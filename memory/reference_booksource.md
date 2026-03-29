@@ -4,7 +4,7 @@ description: 两本书和PRD模板的PDF原文路径，含图片，是生成skil
 type: reference
 ---
 
-原始文献存放在 `d:\BaiduSyncdisk\Doc.Work\Programming\claudecode\SFACRM\skills\bak\booksource\`：
+原始文献存放在 `D:\BaiduSyncdisk\Doc.Work\Writing\知识星球\AI资料\skills backup\booksource\`：
 
 - `决胜B端第二版.pdf` — 《决胜B端》第二版全文，含图表
 - `决胜体验设计v1.5.pdf` — 《决胜体验设计》v1.5全文，含图表

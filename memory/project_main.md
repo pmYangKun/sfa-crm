@@ -153,7 +153,7 @@ type: project
 
 ### 工作流
 1. 修改：直接编辑 `skills/check-prd/` 下的文件
-2. 备份：改动前备份到 `skills/bak/` 目录下
+2. 备份：改动前备份到 `D:\BaiduSyncdisk\Doc.Work\Writing\知识星球\AI资料\skills backup\` 目录下
 3. 测试：跑安装脚本 `.\install.ps1` 同步到 `~/.claude/skills/`，测试 `/check-prd`
 4. 发布：`git push` 到 GitHub，无需手工同步
 
