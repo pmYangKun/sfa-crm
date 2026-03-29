@@ -203,7 +203,7 @@ type: project
 
 ### 已发布文章
 - session-05.md：`d:\BaiduSyncdisk\Doc.Work\Programming\claudecode\SFACRM\articles\session-05.md`
-  记录 Spec Coding 定义、spec-kit 介绍、三次纠偏过程、人对AI纠偏的价值
+  主题：Spec Coding 与 Taste。记录 spec-kit 使用方式的纠偏、以及杨老师关于"人的价值/taste"的思考（taste是什么、如何构建、未来AI越来越强后人是否还需要taste）
 
 ---
 
