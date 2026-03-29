@@ -186,21 +186,48 @@ type: project
 
 ---
 
+---
+
+## 第七次会话（2026-03-29）— spec-kit 引入与工作方式讨论
+
+### 主要工作
+- 项目文件夹从 `D:\MyProgramming\claudecode\SFACRM\` 迁移至 `d:\BaiduSyncdisk\Doc.Work\Programming\claudecode\SFACRM\`，所有路径引用已更新
+- 初始化 git 仓库，推送到 GitHub 私有仓库：`https://github.com/pmYangKun/sfa-crm`
+- 安装 spec-kit（v0.4.3），完成 constitution 编写（中文，六条核心原则）
+- 书籍原始PDF迁移至 `D:\BaiduSyncdisk\Doc.Work\Writing\知识星球\AI资料\skills backup\booksource\`
+
+### 关键判断（spec-kit 使用时机）
+- spec-kit 是**执行框架**，不是思考框架——假设你已想清楚，帮你结构化并约束AI实现
+- 正确介入时机：业务讨论全部完成后，编码开始前
+- 当前仍处于业务讨论阶段，spec-kit 暂不介入
+
+### 已发布文章
+- session-05.md：`d:\BaiduSyncdisk\Doc.Work\Programming\claudecode\SFACRM\articles\session-05.md`
+  记录 Spec Coding 定义、spec-kit 介绍、三次纠偏过程、人对AI纠偏的价值
+
+---
+
 ## 当前状态与下一步（2026-03-29）
 
 ### 已完成
 - ✅ check-prd Skill 已上GitHub，PR #1已合并，仓库规范化完成
 - ✅ SFA CRM 业务上下文采集完整，存于 `spec/business-context.md`
 - ✅ 系统架构方向确定：Ontology底座 + API-first GUI + Copilot协同
-- ✅ 方法论确定：Spec Coding + Harness Engineering，不写PRD
-- ✅ 文章 session-01～04 均已完成
+- ✅ spec-kit 已安装，constitution 已完成
+- ✅ 文章 session-01～05 均已完成
+- ✅ 项目已纳入 git 版本管理（私有仓库）
 
 ### 待办（下次继续）
 - ⚠️ **skill install.ps1 还未运行**：PR合并后新目录结构（references/dimensions/）尚未同步到 `~/.claude/skills/`，需运行 `d:\BaiduSyncdisk\Doc.Work\Programming\claudecode\SFACRM\skills\check-prd\install.ps1`
-- 🔜 **Ontology建模**：定义核心业务对象（客户/联系人/商机/跟进/事件），设计对象关系和状态机
-- 🔜 **模块边界划分**：线索管理、客户管理、商机管理、报表分析等模块
-- 🔜 **API层规划**：操作API（GUI+Agent共用）+ 语义查询API
+- 🔜 **业务概念讨论**：线索/客户/商机的边界与定义，转化时机
+- 🔜 **Ontology建模**：定义核心业务对象，设计对象关系和状态机
+- 🔜 **模块边界划分**
+- 🔜 **进入 spec-kit specify 阶段**（待业务讨论完成后）
 
 ### Spec文件目录
 `d:\BaiduSyncdisk\Doc.Work\Programming\claudecode\SFACRM\spec\`
 - `business-context.md` ✅ 业务上下文 v0.1
+
+### spec-kit 文件目录
+`d:\BaiduSyncdisk\Doc.Work\Programming\claudecode\SFACRM\.specify\`
+- `memory/constitution.md` ✅ 项目宪法 v1.0.0
