@@ -1,0 +1,5 @@
+# skills/check-prd 是独立 git 仓库
+skills/check-prd/
+
+# bak 目录含大文件（PDF、txt书籍原文）
+skills/bak/

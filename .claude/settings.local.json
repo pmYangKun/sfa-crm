@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash",
+      "Read",
+      "Write",
+      "Edit",
+      "Glob",
+      "Grep",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:api.github.com)",
+      "WebSearch",
+      "WebFetch(domain:martinfowler.com)",
+      "WebFetch(domain:openai.com)",
+      "WebFetch(domain:www.anthropic.com)",
+      "WebFetch(domain:www.infoq.com)",
+      "WebFetch(domain:www.humanlayer.dev)",
+      "WebFetch(domain:www.ignorance.ai)"
+    ],
+    "defaultMode": "bypassPermissions"
+  },
+  "skipDangerousModePermissionPrompt": true
+}
