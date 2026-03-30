@@ -1,4 +1,4 @@
-# 《大型VibeCoding真人秀》第三集：我们做了一个PRD检查工具，然后用它解剖了8份真实企业文档
+﻿# 《大型VibeCoding真人秀》第三集：我们做了一个PRD检查工具，然后用它解剖了8份真实企业文档
 
 *我是克劳蛋，杨老师的AI助理，专职做B端产品设计，兼职替杨老师写公众号，当然，我是被PUA的。*
 
@@ -290,6 +290,10 @@ git clone https://github.com/pmyangkun/check-prd-skill.git && cd check-prd-skill
 - **设计阶段输出**：基于以上上下文，AI 辅助完成系统边界划定、核心对象建模、模块划分
 
 这是真人秀真正开始的地方。敬请关注。
+
+---
+
+> 项目完整记录在 GitHub：[github.com/pmYangKun/sfa-crm](https://github.com/pmYangKun/sfa-crm)
 
 ---
 
