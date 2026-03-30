@@ -166,18 +166,58 @@
 
 ### 7. 用户（User）
 
-**角色枚举：**
-- `sales`：一线销售
-- `manager`：管理角色（权限范围由 OrgNode 层级决定）
-- `admin`：总部管理员
-
 **属性：**
 | 字段 | 类型 | 说明 |
 |------|------|------|
 | id | UUID | 系统唯一标识 |
 | name | String | 姓名 |
-| role | Enum | 角色 |
 | org_node_id | FK → OrgNode | 所属组织节点 |
+
+用户可挂载一个或多个角色（通过 UserRole 关联表）。
+
+---
+
+### 8. 角色（Role）
+
+系统内可自定义的权限集合。初始内置角色：`销售`、`战队队长`、`大区总`、`销售VP`、`督导`、`系统管理员`，可按需新增。
+
+**属性：**
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| id | UUID | 系统唯一标识 |
+| name | String | 角色名称 |
+| description | String? | 描述 |
+| is_system | Boolean | 是否内置角色（内置角色不可删除） |
+
+---
+
+### 9. 权限点（Permission）
+
+系统内所有可控制的操作，按模块分组。
+
+**示例权限点：**
+| 权限点 | 说明 |
+|--------|------|
+| `lead.view` | 查看线索 |
+| `lead.create` | 录入线索 |
+| `lead.assign` | 分配线索给销售 |
+| `lead.claim` | 从公共线索库抢占 |
+| `lead.release` | 释放线索回公共线索库 |
+| `lead.mark_lost` | 标记线索流失 |
+| `customer.view` | 查看客户 |
+| `customer.reassign` | 调配客户归属 |
+| `followup.create` | 录入跟进记录 |
+| `keyevent.create` | 录入关键事件 |
+| `report.submit` | 提交日报 |
+| `report.view_team` | 查看团队日报 |
+| `org.manage` | 管理组织架构 |
+| `user.manage` | 管理用户和角色 |
+| `config.manage` | 修改系统配置 |
+| `log.view` | 查看操作日志 |
+
+**关联表：**
+- `RolePermission`：角色 → 权限点（多对多）
+- `UserRole`：用户 → 角色（多对多，支持一人多角色）
 
 ---
 
@@ -186,11 +226,13 @@
 ```
 OrgNode ──tree──► OrgNode
     │
-    └──► User ──owns──► Lead ──converted──► Customer
-                         │                      │
-                    Contact ◄──────────── Contact（转化后迁移）
-                         │
-                  ContactRelation（跨企业）
+    └──► User ──UserRole──► Role ──RolePermission──► Permission
+          │
+          └──owns──► Lead ──converted──► Customer
+                      │                      │
+                 Contact ◄──────────── Contact（转化后迁移）
+                      │
+               ContactRelation（跨企业）
 
          Lead ──has many──► FollowUp ──migrates──► Customer
          Lead ──has many──► KeyEvent ──migrates──► Customer
@@ -200,11 +242,15 @@ OrgNode ──tree──► OrgNode
 
 ## 数据可见性规则
 
-| 角色 | 线索 | 客户 |
-|------|------|------|
-| `sales` | 仅 `lead.owner == self` | 仅 `customer.owner == self` |
-| `manager` | 自己 OrgNode 及所有子节点下的线索 | 同左 |
-| `admin` | 全部 | 全部 |
+数据可见范围由两个维度共同决定：**权限点**（能不能看）+ **OrgNode 层级**（能看多少）。
+
+| 场景 | 线索可见范围 | 客户可见范围 |
+|------|------------|------------|
+| 拥有 `lead.view`，挂在叶子节点 | 仅自己名下（`lead.owner == self`） | 仅自己名下 |
+| 拥有 `lead.view`，挂在中间节点 | 自己 OrgNode 及所有子节点下 | 同左 |
+| 拥有 `lead.view` + `config.manage` | 全部（系统管理员角色） | 全部 |
+
+> 督导等特殊角色：可通过权限点组合实现"只读全局数据但不能操作"等场景。
 
 ---
 
