@@ -11,7 +11,7 @@
 > - **Palantir Ontology 方法论落地**，在系统底层对业务对象、对象关系、可执行动作进行显式建模，让 AI 真正理解结构化业务数据
 > - **所有界面 API 化**，每个操作都有对应接口，AI 可以直接控制界面，而不是靠模拟点击
 > - **Copilot 模式**，AI Agent 与人协同操控同一套系统，各司其职，真正的人机协作
-> - **工具**：Claude Code + Claude Sonnet 4.6 日常编码，复杂任务切换 Claude Opus 4.6
+> - **工具**：VS Code + Claude Code + Claude Sonnet 4.6 日常编码，复杂任务切换 Claude Opus 4.6
 >
 > 此项目**极有可能翻车**。欢迎全程见证——成功或翻车，都会完整记录。
 
