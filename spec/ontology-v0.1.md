@@ -228,6 +228,8 @@ OrgNode ──tree──► OrgNode
     │
     └──► User ──UserRole──► Role ──RolePermission──► Permission
           │
+          ├──UserDataScope──► DataScope（+ 可选 node_ids → OrgNode[]）
+          │
           └──owns──► Lead ──converted──► Customer
                       │                      │
                  Contact ◄──────────── Contact（转化后迁移）
@@ -240,17 +242,38 @@ OrgNode ──tree──► OrgNode
 
 ---
 
-## 数据可见性规则
+## 数据权限规则
 
-数据可见范围由两个维度共同决定：**权限点**（能不能看）+ **OrgNode 层级**（能看多少）。
+数据权限与功能权限**完全分离**：
 
-| 场景 | 线索可见范围 | 客户可见范围 |
-|------|------------|------------|
-| 拥有 `lead.view`，挂在叶子节点 | 仅自己名下（`lead.owner == self`） | 仅自己名下 |
-| 拥有 `lead.view`，挂在中间节点 | 自己 OrgNode 及所有子节点下 | 同左 |
-| 拥有 `lead.view` + `config.manage` | 全部（系统管理员角色） | 全部 |
+- **功能权限**（Role + Permission）：控制用户能执行哪些操作
+- **数据权限**（DataScope）：控制用户能看到哪些范围的数据，基于用户在 OrgNode 树的位置 + 固定控制符
 
-> 督导等特殊角色：可通过权限点组合实现"只读全局数据但不能操作"等场景。
+### DataScope 枚举
+
+| 控制符 | 含义 |
+|--------|------|
+| `self_only` | 仅自己名下的数据（`owner == self`） |
+| `current_node` | 仅当前所在 OrgNode 下的数据 |
+| `current_and_below` | 当前 OrgNode 及所有子节点下的数据 |
+| `selected_nodes` | 手工指定的 OrgNode 列表（需配合 `UserDataScope.node_ids`） |
+| `all` | 全部数据，不受 OrgNode 限制 |
+
+### UserDataScope（用户数据权限配置）
+
+每个用户可单独配置数据权限，独立于其角色：
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| user_id | FK → User | 用户 |
+| scope | Enum | DataScope 控制符 |
+| node_ids | FK[] → OrgNode | 仅 `selected_nodes` 时有效 |
+
+> 典型配置举例：
+> - 一线销售：`self_only`
+> - 战队队长：`current_and_below`
+> - 督导：`all`（只读，通过功能权限限制不可操作）
+> - 跨大区协作角色：`selected_nodes`，手工指定几个大区节点
 
 ---
 
