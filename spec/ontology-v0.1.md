@@ -119,29 +119,30 @@
 
 ---
 
-### 5. 战队（Team）
+### 5. 组织节点（OrgNode）
 
-销售的组织单元，归属于某个大区。
+用树形结构表达组织层级，层级深度不限，不写死层数。当前默认四层（VP → 大区 → 战队 → 销售），未来可灵活扩展。
 
 **属性：**
 | 字段 | 类型 | 说明 |
 |------|------|------|
 | id | UUID | 系统唯一标识 |
-| name | String | 战队名称 |
-| region | Enum | 所属大区 |
-| lead_id | FK → User | 战队队长 |
+| name | String | 节点名称（如"华北区"、"猛虎战队"） |
+| type | Enum | 节点类型：`root` / `region` / `team` / `custom` |
+| parent_id | FK → OrgNode? | 父节点（根节点为 null） |
+
+**数据可见性逻辑：**
+用户能看到自己所在 OrgNode 及其所有子节点下的企业。销售挂在叶子节点，只看自己名下企业（`company.owner == self`）。
 
 ---
 
 ### 6. 用户（User）
 
-系统内的操作人员，对应组织结构中的角色。
+系统内的操作人员，挂在某个组织节点下。
 
 **角色枚举：**
 - `sales`：一线销售
-- `team_lead`：战队队长
-- `region_head`：大区总
-- `vp`：销售VP
+- `manager`：管理角色（队长 / 大区总 / VP 均用此角色，权限范围由 OrgNode 层级决定）
 - `admin`：总部管理员
 
 **属性：**
@@ -150,32 +151,33 @@
 | id | UUID | 系统唯一标识 |
 | name | String | 姓名 |
 | role | Enum | 角色 |
-| region | Enum? | 所属大区（大区总及以下） |
-| team_id | FK → Team? | 所属战队 |
+| org_node_id | FK → OrgNode | 所属组织节点 |
 
 ---
 
 ## 对象关系图
 
 ```
-User ──owns──► Company ──has many──► Contact
-                  │                      │
-                  │              ContactRelation
-                  │                （跨企业关联）
-                  ├──has many──► FollowUp
-                  └──has many──► KeyEvent
+OrgNode ──tree──► OrgNode（父子递归）
+    │
+    └──has many──► User ──owns──► Company ──has many──► Contact
+                                      │                      │
+                                      │              ContactRelation
+                                      │                （跨企业关联）
+                                      ├──has many──► FollowUp
+                                      └──has many──► KeyEvent
 ```
 
 ---
 
 ## 数据可见性规则
 
+基于 OrgNode 树：用户可见范围 = 自己所在节点 + 所有子节点下的企业。
+
 | 角色 | 可见范围 |
 |------|----------|
 | `sales` | 仅自己名下的企业（`company.owner == self`） |
-| `team_lead` | 本战队所有企业 |
-| `region_head` | 本大区所有企业 |
-| `vp` | 全部企业 |
+| `manager` | 自己所在 OrgNode 及所有子节点下的企业 |
 | `admin` | 全部企业 |
 
 ---
@@ -314,8 +316,8 @@ User ──owns──► Company ──has many──► Contact
 | 销售数据可见范围 | 仅自己名下 |
 | 队长数据可见范围 | 本战队 |
 | 大区总数据可见范围 | 本大区 |
-| Team 属性 | 名称 + 所属大区 + 队长（暂定） |
+| 组织结构 | OrgNode 树形，层级不限，默认四层 |
 
 ---
 
-*v0.4 — 补充 Team 对象、数据可见性规则，Ontology 封版*
+*v0.5 — 组织结构改为 OrgNode 树形，支持任意层级扩展*
