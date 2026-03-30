@@ -207,27 +207,49 @@ type: project
 
 ---
 
-## 当前状态与下一步（2026-03-29）
+---
 
-### 已完成
-- ✅ check-prd Skill 已上GitHub，PR #1已合并，仓库规范化完成
-- ✅ SFA CRM 业务上下文采集完整，存于 `spec/business-context.md`
-- ✅ 系统架构方向确定：Ontology底座 + API-first GUI + Copilot协同
-- ✅ spec-kit 已安装，constitution 已完成
-- ✅ 文章 session-01～05 均已完成
-- ✅ 项目已纳入 git 版本管理（私有仓库）
+## 第八次会话（2026-03-30）— Ontology 设计完成 + session-06 文章
 
-### 待办（下次继续）
-- ⚠️ **skill install.ps1 还未运行**：PR合并后新目录结构（references/dimensions/）尚未同步到 `~/.claude/skills/`，需运行 `d:\BaiduSyncdisk\Doc.Work\Programming\claudecode\SFACRM\skills\check-prd\install.ps1`
-- 🔜 **业务概念讨论**：线索/客户/商机的边界与定义，转化时机
-- 🔜 **Ontology建模**：定义核心业务对象，设计对象关系和状态机
-- 🔜 **模块边界划分**
-- 🔜 **进入 spec-kit specify 阶段**（待业务讨论完成后）
+### 主要工作
+- GitHub 仓库从私有改为公开：`https://github.com/pmYangKun/sfa-crm`
+- 添加 README.md，面向公开访问者说明项目背景和进度
+- 完成 Ontology v0.5 设计，文件：`spec/ontology-v0.1.md`
+- 完成 session-06 文章，主题：Ontology 探讨与 AI-native CRM
 
-### Spec文件目录
+### Ontology 关键决策
+- 线索和客户不是两个对象，是**企业（Company）的两个阶段**（stage 字段）
+- 企业是归属核心主体（B2B，对公付款），联系人挂在企业下
+- 联系人关系（ContactRelation）用于记录跨企业人脉，事后补录 + 微信/手机号自动预警
+- 关键事件（KeyEvent）独立于跟进记录，结构化记录送书/小课/大课等业务节点
+- 组织结构用 **OrgNode 树**，不写死层级，支持任意深度扩展
+- Action 层显式声明：主体、前提、效果——这是 Ontology 区别于纯 ER 建模的核心
+- 数据可见性：sales→自己名下，manager→子树，admin→全部
+
+### 重要讨论结论
+- Ontology 本质 = ER + 显式业务操作层（Action），营销吹过头但价值真实存在
+- API 颗粒度合理性才是真正难点，语义/命名是次要问题（杨老师观点）
+- AI-native CRM 的底层仍需结构化数据，演进的是输入层（从人填→AI提取+人确认）
+- Spec-First 的价值：在代价最低的时刻（spec 阶段）做正确决定，上线后改组织结构代价极高
+
+### 当前状态与下一步（2026-03-30）
+
+#### 已完成
+- ✅ Ontology v0.5 封版：`spec/ontology-v0.1.md`
+- ✅ 文章 session-01～06 均已完成
+- ✅ GitHub 仓库公开，README 已添加
+- ✅ check-prd Skill 已上 GitHub，仓库规范化完成
+
+#### 待办（下次继续）
+- ⚠️ **skill install.ps1 还未运行**：需运行 `skills/check-prd/install.ps1` 同步到 `~/.claude/skills/`
+- 🔜 **进入 spec-kit specify 阶段**：按模块逐个跑，从核心模块开始（我来定顺序）
+- 🔜 模块划分和主数据架构将在 specify 过程中自然浮出讨论
+
+#### Spec 文件目录
 `d:\BaiduSyncdisk\Doc.Work\Programming\claudecode\SFACRM\spec\`
 - `business-context.md` ✅ 业务上下文 v0.1
+- `ontology-v0.1.md` ✅ Ontology v0.5（封版）
 
-### spec-kit 文件目录
+#### spec-kit 文件目录
 `d:\BaiduSyncdisk\Doc.Work\Programming\claudecode\SFACRM\.specify\`
 - `memory/constitution.md` ✅ 项目宪法 v1.0.0
