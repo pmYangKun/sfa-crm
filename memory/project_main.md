@@ -280,5 +280,45 @@ type: project
 - ✅ Spec 阶段全部完成
 - ✅ 文章 session-01～07 均已完成
 
+---
+
+## 第十次会话（2026-03-30）— 技术栈确定 + session-08 文章
+
+### 技术栈最终确定
+
+**基础层：**
+- 前端：Next.js
+- 后端：FastAPI（Python）
+- 数据库：SQLite（演示用）
+- 部署：Docker Compose + 腾讯云轻量服务器
+
+**AI Agent 层：**
+- LLM 交互：Vercel AI SDK（多 Provider，抹平各家 API 差异）
+- LLM Provider：数据库配置，Admin 后台可切换（Claude/GPT/DeepSeek 等）
+- 工具调用：Ontology Actions → tool definitions（SDK 原生 Tool Use）
+- Skill 系统：DB 存储，工具调用检索，Admin 维护，本质是提示词文本
+- 对话记忆：DB 存每轮 messages
+
+**界面控制：** 新建系统直接 GUI API 化，不需要 Computer Use 或 DOM 解析
+
+**Agent 工作模式：** 用户主动问（chat 触发）+ 系统主动推（事件触发）两种
+
+### 关键技术讨论结论
+
+- **AI 控制界面五种方式**：CLI / DOM（OpenClaw 用 CDP） / Computer Use / GUI API / DSL，进化线清晰
+- **老系统 AI 操控障碍**：业务语义隐式化——前端藏业务逻辑（GUI API 化解决）+ 后端代码藏业务规则（Ontology Action 化解决）
+- **不用 Dify 的理由**：Dify 是平台不是组件，深度集成自有 Ontology 时黑盒难调试；Dify 的每项能力都有颗粒度更低的开源组件替代
+- **Skill 本质**：提示词文本，不是 Claude 专属，LLM 可替换后 Skill 完全有效
+- **Skill 两种用法**：用户主动问 vs 系统事件触发（Gong.io 模式）
+
+### 已完成文章
+- session-08.md：`d:\BaiduSyncdisk\Doc.Work\Programming\claudecode\SFACRM\articles\session-08.md`
+  主题：AI 控制界面五种方式、老系统改造障碍、技术栈选型、Agent 架构、Skill 系统
+
+### 当前状态与下一步
+#### 已完成
+- ✅ 技术栈确定
+- ✅ 文章 session-01～08 均已完成
+
 #### 下一步
-- 🔜 **Plan 阶段**：确定技术栈（前后端框架/数据库/部署），生成实现方案，进入编码
+- 🔜 **Plan 阶段**：生成整体架构、模块划分、开发顺序，进入编码

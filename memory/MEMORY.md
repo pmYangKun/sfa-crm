@@ -9,3 +9,4 @@
 - [Feedback: 修改前先确认范围](feedback_scope_check.md) — 修改一套文件中的某个概念，先grep确认所有涉及文件再动手
 - [Feedback: 文章格式](feedback_article_format.md) — 文章开头不加标题，直接从署名行开始
 - [Feedback: CRM构建不强绑方法论](feedback_crm_methodology.md) — SFA CRM构建完全依赖AI/工程最佳实践，不把书中方法论强行映射进来
+- [Feedback: 直接反驳错误观点](feedback_direct_refute.md) — 用户观点有误时直接反驳，不顺着说、不软化
