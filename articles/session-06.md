@@ -4,7 +4,7 @@
 
 > **【系列介绍】大型VibeCoding真人秀**
 >
-> 《决胜B端》作者杨堃老师，正在发起一场对传统软件工程的正面挑战：**使用ClaudeCode，基于 Spec Coding，从零构建一个 AI-Native 的 SFA CRM 产品**。
+> 《决胜B端》作者杨堃老师，正在发起一场对传统软件工程的正面挑战：**使用 ClaudeCode，基于 Spec Coding，从零构建一个 AI-Native 的 SFA CRM 产品**。
 >
 > 这个项目有四个核心野心：
 > - **没有 PRD**，全程基于上下文驱动，需求描述方式彻底改变
