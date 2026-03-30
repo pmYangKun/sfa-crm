@@ -151,7 +151,7 @@ Spec 收尾，下一步进 Plan——技术栈要定了。
 
 ---
 
-> 项目完整记录在 GitHub：[github.com/pmYangKun/sfa-crm](https://github.com/pmYangKun/sfa-crm)
+> 本项目完整记录在 GitHub：[github.com/pmYangKun/sfa-crm](https://github.com/pmYangKun/sfa-crm)
 
 ---
 
