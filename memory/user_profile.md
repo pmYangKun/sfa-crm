@@ -4,9 +4,10 @@ description: Who the user is — author, role, expertise, goals
 type: user
 ---
 
-杨堃，出版了两本B端设计领域书籍：
+杨堃，出版了三本B端设计领域书籍：
 - 《决胜B端》：已上市，讲ToB软件设计核心过程
-- 《决胜体验设计》：准备上市，讲ToB产品用户体验
+- 《决胜体验设计》：已上市，讲ToB产品用户体验
+- 第三本：即将上市（2026年）
 
 目标：
 1. 将书中方法论转化为Claude skill/spec，供自己和读者使用
