@@ -1,4 +1,4 @@
-# Ontology 设计 v0.1
+# Ontology 设计
 
 > 本文件基于业务上下文采集（`business-context.md`）整理，定义 SFA CRM 的核心业务对象、对象关系和可执行动作。
 > 这是后续 API 设计、数据建模、权限体系的直接输入。
@@ -7,142 +7,168 @@
 
 ## 核心对象
 
-### 1. 企业（Company）
+### 1. 线索（Lead）
 
-签约和归属的核心主体。线索和客户都归属在企业上，不归属在个人上。
+销售正在跟进、尚未购买小课的目标企业。有明确的归属、生命周期和流转规则。
 
 **属性：**
 | 字段 | 类型 | 说明 |
 |------|------|------|
 | id | UUID | 系统唯一标识 |
-| name | String | 企业名称 |
+| company_name | String | 企业名称 |
 | unified_code | String? | 组织机构代码（强推荐，非强制） |
-| region | Enum | 所属大区（用于分配归属） |
-| stage | Enum | 当前阶段：线索 / 客户 |
-| owner_id | FK → User | 当前负责销售 |
-| pool | Enum | 所在池：私有 / 公共 |
-| source | Enum | 线索来源（见下方枚举） |
+| region | Enum | 所属大区 |
+| stage | Enum | 当前状态（见下方枚举） |
+| owner_id | FK → User? | 当前负责销售（公共线索库时为 null） |
+| pool | Enum | 所在池：`private` / `public` |
+| source | Enum | 线索来源 |
 | created_at | DateTime | 录入时间 |
-| last_followup_at | DateTime | 最近跟进时间 |
-
-**线索来源枚举（source）：**
-- `referral`：转介绍（质量最高）
-- `organic`：自然流量（SEO/直接访问）
-- `koc_sem`：KOC/SEM 付费引流
-- `outbound`：销售主动陌拜（质量最低）
+| last_followup_at | DateTime? | 最近跟进时间 |
+| converted_at | DateTime? | 转化为客户的时间（转化后填入） |
+| lost_at | DateTime? | 标记流失的时间 |
 
 **阶段枚举（stage）：**
-- `lead`：线索（未购小课）
-- `customer`：客户（已购小课，处于大课转化窗口）
-- `converted`：已转化（已购大课）
-- `lost`：已流失
+- `active`：跟进中（默认状态）
+- `converted`：已转化（购买小课，已生成客户记录，线索归档）
+- `lost`：已流失（销售主动标记，明确无意向）
+
+**线索来源枚举（source）：**
+- `referral`：转介绍
+- `organic`：自然流量
+- `koc_sem`：KOC/SEM 付费引流
+- `outbound`：销售主动陌拜
 
 **唯一性规则：**
-- 有组织机构代码：以代码作为去重键，强校验
-- 无组织机构代码：用企业名相似度 + 关键联系人微信号/手机号做模糊预警，推给主管确认
-- 同一企业只能有一个 owner，不允许多销售同时持有
+- 有组织机构代码：精确匹配，命中则阻断
+- 无组织机构代码：名称相似度 + 联系人 wechat_id/phone 做模糊预警，推主管确认
+- 同一线索只能有一个 owner
 
 ---
 
-### 2. 联系人（Contact）
+### 2. 客户（Customer）
 
-挂在企业下的自然人，可以有多个。CEO 是关键决策人，但也可能有其他购课对象（骨干员工）。
+购买了小课后升级创建的企业记录。无业务状态，购买了什么产品从课时订单系统实时查询。
 
 **属性：**
 | 字段 | 类型 | 说明 |
 |------|------|------|
 | id | UUID | 系统唯一标识 |
-| company_id | FK → Company | 所属企业 |
+| lead_id | FK → Lead | 来源线索（归档的线索记录） |
+| company_name | String | 企业名称（从线索继承） |
+| unified_code | String? | 组织机构代码（从线索继承） |
+| region | Enum | 所属大区 |
+| owner_id | FK → User | 归属销售（转化时从线索继承，后续可手工调配） |
+| source | Enum | 线索来源（从线索继承，用于分析） |
+| created_at | DateTime | 客户创建时间（= 转化时间） |
+
+**关于客户状态：**
+客户本身无状态字段。以下业务判断全部从课时订单系统数据实时推导：
+- 是否购买大课 → 查课时订单
+- 是否在转化窗口内 → `now - customer.created_at < 14天 AND 无大课订单`
+- 后续新产品购买情况 → 同样从订单系统查
+
+---
+
+### 3. 联系人（Contact）
+
+挂在线索或客户下的自然人，可多个。
+
+**属性：**
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| id | UUID | 系统唯一标识 |
+| lead_id | FK → Lead? | 关联线索（二选一） |
+| customer_id | FK → Customer? | 关联客户（二选一） |
 | name | String | 姓名 |
-| role | String? | 职位（CEO / 骨干员工等） |
-| is_key_decision_maker | Boolean | 是否为关键决策人 |
-| wechat_id | String? | 微信号（唯一性检测用） |
+| role | String? | 职位 |
+| is_key_decision_maker | Boolean | 是否关键决策人 |
+| wechat_id | String? | 微信号 |
 | phone | String? | 手机号 |
 | created_at | DateTime | 录入时间 |
 
+> 线索转化为客户时，联系人随之迁移到客户下（`lead_id → null`, `customer_id = 新客户`）。
+
 **联系人关系（ContactRelation）：**
-用于记录跨企业的人脉关联，事后发现时补录。
 
 | 字段 | 类型 | 说明 |
 |------|------|------|
 | contact_a_id | FK → Contact | 联系人 A |
 | contact_b_id | FK → Contact | 联系人 B |
-| relation_type | Enum | 关系类型：夫妻 / 亲属 / 合伙人 / 朋友 |
+| relation_type | Enum | 夫妻 / 亲属 / 合伙人 / 朋友 |
 | note | String? | 备注 |
-| created_by | FK → User | 由谁发现并录入 |
+| created_by | FK → User | 录入者 |
 
-⚠️ **预警规则：** 当两个联系人的 wechat_id 或 phone 相同时，系统自动创建关联记录并通知主管。
+⚠️ **预警规则：** 两个联系人 wechat_id 或 phone 相同时，系统自动创建 ContactRelation 并通知主管。
 
 ---
 
-### 3. 跟进记录（FollowUp）
+### 4. 跟进记录（FollowUp）
 
-销售每次与企业/联系人的接触记录。挂在企业下，可关联具体联系人。
+销售与线索/客户的接触记录，挂在线索或客户下。
 
 **属性：**
 | 字段 | 类型 | 说明 |
 |------|------|------|
 | id | UUID | 系统唯一标识 |
-| company_id | FK → Company | 关联企业 |
+| lead_id | FK → Lead? | 关联线索（二选一） |
+| customer_id | FK → Customer? | 关联客户（二选一） |
 | contact_id | FK → Contact? | 关联联系人（可选） |
 | owner_id | FK → User | 跟进销售 |
-| type | Enum | 跟进方式：电话 / 微信 / 拜访 / 其他 |
-| source | Enum | 录入来源：手动 / AI自动（预留） |
+| type | Enum | 电话 / 微信 / 拜访 / 其他 |
+| source | Enum | `manual`（手动）/ `ai`（AI 自动，预留） |
 | content | Text | 跟进内容 |
 | followed_at | DateTime | 实际发生时间 |
 | created_at | DateTime | 录入时间 |
 
+> 线索转化为客户时，线索阶段的跟进记录迁移到客户下。
+
 ---
 
-### 4. 关键事件（KeyEvent）
+### 5. 关键事件（KeyEvent）
 
-业务上有特殊意义的动作节点，带时间戳结构化记录，区别于普通跟进记录。
+业务上有特殊意义的节点，结构化记录，区别于普通跟进。
 
 **事件类型：**
-| 事件 | 触发条件 | 特殊字段 |
-|------|----------|----------|
-| `visited_kp` | 拜访了关键决策人 | contact_id |
-| `book_sent` | 送出专著 | sent_at, responded_at?, confirmed_reading? |
-| `attended_small_course` | 参加小课（线索→客户转化点） | course_date, payment_confirmed |
-| `purchased_big_course` | 购买大课（最终转化） | contract_amount, purchase_date |
-| `contact_relation_discovered` | 发现跨企业人脉关联 | relation_id |
+| 事件 | 属于 | 触发条件 | 特殊字段 |
+|------|------|----------|----------|
+| `visited_kp` | Lead / Customer | 拜访关键决策人 | contact_id |
+| `book_sent` | Lead | 送出专著 | sent_at, responded_at?, confirmed_reading? |
+| `attended_small_course` | Lead | 购买小课（触发转化） | course_date, payment_confirmed |
+| `purchased_big_course` | Customer | 购买大课 | contract_amount, purchase_date |
+| `contact_relation_discovered` | Lead / Customer | 发现跨企业人脉 | relation_id |
 
 **属性：**
 | 字段 | 类型 | 说明 |
 |------|------|------|
 | id | UUID | 系统唯一标识 |
-| company_id | FK → Company | 关联企业 |
-| type | Enum | 事件类型（见上表） |
+| lead_id | FK → Lead? | 关联线索（二选一） |
+| customer_id | FK → Customer? | 关联客户（二选一） |
+| type | Enum | 事件类型 |
 | payload | JSON | 事件特有字段 |
 | created_by | FK → User | 录入者 |
 | occurred_at | DateTime | 事件发生时间 |
 
 ---
 
-### 5. 组织节点（OrgNode）
+### 6. 组织节点（OrgNode）
 
-用树形结构表达组织层级，层级深度不限，不写死层数。当前默认四层（VP → 大区 → 战队 → 销售），未来可灵活扩展。
+树形结构表达组织层级，深度不限。
 
 **属性：**
 | 字段 | 类型 | 说明 |
 |------|------|------|
 | id | UUID | 系统唯一标识 |
-| name | String | 节点名称（如"华北区"、"猛虎战队"） |
-| type | Enum | 节点类型：`root` / `region` / `team` / `custom` |
+| name | String | 节点名称 |
+| type | Enum | `root` / `region` / `team` / `custom` |
 | parent_id | FK → OrgNode? | 父节点（根节点为 null） |
-
-**数据可见性逻辑：**
-用户能看到自己所在 OrgNode 及其所有子节点下的企业。销售挂在叶子节点，只看自己名下企业（`company.owner == self`）。
 
 ---
 
-### 6. 用户（User）
-
-系统内的操作人员，挂在某个组织节点下。
+### 7. 用户（User）
 
 **角色枚举：**
 - `sales`：一线销售
-- `manager`：管理角色（队长 / 大区总 / VP 均用此角色，权限范围由 OrgNode 层级决定）
+- `manager`：管理角色（权限范围由 OrgNode 层级决定）
 - `admin`：总部管理员
 
 **属性：**
@@ -158,111 +184,127 @@
 ## 对象关系图
 
 ```
-OrgNode ──tree──► OrgNode（父子递归）
+OrgNode ──tree──► OrgNode
     │
-    └──has many──► User ──owns──► Company ──has many──► Contact
-                                      │                      │
-                                      │              ContactRelation
-                                      │                （跨企业关联）
-                                      ├──has many──► FollowUp
-                                      └──has many──► KeyEvent
+    └──► User ──owns──► Lead ──converted──► Customer
+                         │                      │
+                    Contact ◄──────────── Contact（转化后迁移）
+                         │
+                  ContactRelation（跨企业）
+
+         Lead ──has many──► FollowUp ──migrates──► Customer
+         Lead ──has many──► KeyEvent ──migrates──► Customer
 ```
 
 ---
 
 ## 数据可见性规则
 
-基于 OrgNode 树：用户可见范围 = 自己所在节点 + 所有子节点下的企业。
-
-| 角色 | 可见范围 |
-|------|----------|
-| `sales` | 仅自己名下的企业（`company.owner == self`） |
-| `manager` | 自己所在 OrgNode 及所有子节点下的企业 |
-| `admin` | 全部企业 |
+| 角色 | 线索 | 客户 |
+|------|------|------|
+| `sales` | 仅 `lead.owner == self` | 仅 `customer.owner == self` |
+| `manager` | 自己 OrgNode 及所有子节点下的线索 | 同左 |
+| `admin` | 全部 | 全部 |
 
 ---
 
 ## 核心业务规则
 
-### 线索分配与客保
+### 线索流转
 
-1. 企业录入时，系统检测唯一性，冲突推主管确认
-2. 主管手动分配企业给销售，进入销售私有池
-3. 私有池上限：可配置（默认 100 个企业，不含已转化客户）
-4. 释放条件（可配置，当前默认值）：
-   - 10 天未跟进 → 自动释放回公共池
-   - 30 天未成单 → 自动释放回公共池
-5. 公共池抢占规则：按大区配置，**仅总部管理员可修改规则**，大区总需申请审批
+1. 录入时检测唯一性，冲突推主管确认
+2. 主管手动分配线索给销售，进入私有池
+3. 私有池上限：可配置（默认 100，不含已转化客户）
+4. 自动释放条件（可配置）：
+   - 10 天未跟进 → 释放回公共线索库
+   - 30 天未成单 → 释放回公共线索库
+5. `converted` 和 `lost` 状态的线索不参与自动释放
 
-### 大课转化窗口
+### 线索转化为客户
 
-- 企业进入 `customer` 阶段（参加小课）后，系统开启 14 天转化窗口
-- 窗口内未产生 `purchased_big_course` 事件，系统推送提醒给销售和战队队长
-- 窗口关闭后标记为 `lost`，但记录保留
+1. 购买小课事件触发（优先课时订单系统，销售可手动兜底）
+2. 执行：
+   - `lead.stage = converted`, `lead.converted_at = now`
+   - 创建 Customer 记录，`customer.lead_id = lead.id`
+   - 联系人、跟进记录、关键事件全部迁移到 Customer 下
+3. 转化后线索归档，不再出现在活跃线索列表
+
+### 大课转化窗口（派生逻辑，不存状态）
+
+- 条件：`now - customer.created_at < 14天 AND 课时系统无大课订单`
+- 系统在第 7 天、第 12 天推送提醒给销售和队长
+- 第 14 天仍无大课订单：推送提醒"转化窗口已关闭"，不改客户任何字段
+
+### 客户归属调配
+
+- 客户归属固定，不参与公私池流转
+- 主管可手动调配客户归属（不受私有池上限约束）
+- 调配后原销售立即失去可见性
 
 ### 防刷保护
 
-- 同一账号抢占公共池操作：每分钟不超过 N 次（N 可配置）
-- 超出限制自动锁定账号，通知主管
-
-### 日报自动生成
-
-- 每日系统从当天 FollowUp 记录自动汇总生成日报草稿
-- 销售确认后一键提交，不需要重复填写
-- 提交对象：战队队长（必选）+ 大区总（可选，销售自行勾选）
+- 同一账号抢占公共线索库：每分钟不超过 N 次（N 可配置）
+- 超限自动锁定，通知主管
 
 ---
 
 ## Actions（业务动作）
 
-每个 Action 声明：操作对象、执行主体、前提条件、执行效果。这是 API 的语义层，也是 AI Agent 判断"当前能做什么"的依据。
+### Lead Actions
+
+**assign_lead** — 分配线索给销售
+- 主体：`manager`, `admin`
+- 前提：`lead.pool == public` AND `sales.private_pool_count < pool_limit`
+- 效果：`lead.owner = sales`, `lead.pool = private`
+
+**release_lead** — 释放线索回公共线索库
+- 主体：系统自动, `manager`
+- 前提：`lead.pool == private` AND（未跟进超阈值 OR 未成单超阈值）
+- 效果：`lead.owner = null`, `lead.pool = public`
+
+**claim_lead** — 从公共线索库抢占线索
+- 主体：`sales`
+- 前提：`lead.pool == public` AND 大区规则允许 AND 速率未超限
+- 效果：`lead.owner = sales`, `lead.pool = private`
+
+**mark_lead_lost** — 标记线索流失
+- 主体：`sales`（自己名下）, `manager`
+- 前提：`lead.stage == active`
+- 效果：`lead.stage = lost`, `lead.lost_at = now`
+
+**convert_lead** — 线索转化为客户
+- 主体：系统自动（课时订单系统），`sales`（手动兜底）
+- 前提：`lead.stage == active`
+- 效果：`lead.stage = converted`，创建 Customer，迁移联系人/跟进/关键事件
 
 ---
 
-### Company Actions
+### Customer Actions
 
-**assign_to_sales** — 分配企业给销售
-- 主体：`team_lead`, `region_head`, `admin`
-- 前提：`company.pool == public` AND `sales.private_pool_count < pool_limit`
-- 效果：`company.owner = sales`, `company.pool = private`
-
-**release_to_pool** — 释放企业回公共池
-- 主体：系统自动（定时任务）, `team_lead`, `region_head`
-- 前提：`company.pool == private` AND（`now - last_followup_at > 10天` OR `now - created_at > 30天 AND stage == lead`）
-- 效果：`company.owner = null`, `company.pool = public`
-
-**claim_from_pool** — 从公共池抢占企业
-- 主体：`sales`（受大区规则约束）
-- 前提：`company.pool == public` AND 大区抢占规则允许 AND 速率未超限
-- 效果：`company.owner = sales`, `company.pool = private`
-
-**mark_duplicate_warning** — 标记疑似重复
-- 主体：系统自动
-- 前提：新录入企业与已有企业名称相似度 > 阈值，或联系人 wechat_id/phone 重复
-- 效果：创建预警通知推送给 `team_lead`
+**reassign_customer** — 手工调配客户归属
+- 主体：`manager`, `admin`
+- 前提：无（不受私有池约束）
+- 效果：`customer.owner = 目标销售`，原销售立即失去可见性
 
 ---
 
 ### Contact Actions
 
 **add_contact** — 添加联系人
-- 主体：`sales`（仅限自己名下企业）
-- 前提：`company.owner == current_user`
-- 效果：创建 Contact，系统检测 wechat_id/phone 是否与其他联系人重复
+- 主体：`sales`（仅自己名下线索/客户）
+- 效果：创建 Contact，检测 wechat_id/phone 重复，触发预警
 
 **link_contacts** — 建立联系人关系
-- 主体：`sales`, `team_lead`
-- 前提：两个 Contact 均已存在
-- 效果：创建 ContactRelation，触发跨企业归属冲突检测，通知相关主管
+- 主体：`sales`, `manager`
+- 效果：创建 ContactRelation，触发跨企业归属冲突检测
 
 ---
 
 ### FollowUp Actions
 
 **log_followup** — 记录跟进
-- 主体：`sales`（仅限自己名下企业）
-- 前提：`company.owner == current_user`
-- 效果：创建 FollowUp，更新 `company.last_followup_at`
+- 主体：`sales`（仅自己名下线索/客户）
+- 效果：创建 FollowUp，更新 `lead.last_followup_at`（线索阶段）
 
 ---
 
@@ -270,23 +312,17 @@ OrgNode ──tree──► OrgNode（父子递归）
 
 **record_book_sent** — 记录送书
 - 主体：`sales`
-- 前提：`company.owner == current_user` AND `company.stage == lead`
-- 效果：创建 `book_sent` KeyEvent，payload 含 sent_at
+- 前提：对象为 Lead
+- 效果：创建 `book_sent` KeyEvent
 
-**confirm_small_course** — 确认参加小课（触发转化）
-- 主体：系统自动（来自课时订单系统付款事件）, `sales`（手动兜底）
-- 前提：`company.stage == lead`
-- 效果：`company.stage = customer`，创建 `attended_small_course` KeyEvent，开启 14 天大课转化窗口
+**confirm_small_course** — 确认购买小课（触发转化）
+- 主体：系统自动, `sales`（手动兜底）
+- 效果：触发 `convert_lead` Action
 
-**confirm_big_course** — 确认购买大课
-- 主体：系统自动（来自课时订单系统）, `sales`（手动兜底）
-- 前提：`company.stage == customer`
-- 效果：`company.stage = converted`，创建 `purchased_big_course` KeyEvent，关闭转化窗口
-
-**expire_conversion_window** — 转化窗口到期
-- 主体：系统自动（定时任务）
-- 前提：`company.stage == customer` AND `now - attended_small_course.occurred_at > 14天`
-- 效果：`company.stage = lost`，通知 `sales` 和 `team_lead`
+**record_big_course** — 记录购买大课
+- 主体：系统自动, `sales`（手动兜底）
+- 前提：对象为 Customer
+- 效果：创建 `purchased_big_course` KeyEvent
 
 ---
 
@@ -294,13 +330,11 @@ OrgNode ──tree──► OrgNode（父子递归）
 
 **generate_daily_report** — 生成日报草稿
 - 主体：系统自动（每日定时）
-- 前提：当天有 FollowUp 记录
-- 效果：汇总当天 FollowUp 生成草稿，推送给 `sales` 确认
+- 效果：汇总当天 FollowUp 生成草稿
 
 **submit_daily_report** — 提交日报
 - 主体：`sales`
-- 前提：日报草稿存在
-- 效果：提交给 `team_lead`（必达）+ `region_head`（若销售勾选）
+- 效果：提交给 `team_lead`（必达）+ `region_head`（可选）
 
 ---
 
@@ -308,16 +342,14 @@ OrgNode ──tree──► OrgNode（父子递归）
 
 | 问题 | 决策 |
 |------|------|
-| 大课转化窗口时长 | 14 天，固定 |
+| 线索与客户关系 | 两个独立对象，转化时创建客户，线索归档 |
+| 客户状态 | 无状态，购买情况从课时订单系统实时推导 |
+| 大课转化窗口 | 派生逻辑，14天固定，不写入客户字段 |
+| 客户流失标记 | 不显式存储，从订单数据推导 |
+| 公私池机制 | 仅属于线索，客户归属固定 |
+| 客户归属调配 | 主管手工调配，不受私有池上限约束 |
+| 转化后历史数据 | 联系人/跟进/关键事件全部迁移到客户下 |
+| 大课转化窗口时长 | 14天，固定 |
 | 私有池上限 | 可配置，默认 100 |
 | 企业大区归属 | 按企业注册地 |
-| 联系人关系类型 | 夫妻 / 亲属 / 合伙人 / 朋友（暂定） |
-| 日报提交对象 | 战队队长必选，大区总可选 |
-| 销售数据可见范围 | 仅自己名下 |
-| 队长数据可见范围 | 本战队 |
-| 大区总数据可见范围 | 本大区 |
-| 组织结构 | OrgNode 树形，层级不限，默认四层 |
-
----
-
-*v0.5 — 组织结构改为 OrgNode 树形，支持任意层级扩展*
+| 组织结构 | OrgNode 树形，层级不限 |
