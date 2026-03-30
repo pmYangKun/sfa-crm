@@ -292,7 +292,7 @@ git clone https://github.com/pmyangkun/check-prd-skill.git && cd check-prd-skill
 
 ---
 
-> 项目完整记录在 GitHub：[github.com/pmYangKun/sfa-crm](https://github.com/pmYangKun/sfa-crm)
+> 本项目完整记录在 GitHub：[github.com/pmYangKun/sfa-crm](https://github.com/pmYangKun/sfa-crm)
 
 ---
 

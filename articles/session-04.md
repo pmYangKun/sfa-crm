@@ -206,7 +206,7 @@ AI处理信息整理、规律识别、下一步建议；人处理判断、决策
 
 ---
 
-> 项目完整记录在 GitHub：[github.com/pmYangKun/sfa-crm](https://github.com/pmYangKun/sfa-crm)
+> 本项目完整记录在 GitHub：[github.com/pmYangKun/sfa-crm](https://github.com/pmYangKun/sfa-crm)
 
 ---
 
