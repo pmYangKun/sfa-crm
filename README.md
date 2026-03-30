@@ -16,7 +16,7 @@
 - **所有界面 API 化**，每个操作都有对应接口，AI 可以直接控制界面，而不是靠模拟点击
 - **Copilot 模式**，AI Agent 与人协同操控同一套系统，各司其职，真正的人机协作
 
-工具栈：**VS Code + Claude Code**，日常编码用 Claude Sonnet 4.6，复杂任务切换 Claude Opus 4.6。
+工具栈：**VS Code + Claude Code**。
 
 ---
 
@@ -38,7 +38,9 @@ Spec 里有业务逻辑、对象定义、行为约束。AI 基于这些生成代
 │   ├── session-02.md  # 第二集：...
 │   └── ...
 ├── spec/              # 业务上下文和系统设计规格文件
-│   └── business-context.md   # 业务上下文 v0.1（甲方业务、组织、流程）
+│   ├── business-context.md   # 业务上下文（甲方业务、组织、流程）
+│   ├── ontology.md           # Ontology 设计（对象、关系、Actions、RBAC）
+│   └── specifications.md     # 功能规格（14 个 SPEC + 菜单结构）
 ├── skills/            # Claude Code Skill 文件
 │   └── check-prd/     # PRD 质量检查工具（独立子项目）
 ├── memory/            # Claude 跨会话记忆文件
@@ -55,8 +57,10 @@ Spec 里有业务逻辑、对象定义、行为约束。AI 基于这些生成代
 | 第二集 | Skill 落地与迭代 | 完成 |
 | 第三集 | check-prd 工具，解剖 8 份真实企业 PRD | 完成 |
 | 第四集 | 业务上下文采集，确定架构方向 | 完成 |
-| 第五集 | 安装 spec-kit，关于 Taste 的讨论 | 完成 |
-| 第六集 | Ontology 设计（线索/客户/商机边界） | 进行中 |
+| 第五集 | 安装 spec-kit，关于 Taste 与学习的讨论 | 完成 |
+| 第六集 | Ontology 设计：对象建模、Actions、AI-native CRM | 完成 |
+| 第七集 | Spec 阶段：线索/客户拆分、RBAC、数据权限分离 | 完成 |
+| 第八集 | Plan 阶段：技术栈选型，编码正式开始 | 进行中 |
 
 ---
 
