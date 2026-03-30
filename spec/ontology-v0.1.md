@@ -185,6 +185,97 @@ User ──owns──► Company ──has many──► Contact
 
 ---
 
+## Actions（业务动作）
+
+每个 Action 声明：操作对象、执行主体、前提条件、执行效果。这是 API 的语义层，也是 AI Agent 判断"当前能做什么"的依据。
+
+---
+
+### Company Actions
+
+**assign_to_sales** — 分配企业给销售
+- 主体：`team_lead`, `region_head`, `admin`
+- 前提：`company.pool == public` AND `sales.private_pool_count < pool_limit`
+- 效果：`company.owner = sales`, `company.pool = private`
+
+**release_to_pool** — 释放企业回公共池
+- 主体：系统自动（定时任务）, `team_lead`, `region_head`
+- 前提：`company.pool == private` AND（`now - last_followup_at > 10天` OR `now - created_at > 30天 AND stage == lead`）
+- 效果：`company.owner = null`, `company.pool = public`
+
+**claim_from_pool** — 从公共池抢占企业
+- 主体：`sales`（受大区规则约束）
+- 前提：`company.pool == public` AND 大区抢占规则允许 AND 速率未超限
+- 效果：`company.owner = sales`, `company.pool = private`
+
+**mark_duplicate_warning** — 标记疑似重复
+- 主体：系统自动
+- 前提：新录入企业与已有企业名称相似度 > 阈值，或联系人 wechat_id/phone 重复
+- 效果：创建预警通知推送给 `team_lead`
+
+---
+
+### Contact Actions
+
+**add_contact** — 添加联系人
+- 主体：`sales`（仅限自己名下企业）
+- 前提：`company.owner == current_user`
+- 效果：创建 Contact，系统检测 wechat_id/phone 是否与其他联系人重复
+
+**link_contacts** — 建立联系人关系
+- 主体：`sales`, `team_lead`
+- 前提：两个 Contact 均已存在
+- 效果：创建 ContactRelation，触发跨企业归属冲突检测，通知相关主管
+
+---
+
+### FollowUp Actions
+
+**log_followup** — 记录跟进
+- 主体：`sales`（仅限自己名下企业）
+- 前提：`company.owner == current_user`
+- 效果：创建 FollowUp，更新 `company.last_followup_at`
+
+---
+
+### KeyEvent Actions
+
+**record_book_sent** — 记录送书
+- 主体：`sales`
+- 前提：`company.owner == current_user` AND `company.stage == lead`
+- 效果：创建 `book_sent` KeyEvent，payload 含 sent_at
+
+**confirm_small_course** — 确认参加小课（触发转化）
+- 主体：系统自动（来自课时订单系统付款事件）, `sales`（手动兜底）
+- 前提：`company.stage == lead`
+- 效果：`company.stage = customer`，创建 `attended_small_course` KeyEvent，开启 14 天大课转化窗口
+
+**confirm_big_course** — 确认购买大课
+- 主体：系统自动（来自课时订单系统）, `sales`（手动兜底）
+- 前提：`company.stage == customer`
+- 效果：`company.stage = converted`，创建 `purchased_big_course` KeyEvent，关闭转化窗口
+
+**expire_conversion_window** — 转化窗口到期
+- 主体：系统自动（定时任务）
+- 前提：`company.stage == customer` AND `now - attended_small_course.occurred_at > 14天`
+- 效果：`company.stage = lost`，通知 `sales` 和 `team_lead`
+
+---
+
+### Report Actions
+
+**generate_daily_report** — 生成日报草稿
+- 主体：系统自动（每日定时）
+- 前提：当天有 FollowUp 记录
+- 效果：汇总当天 FollowUp 生成草稿，推送给 `sales` 确认
+
+**submit_daily_report** — 提交日报
+- 主体：`sales`
+- 前提：日报草稿存在
+- 效果：提交给 `team_lead`（必达）+ `region_head`（若销售勾选）
+
+---
+
 ## 已确认决策
 
 | 问题 | 决策 |
@@ -197,4 +288,4 @@ User ──owns──► Company ──has many──► Contact
 
 ---
 
-*v0.2 — 待确认问题全部确认，可进入 spec-kit specify 阶段*
+*v0.3 — 补充 Actions 层，Ontology 完整：对象 + 关系 + 动作*
