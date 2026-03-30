@@ -232,24 +232,53 @@ type: project
 - AI-native CRM 的底层仍需结构化数据，演进的是输入层（从人填→AI提取+人确认）
 - Spec-First 的价值：在代价最低的时刻（spec 阶段）做正确决定，上线后改组织结构代价极高
 
-### 当前状态与下一步（2026-03-30）
+---
 
-#### 已完成
-- ✅ Ontology v0.5 封版：`spec/ontology-v0.1.md`
-- ✅ 文章 session-01～06 均已完成
-- ✅ GitHub 仓库公开，README 已添加
-- ✅ check-prd Skill 已上 GitHub，仓库规范化完成
+## 第九次会话（2026-03-30）— Spec 阶段完成 + 重大设计决策
 
-#### 待办（下次继续）
-- ⚠️ **skill install.ps1 还未运行**：需运行 `skills/check-prd/install.ps1` 同步到 `~/.claude/skills/`
-- 🔜 **进入 spec-kit specify 阶段**：按模块逐个跑，从核心模块开始（我来定顺序）
-- 🔜 模块划分和主数据架构将在 specify 过程中自然浮出讨论
+### 主要工作
+- 完成功能规格文件：`spec/specifications.md`（12个SPEC + 菜单结构 + 视图规范）
+- Ontology 重大更新：线索/客户拆分为独立对象，RBAC 体系完整建模
+- 文章 session-07 完成，主题：Spec 阶段设计决策与 AI 需要人定基调
 
-#### Spec 文件目录
+### 重大设计决策变更
+
+#### 线索（Lead）与客户（Customer）拆分
+- **原设计**：同一 Company 对象，stage 字段区分
+- **新设计**：两个独立对象，Lead 有状态（active/converted/lost），Customer **无状态**
+- **核心理由**：客户与业务逻辑解绑——买了什么课从课时订单系统实时查，CRM 不存状态。未来出新产品不会因客户状态耦合而混乱
+- 转化时：Lead 归档，创建 Customer，联系人/跟进/关键事件全部迁移
+- 大课转化窗口改为派生逻辑，不写入客户字段
+
+#### RBAC 权限体系
+- **原设计**：User 上固定 role 枚举（sales/manager/admin）
+- **新设计**：Role（独立对象）+ Permission（权限点）+ UserRole（用户-角色关联）+ RolePermission（角色-权限关联）
+- 内置角色：销售、战队队长、大区总、销售VP、督导、系统管理员
+- 支持自定义角色，一人多角色，权限取并集
+
+#### 数据权限与功能权限分离
+- 功能权限：Role + Permission，控制能做什么
+- 数据权限：UserDataScope，独立配置，五种控制符：`self_only / current_node / current_and_below / selected_nodes / all`
+- 两个维度完全解耦，督导等特殊角色可配 `all` 数据范围 + 只读功能权限
+
+### 菜单结构（已确认）
+- 销售：我的线索 / 公共线索库 / 我的客户 / 我的日报
+- 主管：数据概览 / 团队线索 / 公共线索库 / 团队客户 / 团队日报
+- Admin：全部线索 / 全部客户 / 组织管理 / 用户管理 / 权限管理 / 系统配置 / 操作日志
+
+### 列表页视图规范（已确认）
+预设默认列 + 用户可显示/隐藏列、调整列顺序、保存常用筛选条件。不支持自定义字段，不支持跨对象拼接。
+
+### Spec 文件目录（当前状态）
 `d:\BaiduSyncdisk\Doc.Work\Programming\claudecode\SFACRM\spec\`
-- `business-context.md` ✅ 业务上下文 v0.1
-- `ontology-v0.1.md` ✅ Ontology v0.5（封版）
+- `business-context.md` ✅
+- `ontology.md` ✅（已去除版本号后缀）
+- `specifications.md` ✅（SPEC-001～014，含菜单结构和视图规范）
 
-#### spec-kit 文件目录
-`d:\BaiduSyncdisk\Doc.Work\Programming\claudecode\SFACRM\.specify\`
-- `memory/constitution.md` ✅ 项目宪法 v1.0.0
+### 当前状态与下一步
+#### 已完成
+- ✅ Spec 阶段全部完成
+- ✅ 文章 session-01～07 均已完成
+
+#### 下一步
+- 🔜 **Plan 阶段**：确定技术栈（前后端框架/数据库/部署），生成实现方案，进入编码
