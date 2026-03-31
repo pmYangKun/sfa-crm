@@ -5,7 +5,7 @@ from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
 
-from app.api import auth
+from app.api import auth, leads
 
 limiter = Limiter(key_func=get_remote_address)
 
@@ -32,6 +32,7 @@ async def generic_exception_handler(request: Request, exc: Exception):
 
 
 app.include_router(auth.router, prefix="/auth", tags=["auth"])
+app.include_router(leads.router, prefix="", tags=["leads"])
 
 
 @app.get("/health")
