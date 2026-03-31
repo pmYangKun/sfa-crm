@@ -16,7 +16,8 @@
       "WebFetch(domain:www.anthropic.com)",
       "WebFetch(domain:www.infoq.com)",
       "WebFetch(domain:www.humanlayer.dev)",
-      "WebFetch(domain:www.ignorance.ai)"
+      "WebFetch(domain:www.ignorance.ai)",
+      "WebFetch(domain:openclaw.ai)"
     ],
     "defaultMode": "bypassPermissions"
   },

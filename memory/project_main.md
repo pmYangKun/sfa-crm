@@ -202,8 +202,7 @@ type: project
 - 当前仍处于业务讨论阶段，spec-kit 暂不介入
 
 ### 已发布文章
-- session-05.md：`d:\BaiduSyncdisk\Doc.Work\Programming\claudecode\SFACRM\articles\session-05.md`
-  主题：Spec Coding 与 Taste。记录 spec-kit 使用方式的纠偏、以及杨老师关于"人的价值/taste"的思考（taste是什么、如何构建、未来AI越来越强后人是否还需要taste）
+- session-05.md（原 session-06）：Ontology 设计文章（已重新编号）
 
 ---
 
@@ -312,13 +311,13 @@ type: project
 - **Skill 两种用法**：用户主动问 vs 系统事件触发（Gong.io 模式）
 
 ### 已完成文章
-- session-08.md：`d:\BaiduSyncdisk\Doc.Work\Programming\claudecode\SFACRM\articles\session-08.md`
+- session-07.md（原 session-08）：`d:\BaiduSyncdisk\Doc.Work\Programming\claudecode\SFACRM\articles\session-07.md`
   主题：AI 控制界面五种方式、老系统改造障碍、技术栈选型、Agent 架构、Skill 系统
 
 ### 当前状态与下一步
 #### 已完成
 - ✅ 技术栈确定
-- ✅ 文章 session-01～08 均已完成
+- ✅ 文章 session-01～07 均已完成（原 session-05 已删除，后续重新编号）
 
 #### 下一步
 - 🔜 **Plan 阶段**：生成整体架构、模块划分、开发顺序，进入编码
