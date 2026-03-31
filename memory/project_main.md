@@ -373,3 +373,53 @@ type: project
 - ✅ 所有设计文档完成，编码可以开始
 - ✅ 全部 8 篇文章已完成，文件名已加主题词
 - 🔜 **下一步**：从 T001 开始，Phase 1 项目初始化
+
+---
+
+## 第十二次会话（2026-03-31）— Phase 1+2+3 编码完成
+
+### 主要工作
+- 代码全部放入 `src/` 子目录（src/backend, src/frontend, src/docker-compose.yml），保持根目录整洁
+- 完成 Phase 1 初始化：T001-T006（pyproject.toml、package.json、docker-compose、Dockerfile、ruff、tsconfig/eslint）
+- 完成 Phase 2 基础设施：T007-T025（数据库、ORM 模型、RBAC、JWT 认证、FastAPI 主应用、前端 API 封装）
+- 完成 Phase 3 US1：T026-T036（Lead/Contact 模型、唯一性服务、Leads API、前端三页）
+
+### 代码目录结构
+```
+src/
+  backend/
+    app/
+      api/auth.py, leads.py
+      core/config.py, database.py, auth.py, deps.py, init_db.py
+      models/org.py, auth.py, config.py, audit.py, lead.py, contact.py
+      services/permission_service.py, audit_service.py, uniqueness_service.py, lead_service.py
+      main.py
+    pyproject.toml, Dockerfile, .ruff.toml
+  frontend/
+    src/
+      app/layout.tsx, globals.css
+      app/login/page.tsx
+      app/leads/page.tsx, new/page.tsx, [id]/page.tsx
+      lib/api.ts, auth-context.tsx
+      types/index.ts
+    package.json, tsconfig.json, Dockerfile
+  docker-compose.yml
+```
+
+### 关键实现细节
+- SQLite WAL+foreign_keys+busy_timeout=5000+synchronous=NORMAL（T007）
+- OrgNode adjacency list（remote_side 配置）+ in-memory BFS for DataScope（T008, T017）
+- UserDataScope 五种 scope（self_only/current_node/current_and_below/selected_nodes/all）
+- rapidfuzz token_sort_ratio 85 分阈值，剥离法律后缀后比较（T029）
+- Lead 录入：201 正常 / 202 模糊预警（已创建）/ 409 代码冲突阻断（T030）
+- require_permission() 依赖注入方式：`Depends(require_permission("lead:create"))`
+
+### commit 记录（本 session，共 19 次）
+- Phase 1: T001~T006 各自独立 commit
+- Phase 2: T007~T021 后端各自独立 commit，T022~T025 前端打包一次 commit + 登录页单独 commit
+- Phase 3: T026-T028 / T029 / T030-T032 / T033 / T034-T036 各自独立 commit
+
+### 当前状态
+- ✅ Phase 1+2+3 已全部完成并提交
+- ✅ 工作区干净（git status clean）
+- 🔜 **下一步**：Phase 4（US2+US3 线索分配与公共池抢占，T037-T046）
