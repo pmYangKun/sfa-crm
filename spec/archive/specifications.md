@@ -1,3 +1,5 @@
+> **已归档** — 当前规格见 `specs/master/spec.md`，本文件仅作历史记录保留。
+
 # SFA CRM — 功能规格（Specifications）
 
 > 基于 `ontology-v0.2.md` 和 `business-context.md` 整理。

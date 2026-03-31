@@ -26,7 +26,9 @@
 
 ## 宪法校验
 
-*关卡：Phase 0 研究前必须通过。Phase 1 设计完成后复查。*
+*对照宪法版本：v1.1.0（生效日期：2026-03-31）*
+
+### Phase 0 前校验（6 项核心原则）
 
 | 原则 | 状态 | 说明 |
 |------|------|------|
@@ -37,7 +39,19 @@
 | 5. 最小化销售录入负担 | ✅ 通过 | 日报自动生成；跟进记录驱动日报 |
 | 6. 显式优于隐式 | ✅ 通过 | 所有状态变更通过 Actions 触发；DataScope 和权限均显式声明 |
 
-**关卡结果：通过——进入 Phase 0。**
+**Phase 0 关卡结果：通过。**
+
+### Phase 1 后复查（技术约束，v1.1.0 新增）
+
+| 约束 | 状态 | 说明 |
+|------|------|------|
+| 技术栈符合约束 | ✅ 通过 | Next.js / FastAPI / SQLite / Docker Compose，与 constitution v1.1.0 一致 |
+| AI Agent 层符合约束 | ✅ 通过 | Vercel AI SDK + LLMConfig 存库可切换 + Actions 映射 Tool Use + Skill 存库 |
+| 速率限制在 API 层 | ✅ 通过 | SlowAPI 在 `/leads/{id}/claim` 接口层实施，客户端不可绕过 |
+| 审计追踪仅追加 | ✅ 通过 | audit_log 表只写入，无物理删除接口 |
+| 配置驱动规则 | ✅ 通过 | 大区规则、池上限、阈值、LLM Provider 全部在 SystemConfig 表 |
+
+**Phase 1 关卡结果：通过——进入 Phase 2（编码）。**
 
 ---
 

@@ -33,18 +33,29 @@ Spec 里有业务逻辑、对象定义、行为约束。AI 基于这些生成代
 ## Repo 结构
 
 ```
-├── articles/          # 系列文章，每集记录一次对话的过程和结论
-│   ├── session-01.md  # 第一集：从两本书到第一批 Skill
-│   ├── session-02.md  # 第二集：...
-│   └── ...
-├── spec/              # 业务上下文和系统设计规格文件
-│   ├── business-context.md   # 业务上下文（甲方业务、组织、流程）
-│   ├── ontology.md           # Ontology 设计（对象、关系、Actions、RBAC）
-│   └── specifications.md     # 功能规格（14 个 SPEC + 菜单结构）
-├── skills/            # Claude Code Skill 文件
-│   └── check-prd/     # PRD 质量检查工具（独立子项目）
-├── memory/            # Claude 跨会话记忆文件
-└── CLAUDE.md          # Claude Code 项目配置
+├── articles/                        # 系列文章，每集记录一次对话的过程和结论
+│   ├── session-01-skill提炼.md
+│   ├── session-02-skill迭代.md
+│   ├── session-03-check-prd.md
+│   ├── session-04-需求采集.md
+│   ├── session-05-ontology.md
+│   ├── session-06-老登反击.md
+│   ├── session-07-技术栈.md
+│   └── session-08-speccoding.md
+├── spec/archive/                    # 原始规格文件归档（已整合至 specs/master/spec.md）
+├── specs/master/                    # spec-kit 产出文档（设计唯一真相源）
+│   ├── spec.md                      # 业务规格
+│   ├── plan.md                      # 实现计划
+│   ├── data-model.md                # 数据模型
+│   ├── contracts/api-contracts.md   # API 接口契约
+│   ├── quickstart.md                # 启动指南
+│   └── tasks.md                     # 110 个实现任务
+├── backend/                         # FastAPI 后端（待实现）
+├── frontend/                        # Next.js 前端（待实现）
+├── skills/                          # Claude Code Skill 文件
+│   └── check-prd/                   # PRD 质量检查工具（独立子项目）
+├── memory/                          # Claude 跨会话记忆文件
+└── CLAUDE.md                        # Claude Code 项目配置
 ```
 
 ---
@@ -59,7 +70,8 @@ Spec 里有业务逻辑、对象定义、行为约束。AI 基于这些生成代
 | 第四集 | 业务上下文采集，确定架构方向 | 完成 |
 | 第五集 | Ontology 设计：对象建模、Actions、AI-native CRM | 完成 |
 | 第六集 | Spec 阶段：线索/客户拆分、RBAC、数据权限分离 | 完成 |
-| 第七集 | Plan 阶段：技术栈选型，编码正式开始 | 进行中 |
+| 第七集 | Plan 阶段：技术栈选型，AI Agent 方案 | 完成 |
+| 第八集 | Spec Coding 的正确打开方式：spec-kit 定位与协作分工 | 进行中 |
 
 ---
 

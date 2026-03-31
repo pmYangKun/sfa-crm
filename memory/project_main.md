@@ -311,7 +311,7 @@ type: project
 - **Skill 两种用法**：用户主动问 vs 系统事件触发（Gong.io 模式）
 
 ### 已完成文章
-- session-07.md（原 session-08）：`d:\BaiduSyncdisk\Doc.Work\Programming\claudecode\SFACRM\articles\session-07.md`
+- session-07-技术栈.md：`articles/session-07-技术栈.md`
   主题：AI 控制界面五种方式、老系统改造障碍、技术栈选型、Agent 架构、Skill 系统
 
 ### 当前状态与下一步
@@ -321,3 +321,55 @@ type: project
 
 #### 下一步
 - 🔜 **Plan 阶段**：生成整体架构、模块划分、开发顺序，进入编码
+
+---
+
+## 第十一次会话（2026-03-31）— spec-kit 全流程完成 + 流程复盘 + session-08 文章
+
+### 主要工作
+- 更新 constitution.md 至 v1.1.0（新增技术栈约束 + AI Agent 层约束）
+- 执行 /speckit.plan：生成 plan.md / research.md / data-model.md / contracts/api-contracts.md / quickstart.md
+- 执行 /speckit.tasks：生成 tasks.md（110个任务，14个 Phase）
+- 复盘 spec-kit 使用流程，修正三个偏差
+- 归档原始 spec 文件到 spec/archive/，specs/master/spec.md 成为唯一真相源
+- 更新 plan.md 宪法校验，补充 Phase 1 复查（对照 v1.1.0）
+- 完成 session-08 文章，主题：Spec Coding 正确打开方式与 spec-kit 定位
+
+### spec-kit 产出文件（specs/master/）
+- `spec.md` ✅ 业务规格（唯一真相源）
+- `plan.md` ✅ 实现计划（宪法 v1.1.0 两次校验均通过）
+- `research.md` ✅ 技术调研（5项决策）
+- `data-model.md` ✅ 数据模型（15张表 + 索引 + 状态机）
+- `contracts/api-contracts.md` ✅ API 接口契约
+- `quickstart.md` ✅ 启动指南
+- `tasks.md` ✅ 110个任务，14个 Phase
+
+### 流程复盘三个偏差
+1. **constitution 时机错误**：应先更新 constitution → 再跑 plan，我们先跑了 plan 再补更新，事后补了校验
+2. **spec.md 孤岛**：原始文件（ontology/specifications/business-context）和 spec.md 并存，已修正：原始文件归档，spec.md 唯一真相源
+3. **research.md 是确认结论而非调研**：技术选型在文章讨论阶段已确定，research 只是文档化，非问题但需知晓
+
+### spec-kit 协作分工（已确定）
+- 杨老师：业务判断、需求决策、方向确认（自然语言对话）
+- Claude：翻译成设计决策，更新文档，执行编码
+- 增量设计：先对话 → 判断是否影响 constitution → 局部更新文档 → 追加任务 → 编码
+
+### 文章文件（当前最终状态）
+
+文件名规则：`session-{编号}-{主题}.md`，均在 `articles/` 目录下。
+
+| 文件名 | 主题 |
+|--------|------|
+| session-01-skill提炼.md | 从书到方法论 Skill |
+| session-02-skill迭代.md | Skill 落地与迭代 |
+| session-03-check-prd.md | check-prd 工具与 PRD 验证 |
+| session-04-需求采集.md | 业务上下文采集与架构方向 |
+| session-05-ontology.md | Ontology 设计 |
+| session-06-老登反击.md | Spec 阶段：线索客户拆分、RBAC、数据权限分离 |
+| session-07-技术栈.md | 技术栈与 AI Agent 架构 |
+| session-08-speccoding.md | Spec Coding 正确打开方式与 spec-kit 定位 |
+
+### 当前状态
+- ✅ 所有设计文档完成，编码可以开始
+- ✅ 全部 8 篇文章已完成，文件名已加主题词
+- 🔜 **下一步**：从 T001 开始，Phase 1 项目初始化

@@ -1,3 +1,5 @@
+> **已归档** — 当前规格见 `specs/master/spec.md`，本文件仅作历史记录保留。
+
 # Ontology 设计
 
 > 本文件基于业务上下文采集（`business-context.md`）整理，定义 SFA CRM 的核心业务对象、对象关系和可执行动作。
