@@ -72,7 +72,8 @@ specs/master/
 ### 源代码
 
 ```text
-backend/
+src/
+├── backend/
 ├── app/
 │   ├── main.py              # FastAPI 应用入口
 │   ├── models/              # SQLModel ORM 模型
@@ -124,8 +125,8 @@ backend/
 ├── pyproject.toml
 └── Dockerfile
 
-frontend/
-├── src/
+├── frontend/
+│   ├── src/
 │   ├── app/                 # Next.js App Router
 │   │   ├── leads/           # 线索列表、详情页
 │   │   ├── customers/
@@ -146,10 +147,10 @@ frontend/
 ├── package.json
 └── Dockerfile
 
-docker-compose.yml
+└── docker-compose.yml
 ```
 
-**目录结构决策**：前后端分离（`backend/` + `frontend/`）。后端 FastAPI 明确分层：models / api 路由 / services / tool 定义。前端 Next.js App Router，Chat 侧边栏挂载在根 layout，全局可见。
+**目录结构决策**：源代码统一放在 `src/`，前后端分离（`src/backend/` + `src/frontend/`）。后端 FastAPI 明确分层：models / api 路由 / services / tool 定义。前端 Next.js App Router，Chat 侧边栏挂载在根 layout，全局可见。
 
 ---
 

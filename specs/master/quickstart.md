@@ -25,7 +25,7 @@ cd sfa-crm
 ### 2. 启动后端
 
 ```bash
-cd backend
+cd src/backend
 python -m venv .venv
 source .venv/bin/activate  # Windows: .venv\Scripts\activate
 pip install -e ".[dev]"
@@ -43,7 +43,7 @@ API 文档：http://localhost:8000/docs
 ### 3. 启动前端
 
 ```bash
-cd frontend
+cd src/frontend
 npm install
 
 # 复制环境变量
@@ -89,23 +89,24 @@ docker-compose up -d
 
 ```
 sfa-crm/
-├── backend/           # FastAPI 后端
-│   ├── app/
-│   │   ├── models/    # SQLModel ORM 模型
-│   │   ├── api/       # API 路由（每个模块一个文件）
-│   │   ├── services/  # 业务逻辑层
-│   │   ├── tools/     # AI Tool Use 定义
-│   │   └── core/      # 数据库、认证、配置
-│   └── tests/
-├── frontend/          # Next.js 前端
-│   └── src/
-│       ├── app/       # App Router 页面
-│       ├── components/# UI 组件（含 chat/ 侧边栏）
-│       └── lib/       # API 客户端、Vercel AI SDK 配置
-├── spec/              # 业务规格文档
-├── specs/master/      # Plan 阶段产出文档
-├── .specify/          # spec-kit 配置
-└── docker-compose.yml
+├── src/
+│   ├── backend/           # FastAPI 后端
+│   │   ├── app/
+│   │   │   ├── models/    # SQLModel ORM 模型
+│   │   │   ├── api/       # API 路由（每个模块一个文件）
+│   │   │   ├── services/  # 业务逻辑层
+│   │   │   ├── tools/     # AI Tool Use 定义
+│   │   │   └── core/      # 数据库、认证、配置
+│   │   └── tests/
+│   ├── frontend/          # Next.js 前端
+│   │   └── src/
+│   │       ├── app/       # App Router 页面
+│   │       ├── components/# UI 组件（含 chat/ 侧边栏）
+│   │       └── lib/       # API 客户端、Vercel AI SDK 配置
+│   └── docker-compose.yml
+├── spec/archive/          # 原始规格文档归档
+├── specs/master/          # Plan 阶段产出文档
+└── .specify/              # spec-kit 配置
 ```
 
 ---
