@@ -1,4 +1,4 @@
-# Claude Code 项目配置
+﻿# Claude Code 项目配置
 
 ## 记忆系统路径
 
