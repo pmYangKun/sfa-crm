@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import Sidebar from '@/components/nav/sidebar';
 import ChatSidebar from '@/components/chat/chat-sidebar';
+import NotificationBell from '@/components/notifications/notification-bell';
 
 export default function AuthenticatedLayout({
   children,
@@ -33,7 +34,10 @@ export default function AuthenticatedLayout({
   return (
     <div style={{ display: 'flex' }}>
       <Sidebar />
-      <main style={{ marginLeft: 220, flex: 1, padding: 24, minHeight: '100vh' }}>
+      <main style={{ marginLeft: 220, flex: 1, padding: 24, minHeight: '100vh', position: 'relative' }}>
+        <div style={{ position: 'absolute', top: 16, right: 24 }}>
+          <NotificationBell />
+        </div>
         {children}
       </main>
       <ChatSidebar />
