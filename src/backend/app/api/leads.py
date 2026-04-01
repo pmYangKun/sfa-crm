@@ -12,7 +12,7 @@ from app.models.config import SystemConfig
 from app.models.lead import Lead
 from app.models.org import User
 from app.services.audit_service import log_action
-from app.services.lead_service import assign_lead, claim_lead, mark_lead_lost, release_lead
+from app.services.lead_service import assign_lead, claim_lead, convert_lead, mark_lead_lost, release_lead
 from app.services.permission_service import get_visible_user_ids
 from app.services.rate_limiter import user_limiter
 from app.services.uniqueness_service import check_uniqueness
@@ -255,5 +255,41 @@ def mark_lost_endpoint(
 
     try:
         return mark_lead_lost(session, current_user.id, lead_id)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+
+# ── POST /leads/{id}/convert (T052) ──────────────────────────────────────────
+
+class CustomerResponse(BaseModel):
+    id: str
+    lead_id: str
+    company_name: str
+    unified_code: Optional[str]
+    region: str
+    owner_id: str
+    source: str
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+@router.post("/leads/{lead_id}/convert", response_model=CustomerResponse, status_code=status.HTTP_201_CREATED)
+def convert_lead_endpoint(
+    lead_id: str,
+    session: SessionDep,
+    current_user: CurrentUser,
+    _: Annotated[None, Depends(require_permission("lead:convert"))],
+):
+    lead = session.get(Lead, lead_id)
+    if not lead:
+        raise HTTPException(status_code=404, detail="线索不存在")
+
+    visible_ids = get_visible_user_ids(session, current_user)
+    if lead.owner_id not in visible_ids:
+        raise HTTPException(status_code=403, detail="无权操作")
+
+    try:
+        return convert_lead(session, current_user.id, lead_id)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
