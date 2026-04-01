@@ -28,31 +28,76 @@ SYSTEM_ROLES = [
 
 PERMISSIONS = [
     # lead
-    ("lead.create", "lead", "创建线索"),
-    ("lead.view", "lead", "查看线索"),
-    ("lead.assign", "lead", "分配线索"),
-    ("lead.claim", "lead", "抢占线索"),
-    ("lead.release", "lead", "释放线索"),
-    ("lead.convert", "lead", "转化线索"),
-    ("lead.mark_lost", "lead", "标记丢失"),
+    ("lead:create", "lead", "创建线索"),
+    ("lead:view", "lead", "查看线索"),
+    ("lead:assign", "lead", "分配线索"),
+    ("lead:claim", "lead", "抢占线索"),
+    ("lead:release", "lead", "释放线索"),
+    ("lead:convert", "lead", "转化线索"),
+    ("lead:mark_lost", "lead", "标记丢失"),
     # customer
-    ("customer.view", "customer", "查看客户"),
-    ("customer.reassign", "customer", "转移客户"),
+    ("customer:view", "customer", "查看客户"),
+    ("customer:reassign", "customer", "转移客户"),
     # followup
-    ("followup.create", "followup", "创建跟进"),
-    ("followup.view", "followup", "查看跟进"),
+    ("followup:create", "followup", "创建跟进"),
+    ("followup:view", "followup", "查看跟进"),
     # key_event
-    ("key_event.create", "key_event", "创建关键事件"),
+    ("key_event:create", "key_event", "创建关键事件"),
     # report
-    ("report.submit", "report", "提交日报"),
-    ("report.view_team", "report", "查看团队日报"),
+    ("report:submit", "report", "提交日报"),
+    ("report:view_team", "report", "查看团队日报"),
     # admin
-    ("admin.org", "admin", "组织管理"),
-    ("admin.users", "admin", "用户管理"),
-    ("admin.roles", "admin", "角色权限管理"),
-    ("admin.config", "admin", "系统配置"),
-    ("admin.audit", "admin", "操作日志"),
+    ("admin:org", "admin", "组织管理"),
+    ("admin:users", "admin", "用户管理"),
+    ("admin:roles", "admin", "角色权限管理"),
+    ("admin:config", "admin", "系统配置"),
+    ("admin:audit", "admin", "操作日志"),
 ]
+
+# Permissions granted to each system role by default
+ROLE_PERMISSIONS: dict[str, list[str]] = {
+    "系统管理员": [
+        "lead:create", "lead:view", "lead:assign", "lead:claim", "lead:release",
+        "lead:convert", "lead:mark_lost",
+        "customer:view", "customer:reassign",
+        "followup:create", "followup:view",
+        "key_event:create",
+        "report:submit", "report:view_team",
+        "admin:org", "admin:users", "admin:roles", "admin:config", "admin:audit",
+    ],
+    "销售VP": [
+        "lead:view", "lead:assign", "lead:convert", "lead:mark_lost",
+        "customer:view", "customer:reassign",
+        "followup:create", "followup:view",
+        "key_event:create",
+        "report:submit", "report:view_team",
+    ],
+    "大区总": [
+        "lead:view", "lead:assign", "lead:release", "lead:convert", "lead:mark_lost",
+        "customer:view", "customer:reassign",
+        "followup:create", "followup:view",
+        "key_event:create",
+        "report:submit", "report:view_team",
+    ],
+    "战队队长": [
+        "lead:view", "lead:assign", "lead:release", "lead:convert", "lead:mark_lost",
+        "customer:view",
+        "followup:create", "followup:view",
+        "key_event:create",
+        "report:submit", "report:view_team",
+    ],
+    "督导": [
+        "lead:view", "customer:view", "followup:view", "report:view_team",
+    ],
+    "销售": [
+        "lead:create", "lead:view", "lead:claim", "lead:release",
+        "lead:convert", "lead:mark_lost",
+        "customer:view",
+        "followup:create", "followup:view",
+        "key_event:create",
+        "report:submit",
+    ],
+}
 
 SYSTEM_CONFIGS = [
     ("private_pool_limit", "100", "私有池线索上限"),
@@ -117,6 +162,17 @@ def _seed_permissions(session: Session):
         return
     for code, module, name in PERMISSIONS:
         session.add(Permission(id=str(uuid.uuid4()), code=code, module=module, name=name))
+    session.flush()
+
+    # Assign permissions to system roles
+    for role_name, perm_codes in ROLE_PERMISSIONS.items():
+        role = session.exec(select(Role).where(Role.name == role_name)).first()
+        if not role:
+            continue
+        for code in perm_codes:
+            perm = session.exec(select(Permission).where(Permission.code == code)).first()
+            if perm:
+                session.add(RolePermission(role_id=role.id, permission_id=perm.id))
 
 
 def _seed_configs(session: Session):
