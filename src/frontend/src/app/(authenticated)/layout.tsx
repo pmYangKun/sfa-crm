@@ -4,6 +4,7 @@ import { useAuth } from '@/lib/auth-context';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import Sidebar from '@/components/nav/sidebar';
+import ChatSidebar from '@/components/chat/chat-sidebar';
 
 export default function AuthenticatedLayout({
   children,
@@ -35,6 +36,7 @@ export default function AuthenticatedLayout({
       <main style={{ marginLeft: 220, flex: 1, padding: 24, minHeight: '100vh' }}>
         {children}
       </main>
+      <ChatSidebar />
     </div>
   );
 }

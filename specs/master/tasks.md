@@ -250,17 +250,17 @@
 
 **独立验收**：在 Chat 中输入"帮我把华为线索分配给张三" → LLM 调用 assign_lead tool → 线索被分配 → 自然语言回复
 
-- [ ] T095 实现 LLMConfig 模型和 Skill 模型：`backend/app/models/llm_config.py`、`backend/app/models/skill.py`
-- [ ] T096 实现 ConversationMessage 模型：`backend/app/models/llm_config.py`
-- [ ] T097 实现 LLM 配置接口（`GET /agent/llm-config`、`GET /agent/skills`）：`backend/app/api/agent.py`
-- [ ] T098 实现 Agent 服务（从 DB 读取 LLMConfig，执行工具调度）：`backend/app/services/agent_service.py`
-- [ ] T099 实现所有 Tool Use 定义（映射自 Ontology Actions，含参数 schema）：`backend/app/tools/lead_tools.py`、`backend/app/tools/customer_tools.py`、`backend/app/tools/followup_tools.py`、`backend/app/tools/skill_tools.py`
-- [ ] T100 实现 `POST /agent/chat` 接口（工具调度 + 审计日志）：`backend/app/api/agent.py`
-- [ ] T101 前端：配置 Vercel AI SDK（动态从后端读取 LLMConfig，实例化 Provider）：`frontend/src/lib/ai.ts`
-- [ ] T102 前端：实现 `/api/chat` Next.js API Route（调用 Vercel AI SDK + 流式输出 + 工具执行调用后端）：`frontend/src/app/api/chat/route.ts`
-- [ ] T103 前端：实现 Chat 侧边栏 UI（消息列表 + 输入框 + 流式渲染 + 工具执行状态显示）：`frontend/src/components/chat/chat-sidebar.tsx`
-- [ ] T104 前端：将 Chat 侧边栏挂载到根布局：`frontend/src/app/layout.tsx`
-- [ ] T105 前端：Admin 页面中实现 LLM 切换配置和 Skill 管理 CRUD：`frontend/src/app/admin/config/page.tsx`
+- [x] T095 实现 LLMConfig 模型和 Skill 模型：`backend/app/models/llm_config.py`、`backend/app/models/skill.py`
+- [x] T096 实现 ConversationMessage 模型：`backend/app/models/llm_config.py`
+- [x] T097 实现 LLM 配置接口（`GET /agent/llm-config`、`GET /agent/skills`）：`backend/app/api/agent.py`
+- [x] T098 实现 Agent 服务（从 DB 读取 LLMConfig，执行工具调度）：`backend/app/services/agent_service.py`
+- [x] T099 实现所有 Tool Use 定义（映射自 Ontology Actions，含参数 schema）：`backend/app/tools/lead_tools.py`、`backend/app/tools/customer_tools.py`、`backend/app/tools/followup_tools.py`、`backend/app/tools/skill_tools.py`
+- [x] T100 实现 `POST /agent/chat` 接口（工具调度 + 审计日志）：`backend/app/api/agent.py`
+- [x] T101 前端：配置 Vercel AI SDK（动态从后端读取 LLMConfig，实例化 Provider）：`frontend/src/lib/ai.ts`
+- [x] T102 前端：实现 `/api/chat` Next.js API Route（调用 Vercel AI SDK + 流式输出 + 工具执行调用后端）：`frontend/src/app/api/chat/route.ts`
+- [x] T103 前端：实现 Chat 侧边栏 UI（消息列表 + 输入框 + 流式渲染 + 工具执行状态显示）：`frontend/src/components/chat/chat-sidebar.tsx`
+- [x] T104 前端：将 Chat 侧边栏挂载到根布局：`frontend/src/app/layout.tsx`
+- [x] T105 前端：Admin 页面中实现 LLM 切换配置和 Skill 管理 CRUD：`frontend/src/app/admin/config/page.tsx`
 
 **检查点**：US15（AI Agent）可独立运行和验证
 

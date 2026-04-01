@@ -76,6 +76,7 @@ from app.api.roles import router as roles_router  # noqa: E402
 from app.api.config import router as config_router  # noqa: E402
 from app.api.audit import router as audit_router  # noqa: E402
 from app.api.webhooks import router as webhooks_router  # noqa: E402
+from app.api.agent import router as agent_router  # noqa: E402
 
 app.include_router(auth_router, prefix="/api/v1", tags=["auth"])
 app.include_router(leads_router, prefix="/api/v1", tags=["leads"])
@@ -90,6 +91,7 @@ app.include_router(roles_router, prefix="/api/v1", tags=["roles"])
 app.include_router(config_router, prefix="/api/v1", tags=["config"])
 app.include_router(audit_router, prefix="/api/v1", tags=["audit"])
 app.include_router(webhooks_router, prefix="/api/v1", tags=["webhooks"])
+app.include_router(agent_router, prefix="/api/v1", tags=["agent"])
 
 
 @app.get("/")
