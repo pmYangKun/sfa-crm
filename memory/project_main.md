@@ -422,4 +422,73 @@ src/
 ### 当前状态
 - ✅ Phase 1+2+3 已全部完成并提交
 - ✅ 工作区干净（git status clean）
-- 🔜 **下一步**：Phase 4（US2+US3 线索分配与公共池抢占，T037-T046）
+
+---
+
+## 第十三次会话（2026-04-01）— Phase 4 编码完成
+
+### 主要工作（T037-T046，共 6 次 commit）
+- T037: `services/rate_limiter.py` — 按用户ID限速（从JWT解析，非IP）
+- T038+T040+T042+T043: `lead_service.py` 新增 assign/claim/release Actions + 大区规则引擎
+  - `_check_private_pool_limit`：读 SystemConfig `private_pool_limit`，超限抛 ValueError
+  - `_get_user_region`：向上遍历 OrgNode 树找 type=="region" 的节点名
+  - `assign_lead`：校验受让人私有池容量，转移 owner_id + pool="private"
+  - `claim_lead`：校验 pool/stage/region规则/私有池，单事务 SELECT+UPDATE 防并发双抢
+  - `release_lead`：active 私有池线索 → pool="public"，owner_id=None
+  - `_check_region_claim_rules`：支持三种模式（any/same_region_only/priority）
+- T039+T041+T044: `api/leads.py` 新增接口
+  - `POST /leads/{id}/assign`（需 lead:assign 权限）
+  - `POST /leads/{id}/claim`（SlowAPI callable 方式动态读 DB 限速）
+  - `POST /leads/{id}/release`（需 lead:release 权限 + 数据权限校验）
+  - `POST /leads/{id}/mark-lost`（需 lead:mark_lost 权限）
+- T045: `frontend/src/app/public-pool/page.tsx` — 公共线索库（含抢占按钮）
+- T046: `frontend/src/app/leads/team/page.tsx` — 团队线索（主管视图，含分配弹窗）
+
+### 关键实现细节
+- SlowAPI 动态限速：`@user_limiter.limit(callable)` 在请求时读 SystemConfig `claim_rate_limit`
+- 并发保护：SQLite WAL + 单事务内 get+update，无需显式锁
+- 大区规则 priority 模式：以 lead.created_at 为基准计算优先窗口（简化实现）
+- user_limiter 通过 `user_limiter.app = app` 挂载到 FastAPI 实例
+
+### 当前状态
+- ✅ Phase 1+2+3+4 已全部完成并提交
+- ✅ 工作区干净（git status clean）
+- ✅ Phase 4 完成（T037-T046，线索分配/抢占/释放/标丢失）
+
+---
+
+## 第十三次会话（2026-04-01）— Phase 4+5+6 编码完成
+
+### Phase 4（T037-T046）
+- rate_limiter.py（用户ID限速）、assign/claim/release Actions + 大区规则引擎
+- 四个 API 接口：assign/claim/release/mark-lost
+- 前端：公共线索库页面（抢占）+ 团队线索页面（主管分配弹窗）
+
+### Phase 5（T047-T049）
+- T047: `release_service.py`：APScheduler 每日 02:00 运行，双规则（followup_release_days/conversion_release_days），释放时写 Notification 记录
+- T048: `main.py` lifespan 注册 APScheduler + init_db + customers/webhooks 路由
+- T049: `models/notification.py`（Notification 表）
+
+### Phase 6（T050-T056）
+- T050: `models/customer.py`（Customer 表，lead_id UNIQUE）
+- T051: `convert_lead` Action：创建 Customer + 迁移 contacts（lead_id→customer_id）+ lead.stage="converted"
+- T052: `POST /leads/{id}/convert`（手动兜底，权限+数据权限校验）
+- T053: `POST /webhooks/order-payment`：unified_code优先 → 公司名精确匹配，幂等处理
+- T054: `GET /customers` + `GET /customers/{id}`（含派生 days_since_conversion）
+- T055: 前端客户列表页（转化天数颜色标记）
+- T056: 前端客户详情页（基本信息 + 来源线索链接）
+
+### 代码目录新增
+```
+src/backend/app/
+  api/customers.py, webhooks.py
+  models/customer.py, notification.py
+  services/release_service.py
+src/frontend/src/app/
+  customers/page.tsx, [id]/page.tsx
+```
+
+### 当前状态
+- ✅ Phase 1+2+3+4+5+6 已全部完成并提交
+- ✅ 工作区干净
+- 🔜 **下一步**：Phase 7（US6+US7 跟进记录 + 关键事件，T057-T066）

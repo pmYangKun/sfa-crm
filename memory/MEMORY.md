@@ -1,6 +1,6 @@
 # Memory Index
 
-- [User Profile](user_profile.md) — 《决胜B端》《决胜体验设计》作者，探索AI辅助ToB设计实践
+- [User Profile](user_profile.md) — 杨堃，《决胜B端》作者，B端产品专家，资深咨询顾问/培训讲师，服务华为/京东/宝洁等百余家企业
 - [Main Project](project_main.md) — 书籍方法论→Spec/Skill→SFA CRM，三阶段验证项目
 - [Feedback: 自动执行](feedback_autopermission.md) — 工具调用全部自动执行，不要手工确认
 - [Feedback: 模型选择](feedback_model_selection.md) — 深度阅读+综合生成类任务必须用Opus，不要用Sonnet
