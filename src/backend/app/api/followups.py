@@ -23,6 +23,8 @@ class FollowUpCreate(BaseModel):
 
 
 class FollowUpResponse(BaseModel):
+    model_config = {"from_attributes": True}
+
     id: str
     lead_id: Optional[str]
     customer_id: Optional[str]
