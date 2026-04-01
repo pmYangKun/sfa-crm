@@ -8,7 +8,7 @@ from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
 
-from app.api import auth, contacts, customers, followups, key_events, leads, org, reports, users, webhooks
+from app.api import audit, auth, config, contacts, customers, followups, key_events, leads, org, reports, roles, users, webhooks
 from app.core.init_db import init_db
 from app.services.rate_limiter import user_limiter
 from app.services.customer_service import run_conversion_window_reminders
@@ -71,6 +71,9 @@ app.include_router(key_events.router, prefix="", tags=["key_events"])
 app.include_router(reports.router, prefix="", tags=["reports"])
 app.include_router(org.router, prefix="", tags=["admin"])
 app.include_router(users.router, prefix="", tags=["admin"])
+app.include_router(roles.router, prefix="", tags=["admin"])
+app.include_router(config.router, prefix="", tags=["admin"])
+app.include_router(audit.router, prefix="", tags=["admin"])
 app.include_router(webhooks.router, prefix="/webhooks", tags=["webhooks"])
 
 
