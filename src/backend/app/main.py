@@ -8,7 +8,7 @@ from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
 
-from app.api import auth, leads, customers, webhooks
+from app.api import auth, customers, followups, key_events, leads, webhooks
 from app.core.init_db import init_db
 from app.services.rate_limiter import user_limiter
 from app.services.release_service import run_auto_release
@@ -59,6 +59,8 @@ async def generic_exception_handler(request: Request, exc: Exception):
 app.include_router(auth.router, prefix="/auth", tags=["auth"])
 app.include_router(leads.router, prefix="", tags=["leads"])
 app.include_router(customers.router, prefix="", tags=["customers"])
+app.include_router(followups.router, prefix="", tags=["followups"])
+app.include_router(key_events.router, prefix="", tags=["key_events"])
 app.include_router(webhooks.router, prefix="/webhooks", tags=["webhooks"])
 
 
