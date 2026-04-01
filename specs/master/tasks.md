@@ -114,9 +114,9 @@
 
 **独立验收**：手动触发定时任务 → 超期线索进入公共池 → 原销售收到通知记录
 
-- [ ] T047 实现自动释放定时任务（APScheduler，每日运行，读取 SystemConfig 阈值）：`backend/app/services/release_service.py`
-- [ ] T048 将定时任务注册到 FastAPI lifespan：`backend/app/main.py`
-- [ ] T049 [P] 实现通知写入（释放时写 notification 记录，后续前端轮询）：`backend/app/models/notification.py` + `backend/app/services/release_service.py`
+- [x] T047 实现自动释放定时任务（APScheduler，每日运行，读取 SystemConfig 阈值）：`backend/app/services/release_service.py`
+- [x] T048 将定时任务注册到 FastAPI lifespan：`backend/app/main.py`
+- [x] T049 [P] 实现通知写入（释放时写 notification 记录，后续前端轮询）：`backend/app/models/notification.py` + `backend/app/services/release_service.py`
 
 **检查点**：US4 可通过手动调用 release_service 验证
 
@@ -128,13 +128,13 @@
 
 **独立验收**：调用 Webhook → 线索转化 → Customer 记录创建 → 联系人迁移 → 线索从活跃列表消失
 
-- [ ] T050 实现 Customer 模型：`backend/app/models/customer.py`
-- [ ] T051 实现 `convert_lead` Action（创建 Customer + 迁移联系人/跟进/关键事件 + 更新 lead.stage）：`backend/app/services/lead_service.py`
-- [ ] T052 实现 `POST /leads/{id}/convert` 接口（手动兜底）：`backend/app/api/leads.py`
-- [ ] T053 实现 `POST /webhooks/order-payment` Webhook（解析付款事件，匹配线索，触发 convert_lead）：`backend/app/api/webhooks.py`
-- [ ] T054 实现 `GET /customers` 和 `GET /customers/{id}` 接口（含派生的转化窗口状态）：`backend/app/api/customers.py`
-- [ ] T055 前端：实现"我的客户"列表页：`frontend/src/app/customers/page.tsx`
-- [ ] T056 [P] 前端：实现客户详情页（含转化窗口倒计时、来源线索链接）：`frontend/src/app/customers/[id]/page.tsx`
+- [x] T050 实现 Customer 模型：`backend/app/models/customer.py`
+- [x] T051 实现 `convert_lead` Action（创建 Customer + 迁移联系人/跟进/关键事件 + 更新 lead.stage）：`backend/app/services/lead_service.py`
+- [x] T052 实现 `POST /leads/{id}/convert` 接口（手动兜底）：`backend/app/api/leads.py`
+- [x] T053 实现 `POST /webhooks/order-payment` Webhook（解析付款事件，匹配线索，触发 convert_lead）：`backend/app/api/webhooks.py`
+- [x] T054 实现 `GET /customers` 和 `GET /customers/{id}` 接口（含派生的转化窗口状态）：`backend/app/api/customers.py`
+- [x] T055 前端：实现"我的客户"列表页：`frontend/src/app/customers/page.tsx`
+- [x] T056 [P] 前端：实现客户详情页（含转化窗口倒计时、来源线索链接）：`frontend/src/app/customers/[id]/page.tsx`
 
 **检查点**：US5 可独立运行和验证
 

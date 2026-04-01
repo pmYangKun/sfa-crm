@@ -15,9 +15,19 @@ from app.services.rate_limiter import limiter
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup
+    # Startup — register scheduled jobs
+    from apscheduler.schedulers.background import BackgroundScheduler
+    from app.services.release_service import run_auto_release
+
+    scheduler = BackgroundScheduler()
+    scheduler.add_job(run_auto_release, "cron", hour=2, minute=0, id="auto_release")
+    scheduler.start()
+    app.state.scheduler = scheduler
+
     yield
+
     # Shutdown
+    scheduler.shutdown(wait=False)
 
 
 app = FastAPI(
@@ -51,9 +61,13 @@ async def global_exception_handler(request: Request, exc: Exception):
 # ── Register routers ─────────────────────────────────────────────────────────
 from app.api.auth import router as auth_router  # noqa: E402
 from app.api.leads import router as leads_router  # noqa: E402
+from app.api.customers import router as customers_router  # noqa: E402
+from app.api.webhooks import router as webhooks_router  # noqa: E402
 
 app.include_router(auth_router, prefix="/api/v1", tags=["auth"])
 app.include_router(leads_router, prefix="/api/v1", tags=["leads"])
+app.include_router(customers_router, prefix="/api/v1", tags=["customers"])
+app.include_router(webhooks_router, prefix="/api/v1", tags=["webhooks"])
 
 
 @app.get("/")

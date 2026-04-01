@@ -15,6 +15,7 @@ from app.models.org import User
 from app.services.lead_service import (
     assign_lead,
     claim_lead,
+    convert_lead,
     create_lead_contacts,
     mark_lead_lost,
     release_lead,
@@ -331,5 +332,23 @@ def mark_lost_endpoint(
         )
         session.commit()
         return _lead_to_response(lead, session)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.post("/leads/{lead_id}/convert")
+def convert_lead_endpoint(
+    lead_id: str,
+    request: Request,
+    session: Session = Depends(get_session),
+    current_user: User = Depends(require_permission("lead.create")),
+):
+    try:
+        lead, customer = convert_lead(
+            session, current_user.id, lead_id,
+            ip=get_client_ip(request),
+        )
+        session.commit()
+        return {"lead": _lead_to_response(lead, session), "customer_id": customer.id}
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
