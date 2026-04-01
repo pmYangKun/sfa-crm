@@ -4,6 +4,23 @@
 
 ---
 
+## 当前服务地址（本地开发）
+
+| 服务 | 地址 | 说明 |
+|------|------|------|
+| 前端页面 | http://localhost:3000 | 登录入口：http://localhost:3000/login |
+| 后端 API | http://localhost:8000 | Swagger 文档：http://localhost:8000/docs |
+
+## 初始账号
+
+| 账号 | 密码 | 角色 | 能看到的菜单 |
+|------|------|------|------|
+| `admin` | `admin123` | 系统管理员 | 数据概览、全部线索、全部客户、组织管理、用户管理、角色权限、系统配置、操作日志 |
+| `manager01` | `test123` | 战队队长 | 数据概览、团队线索、公共线索库、团队客户、团队日报 |
+| `sales01` | `test123` | 销售 | 我的线索、公共线索库、我的客户、我的日报 |
+
+---
+
 ## 前置条件
 
 - Python 3.11+
@@ -30,8 +47,8 @@ python -m venv .venv
 source .venv/bin/activate  # Windows: .venv\Scripts\activate
 pip install -e ".[dev]"
 
-# 初始化数据库（创建表 + 种入初始数据）
-python -m app.core.init_db
+# 初始化数据库（创建表 + 种入初始数据，自动创建 data/ 目录）
+python -c "from app.core.init_db import init_db; init_db()"
 
 # 启动开发服务器
 uvicorn app.main:app --reload --port 8000

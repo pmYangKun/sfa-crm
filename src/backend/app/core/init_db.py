@@ -15,7 +15,15 @@ from app.models.auth import (
     UserRole,
 )
 from app.models.config import SystemConfig
+from app.models.contact import Contact, ContactRelation  # noqa: F401
+from app.models.customer import Customer  # noqa: F401
+from app.models.followup import FollowUp  # noqa: F401
+from app.models.key_event import KeyEvent  # noqa: F401
+from app.models.lead import Lead  # noqa: F401
+from app.models.llm_config import ConversationMessage, LLMConfig, Skill  # noqa: F401
+from app.models.notification import Notification  # noqa: F401
 from app.models.org import OrgNode, User
+from app.models.report import DailyReport  # noqa: F401
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -107,6 +115,13 @@ DEFAULT_CONFIGS = [
 
 
 def init_db():
+    import os
+    # Ensure the data directory exists for SQLite file
+    db_path = os.getenv("DATABASE_URL", "sqlite:///data/sfa_crm.db")
+    if db_path.startswith("sqlite:///"):
+        db_file = db_path.replace("sqlite:///", "")
+        os.makedirs(os.path.dirname(db_file) or ".", exist_ok=True)
+
     create_db_and_tables()
 
     with Session(engine) as session:
