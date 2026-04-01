@@ -1,5 +1,7 @@
+"""Role, Permission, UserRole, RolePermission, UserDataScope models."""
+
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 
 from sqlmodel import Field, SQLModel
@@ -9,19 +11,21 @@ class Role(SQLModel, table=True):
     __tablename__ = "role"
 
     id: str = Field(default_factory=lambda: str(uuid.uuid4()), primary_key=True)
-    name: str = Field(nullable=False, unique=True)
-    description: Optional[str] = Field(default=None)
-    is_system: bool = Field(default=False, nullable=False)
-    created_at: str = Field(default_factory=lambda: datetime.utcnow().isoformat())
+    name: str = Field(unique=True)
+    description: Optional[str] = None
+    is_system: bool = Field(default=False)
+    created_at: str = Field(
+        default_factory=lambda: datetime.now(timezone.utc).isoformat()
+    )
 
 
 class Permission(SQLModel, table=True):
     __tablename__ = "permission"
 
     id: str = Field(default_factory=lambda: str(uuid.uuid4()), primary_key=True)
-    code: str = Field(nullable=False, unique=True)   # e.g. 'lead.create'
-    module: str = Field(nullable=False)               # e.g. 'lead'
-    name: str = Field(nullable=False)
+    code: str = Field(unique=True)  # e.g. 'lead.create'
+    module: str  # e.g. 'lead'
+    name: str
 
 
 class RolePermission(SQLModel, table=True):
@@ -42,5 +46,5 @@ class UserDataScope(SQLModel, table=True):
     __tablename__ = "user_data_scope"
 
     user_id: str = Field(foreign_key="user.id", primary_key=True)
-    scope: str = Field(nullable=False)  # self_only|current_node|current_and_below|selected_nodes|all
-    node_ids: Optional[str] = Field(default=None)  # JSON array, only for selected_nodes
+    scope: str  # 'self_only', 'current_node', 'current_and_below', 'selected_nodes', 'all'
+    node_ids: Optional[str] = None  # JSON array, only for 'selected_nodes'

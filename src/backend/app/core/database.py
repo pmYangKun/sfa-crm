@@ -1,18 +1,21 @@
+"""SQLite database connection with WAL mode and PRAGMA configuration."""
+
+import os
 from sqlalchemy import event
 from sqlmodel import Session, SQLModel, create_engine
 
-from app.core.config import settings
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///data/sfa_crm.db")
 
 engine = create_engine(
-    settings.database_url,
+    DATABASE_URL,
+    echo=False,
     connect_args={"check_same_thread": False},
-    echo=settings.environment == "development",
 )
 
 
 @event.listens_for(engine, "connect")
-def set_sqlite_pragma(dbapi_conn, _connection_record):
-    cursor = dbapi_conn.cursor()
+def set_sqlite_pragmas(dbapi_connection, connection_record):
+    cursor = dbapi_connection.cursor()
     cursor.execute("PRAGMA journal_mode = WAL")
     cursor.execute("PRAGMA foreign_keys = ON")
     cursor.execute("PRAGMA busy_timeout = 5000")

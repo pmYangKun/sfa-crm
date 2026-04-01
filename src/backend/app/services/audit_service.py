@@ -1,21 +1,24 @@
+"""Audit log service — write-only, append-only."""
+
 import json
-from typing import Any, Optional
+from typing import Optional
 
 from sqlmodel import Session
 
 from app.models.audit import AuditLog
 
 
-def log_action(
+def write_audit_log(
     session: Session,
+    *,
+    user_id: Optional[str],
     action: str,
-    user_id: Optional[str] = None,
     entity_type: Optional[str] = None,
     entity_id: Optional[str] = None,
-    payload: Optional[dict[str, Any]] = None,
+    payload: Optional[dict] = None,
     ip: Optional[str] = None,
-):
-    entry = AuditLog(
+) -> AuditLog:
+    log = AuditLog(
         user_id=user_id,
         action=action,
         entity_type=entity_type,
@@ -23,4 +26,5 @@ def log_action(
         payload=json.dumps(payload, ensure_ascii=False) if payload else None,
         ip=ip,
     )
-    session.add(entry)
+    session.add(log)
+    return log

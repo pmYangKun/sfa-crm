@@ -1,3 +1,5 @@
+"""DataScope filtering — OrgNode in-memory tree + visible user IDs."""
+
 import json
 from collections import defaultdict
 
@@ -7,60 +9,74 @@ from app.models.auth import UserDataScope
 from app.models.org import OrgNode, User
 
 
-def get_user_data_scope(session: Session, user_id: str) -> UserDataScope | None:
-    return session.exec(
-        select(UserDataScope).where(UserDataScope.user_id == user_id)
+def _build_children_map(session: Session) -> dict[str | None, list[str]]:
+    """Load all OrgNodes and build {parent_id: [child_ids]} map."""
+    nodes = session.exec(select(OrgNode)).all()
+    children: dict[str | None, list[str]] = defaultdict(list)
+    for node in nodes:
+        children[node.parent_id].append(node.id)
+    return children
+
+
+def get_subtree_node_ids(session: Session, node_id: str) -> list[str]:
+    """Return node_id and all descendant node IDs."""
+    children_map = _build_children_map(session)
+    result = []
+    stack = [node_id]
+    while stack:
+        current = stack.pop()
+        result.append(current)
+        stack.extend(children_map.get(current, []))
+    return result
+
+
+def get_visible_user_ids(session: Session, current_user: User) -> list[str] | None:
+    """Return list of user IDs visible to current_user based on DataScope.
+    Returns None if scope is 'all' (no filtering needed)."""
+    scope_record = session.exec(
+        select(UserDataScope).where(UserDataScope.user_id == current_user.id)
     ).first()
 
-
-def get_visible_user_ids(session: Session, user: User) -> list[str]:
-    """Return list of user IDs whose data the given user can see."""
-    scope_record = get_user_data_scope(session, user.id)
-    if not scope_record:
-        return [user.id]  # fallback: self only
+    if scope_record is None:
+        # No scope configured — default to self_only
+        return [current_user.id]
 
     scope = scope_record.scope
 
     if scope == "all":
-        return session.exec(select(User.id).where(User.is_active == True)).all()  # noqa: E712
+        return None  # No filtering
 
     if scope == "self_only":
-        return [user.id]
+        return [current_user.id]
 
     if scope == "current_node":
-        return session.exec(
-            select(User.id).where(User.org_node_id == user.org_node_id, User.is_active == True)  # noqa: E712
+        # All users in the same org node
+        users = session.exec(
+            select(User.id).where(
+                User.org_node_id == current_user.org_node_id,
+                User.is_active == True,  # noqa: E712
+            )
         ).all()
+        return list(users)
 
-    if scope in ("current_and_below", "selected_nodes"):
-        all_nodes = session.exec(select(OrgNode)).all()
-        node_map = defaultdict(list)
-        for node in all_nodes:
-            if node.parent_id:
-                node_map[node.parent_id].append(node.id)
-
-        if scope == "current_and_below":
-            root_ids = [user.org_node_id]
-        else:
-            raw = scope_record.node_ids or "[]"
-            root_ids = json.loads(raw)
-
-        visible_node_ids = _collect_subtree(root_ids, node_map)
-        return session.exec(
-            select(User.id).where(User.org_node_id.in_(visible_node_ids), User.is_active == True)  # noqa: E712
+    if scope == "current_and_below":
+        node_ids = get_subtree_node_ids(session, current_user.org_node_id)
+        users = session.exec(
+            select(User.id).where(
+                User.org_node_id.in_(node_ids),
+                User.is_active == True,  # noqa: E712
+            )
         ).all()
+        return list(users)
 
-    return [user.id]
+    if scope == "selected_nodes":
+        node_ids = json.loads(scope_record.node_ids or "[]")
+        users = session.exec(
+            select(User.id).where(
+                User.org_node_id.in_(node_ids),
+                User.is_active == True,  # noqa: E712
+            )
+        ).all()
+        return list(users)
 
-
-def _collect_subtree(root_ids: list[str], node_map: dict[str, list[str]]) -> set[str]:
-    """BFS to collect all descendant node IDs including roots."""
-    visited = set(root_ids)
-    queue = list(root_ids)
-    while queue:
-        current = queue.pop()
-        for child_id in node_map.get(current, []):
-            if child_id not in visited:
-                visited.add(child_id)
-                queue.append(child_id)
-    return visited
+    return [current_user.id]

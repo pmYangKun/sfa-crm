@@ -32,34 +32,34 @@
 
 ### 数据库核心
 
-- [ ] T007 实现数据库连接和 PRAGMA 配置（WAL + foreign_keys + busy_timeout）：`backend/app/core/database.py`
-- [ ] T008 实现 OrgNode 模型（自引用树，`remote_side` 配置）：`backend/app/models/org.py`
-- [ ] T009 [P] 实现 User 模型（含 login、password_hash 字段）：`backend/app/models/org.py`（追加到同文件）
-- [ ] T010 实现 Role、Permission、UserRole、RolePermission 模型：`backend/app/models/auth.py`
-- [ ] T011 [P] 实现 UserDataScope 模型（scope 枚举 + node_ids JSON 字段）：`backend/app/models/auth.py`
-- [ ] T012 实现 SystemConfig 模型：`backend/app/models/config.py`
-- [ ] T013 实现数据库初始化脚本（建表 + 种入初始数据：内置角色、权限点、默认配置）：`backend/app/core/init_db.py`
-- [ ] T014 实现所有索引创建（参照 data-model.md 关键索引章节）：`backend/app/core/init_db.py`
+- [x] T007 实现数据库连接和 PRAGMA 配置（WAL + foreign_keys + busy_timeout）：`backend/app/core/database.py`
+- [x] T008 实现 OrgNode 模型（自引用树，`remote_side` 配置）：`backend/app/models/org.py`
+- [x] T009 [P] 实现 User 模型（含 login、password_hash 字段）：`backend/app/models/org.py`（追加到同文件）
+- [x] T010 实现 Role、Permission、UserRole、RolePermission 模型：`backend/app/models/auth.py`
+- [x] T011 [P] 实现 UserDataScope 模型（scope 枚举 + node_ids JSON 字段）：`backend/app/models/auth.py`
+- [x] T012 实现 SystemConfig 模型：`backend/app/models/config.py`
+- [x] T013 实现数据库初始化脚本（建表 + 种入初始数据：内置角色、权限点、默认配置）：`backend/app/core/init_db.py`
+- [x] T014 实现所有索引创建（参照 data-model.md 关键索引章节）：`backend/app/core/init_db.py`
 
 ### 认证与权限服务
 
-- [ ] T015 实现 JWT 生成和校验工具函数：`backend/app/core/auth.py`
-- [ ] T016 实现 FastAPI 依赖注入：`get_current_user()`、`require_permission(code)`：`backend/app/core/deps.py`
-- [ ] T017 实现 DataScope 过滤服务（OrgNode 内存树构建 + 子树遍历）：`backend/app/services/permission_service.py`
-- [ ] T018 实现审计日志写入工具函数（所有 Action 调用时记录）：`backend/app/models/audit.py` + `backend/app/services/audit_service.py`
+- [x] T015 实现 JWT 生成和校验工具函数：`backend/app/core/auth.py`
+- [x] T016 实现 FastAPI 依赖注入：`get_current_user()`、`require_permission(code)`：`backend/app/core/deps.py`
+- [x] T017 实现 DataScope 过滤服务（OrgNode 内存树构建 + 子树遍历）：`backend/app/services/permission_service.py`
+- [x] T018 实现审计日志写入工具函数（所有 Action 调用时记录）：`backend/app/models/audit.py` + `backend/app/services/audit_service.py`
 
 ### 应用配置
 
-- [ ] T019 实现应用设置加载（环境变量）：`backend/app/core/config.py`
-- [ ] T020 配置 FastAPI 主应用、错误处理中间件、CORS：`backend/app/main.py`
-- [ ] T021 实现登录接口 `POST /auth/login`：`backend/app/api/auth.py`
+- [x] T019 实现应用设置加载（环境变量）：`backend/app/core/config.py`
+- [x] T020 配置 FastAPI 主应用、错误处理中间件、CORS：`backend/app/main.py`
+- [x] T021 实现登录接口 `POST /auth/login`：`backend/app/api/auth.py`
 
 ### 前端基础
 
-- [ ] T022 实现 API 客户端基础（fetch 封装 + JWT 自动注入）：`frontend/src/lib/api.ts`
-- [ ] T023 [P] 实现登录页面和认证 Context：`frontend/src/app/login/page.tsx`、`frontend/src/lib/auth-context.tsx`
-- [ ] T024 [P] 实现根布局（含 Chat 侧边栏占位）：`frontend/src/app/layout.tsx`
-- [ ] T025 [P] 定义共享 TypeScript 类型（Lead、Customer、Contact 等）：`frontend/src/types/index.ts`
+- [x] T022 实现 API 客户端基础（fetch 封装 + JWT 自动注入）：`frontend/src/lib/api.ts`
+- [x] T023 [P] 实现登录页面和认证 Context：`frontend/src/app/login/page.tsx`、`frontend/src/lib/auth-context.tsx`
+- [x] T024 [P] 实现根布局（含 Chat 侧边栏占位）：`frontend/src/app/layout.tsx`
+- [x] T025 [P] 定义共享 TypeScript 类型（Lead、Customer、Contact 等）：`frontend/src/types/index.ts`
 
 **检查点**：登录接口可正常返回 JWT；权限校验 `require_permission()` 可正确阻断无权请求；DataScope 过滤返回正确数据集
 

@@ -1,63 +1,84 @@
-from typing import Annotated
+"""FastAPI dependency injection: authentication and permission checks."""
 
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from jose import JWTError
 from sqlmodel import Session, select
 
-from app.core.auth import decode_access_token
+from app.core.auth import verify_token
 from app.core.database import get_session
 from app.models.auth import Permission, RolePermission, UserRole
 from app.models.org import User
 
-bearer = HTTPBearer()
+security = HTTPBearer()
 
 
 def get_current_user(
-    credentials: Annotated[HTTPAuthorizationCredentials, Depends(bearer)],
-    session: Annotated[Session, Depends(get_session)],
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    session: Session = Depends(get_session),
 ) -> User:
-    try:
-        user_id = decode_access_token(credentials.credentials)
-    except JWTError:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
-
+    payload = verify_token(credentials.credentials)
+    if payload is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired token",
+        )
+    user_id = payload.get("sub")
     user = session.get(User, user_id)
-    if not user or not user.is_active:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found or inactive")
+    if user is None or not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User not found or inactive",
+        )
     return user
 
 
-def require_permission(permission_code: str):
-    """Returns a FastAPI dependency that checks the current user has the given permission."""
+def require_permission(code: str):
+    """Return a FastAPI dependency that checks if the current user has
+    the specified permission code (e.g. 'lead.create')."""
 
-    def _check(
-        current_user: Annotated[User, Depends(get_current_user)],
-        session: Annotated[Session, Depends(get_session)],
+    def checker(
+        current_user: User = Depends(get_current_user),
+        session: Session = Depends(get_session),
     ) -> User:
-        role_ids = session.exec(
+        # Get all role IDs for the user
+        user_roles = session.exec(
             select(UserRole.role_id).where(UserRole.user_id == current_user.id)
         ).all()
+        if not user_roles:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail={"code": "PERMISSION_DENIED", "message": "无功能权限"},
+            )
 
-        if not role_ids:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="No roles assigned")
-
+        # Find the permission by code
         permission = session.exec(
-            select(Permission).where(Permission.code == permission_code)
+            select(Permission).where(Permission.code == code)
         ).first()
-        if not permission:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Permission not found")
+        if permission is None:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail={"code": "PERMISSION_DENIED", "message": f"Permission not found: {code}"},
+            )
 
+        # Check if any of the user's roles has this permission
         has_perm = session.exec(
             select(RolePermission).where(
-                RolePermission.role_id.in_(role_ids),
+                RolePermission.role_id.in_(user_roles),
                 RolePermission.permission_id == permission.id,
             )
         ).first()
-
-        if not has_perm:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Permission denied")
-
+        if has_perm is None:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail={"code": "PERMISSION_DENIED", "message": "无功能权限"},
+            )
         return current_user
 
-    return _check
+    return checker
+
+
+def get_client_ip(request: Request) -> str:
+    forwarded = request.headers.get("X-Forwarded-For")
+    if forwarded:
+        return forwarded.split(",")[0].strip()
+    return request.client.host if request.client else "unknown"

@@ -1,14 +1,15 @@
-from pydantic_settings import BaseSettings, SettingsConfigDict
+"""Application settings loaded from environment variables."""
+
+import os
 
 
-class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
-
-    database_url: str = "sqlite:///./data/sfa_crm.db"
-    secret_key: str = "dev-secret-key-change-in-production"
-    algorithm: str = "HS256"
-    access_token_expire_minutes: int = 480  # 8 hours
-    environment: str = "development"
+class Settings:
+    DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///data/sfa_crm.db")
+    JWT_SECRET: str = os.getenv("JWT_SECRET", "change-me-in-production")
+    CORS_ORIGINS: list[str] = os.getenv(
+        "CORS_ORIGINS", "http://localhost:3000"
+    ).split(",")
+    WEBHOOK_SECRET: str = os.getenv("WEBHOOK_SECRET", "webhook-secret-change-me")
 
 
 settings = Settings()

@@ -1,126 +1,70 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { useAuth } from "@/lib/auth-context";
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/lib/auth-context';
 
 export default function LoginPage() {
+  const [loginName, setLoginName] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
   const { login } = useAuth();
   const router = useRouter();
-  const [loginId, setLoginId] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
 
-  async function handleSubmit(e: React.FormEvent) {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
-    setLoading(true);
+    setError('');
+    setSubmitting(true);
     try {
-      await login(loginId, password);
-      router.push("/leads");
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "登录失败");
+      await login(loginName, password);
+      router.push('/dashboard');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : '登录失败');
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
-  }
+  };
 
   return (
-    <div className="login-page">
-      <div className="login-card">
-        <h1>SFA CRM</h1>
+    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', background: '#f5f5f5' }}>
+      <div style={{ width: 360, padding: 32, background: '#fff', borderRadius: 8, boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
+        <h1 style={{ textAlign: 'center', marginBottom: 24, fontSize: 24 }}>SFA CRM</h1>
         <form onSubmit={handleSubmit}>
-          <div className="field">
-            <label htmlFor="login">账号</label>
+          <div style={{ marginBottom: 16 }}>
+            <label style={{ display: 'block', marginBottom: 4, fontSize: 14 }}>账号</label>
             <input
-              id="login"
               type="text"
-              value={loginId}
-              onChange={(e) => setLoginId(e.target.value)}
+              value={loginName}
+              onChange={(e) => setLoginName(e.target.value)}
               required
-              autoComplete="username"
+              style={{ width: '100%', padding: '8px 12px', border: '1px solid #d9d9d9', borderRadius: 4, fontSize: 14, boxSizing: 'border-box' }}
             />
           </div>
-          <div className="field">
-            <label htmlFor="password">密码</label>
+          <div style={{ marginBottom: 16 }}>
+            <label style={{ display: 'block', marginBottom: 4, fontSize: 14 }}>密码</label>
             <input
-              id="password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              autoComplete="current-password"
+              style={{ width: '100%', padding: '8px 12px', border: '1px solid #d9d9d9', borderRadius: 4, fontSize: 14, boxSizing: 'border-box' }}
             />
           </div>
-          {error && <p className="error">{error}</p>}
-          <button type="submit" disabled={loading}>
-            {loading ? "登录中…" : "登录"}
+          {error && <p style={{ color: '#ff4d4f', marginBottom: 16, fontSize: 14 }}>{error}</p>}
+          <button
+            type="submit"
+            disabled={submitting}
+            style={{
+              width: '100%', padding: '10px 0', background: '#1890ff', color: '#fff',
+              border: 'none', borderRadius: 4, fontSize: 16, cursor: submitting ? 'not-allowed' : 'pointer',
+              opacity: submitting ? 0.7 : 1,
+            }}
+          >
+            {submitting ? '登录中...' : '登录'}
           </button>
         </form>
       </div>
-
-      <style jsx>{`
-        .login-page {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          min-height: 100vh;
-          background: var(--color-bg);
-        }
-        .login-card {
-          background: var(--color-surface);
-          border: 1px solid var(--color-border);
-          border-radius: var(--radius);
-          padding: 40px 32px;
-          width: 360px;
-        }
-        h1 {
-          font-size: 22px;
-          font-weight: 600;
-          margin-bottom: 28px;
-          text-align: center;
-        }
-        .field {
-          display: flex;
-          flex-direction: column;
-          gap: 6px;
-          margin-bottom: 16px;
-        }
-        label {
-          font-size: 13px;
-          color: var(--color-text-secondary);
-        }
-        input {
-          padding: 8px 12px;
-          border: 1px solid var(--color-border);
-          border-radius: var(--radius);
-          font-size: 14px;
-          outline: none;
-        }
-        input:focus {
-          border-color: var(--color-primary);
-        }
-        .error {
-          color: #e53e3e;
-          font-size: 13px;
-          margin-bottom: 12px;
-        }
-        button {
-          width: 100%;
-          padding: 10px;
-          background: var(--color-primary);
-          color: #fff;
-          border: none;
-          border-radius: var(--radius);
-          font-size: 14px;
-          cursor: pointer;
-        }
-        button:disabled {
-          opacity: 0.6;
-          cursor: not-allowed;
-        }
-      `}</style>
     </div>
   );
 }
