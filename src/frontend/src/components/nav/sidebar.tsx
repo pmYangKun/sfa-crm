@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
+import NotificationBell from "@/components/notifications/notification-bell";
 
 interface NavItem {
   href: string;
@@ -17,6 +18,7 @@ const SALES_NAV: NavItem[] = [
 ];
 
 const MANAGER_NAV: NavItem[] = [
+  { href: "/dashboard", label: "数据概览" },
   { href: "/leads/team", label: "团队线索" },
   { href: "/public-pool", label: "公共线索库" },
   { href: "/customers", label: "团队客户" },
@@ -24,11 +26,14 @@ const MANAGER_NAV: NavItem[] = [
 ];
 
 const ADMIN_NAV: NavItem[] = [
+  { href: "/dashboard", label: "数据概览" },
   { href: "/leads", label: "全部线索" },
   { href: "/customers", label: "全部客户" },
   { href: "/admin/org", label: "组织管理" },
   { href: "/admin/users", label: "用户管理" },
+  { href: "/admin/roles", label: "角色权限" },
   { href: "/admin/config", label: "系统配置" },
+  { href: "/admin/logs", label: "操作日志" },
 ];
 
 export function Sidebar() {
@@ -60,6 +65,7 @@ export function Sidebar() {
           <span className="user-name">{user.name}</span>
           <span className="user-role">{user.roles[0] ?? "—"}</span>
         </div>
+        <NotificationBell />
         <button className="logout-btn" onClick={logout}>退出</button>
       </div>
 
