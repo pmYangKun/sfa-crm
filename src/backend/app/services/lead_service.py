@@ -13,6 +13,8 @@ from sqlmodel import Session, select
 from app.models.config import SystemConfig
 from app.models.contact import Contact, ContactRelation
 from app.models.customer import Customer
+from app.models.followup import FollowUp
+from app.models.key_event import KeyEvent
 from app.models.lead import Lead
 from app.models.org import OrgNode, User
 from app.services.audit_service import log_action
@@ -380,3 +382,139 @@ def convert_lead(
 
     log_action(session, actor_id, "lead:convert", "lead", lead_id, {"customer_id": customer.id})
     return customer
+
+
+# ── FollowUp logging (T059) ───────────────────────────────────────────────────
+
+def log_followup(
+    session: Session,
+    actor_id: str,
+    *,
+    lead_id: str | None = None,
+    customer_id: str | None = None,
+    contact_id: str | None = None,
+    followup_type: str,
+    content: str,
+    followed_at: datetime,
+    source: str = "manual",
+) -> FollowUp:
+    """
+    Record a followup activity.
+    If attached to a lead, automatically updates lead.last_followup_at.
+    """
+    followup = FollowUp(
+        id=str(uuid.uuid4()),
+        lead_id=lead_id,
+        customer_id=customer_id,
+        contact_id=contact_id,
+        owner_id=actor_id,
+        type=followup_type,
+        source=source,
+        content=content,
+        followed_at=followed_at,
+    )
+    session.add(followup)
+
+    if lead_id:
+        lead = session.get(Lead, lead_id)
+        if lead and (lead.last_followup_at is None or followed_at > lead.last_followup_at):
+            lead.last_followup_at = followed_at
+            session.add(lead)
+
+    session.commit()
+    session.refresh(followup)
+
+    entity_type = "lead" if lead_id else "customer"
+    entity_id = lead_id or customer_id or ""
+    log_action(session, actor_id, "followup:create", entity_type, entity_id, {"followup_id": followup.id})
+    return followup
+
+
+# ── Key Event recording (T062) ────────────────────────────────────────────────
+
+def _record_key_event(
+    session: Session,
+    actor_id: str,
+    *,
+    lead_id: str | None,
+    customer_id: str | None,
+    event_type: str,
+    payload: dict,
+    occurred_at: datetime,
+) -> KeyEvent:
+    event = KeyEvent(
+        id=str(uuid.uuid4()),
+        lead_id=lead_id,
+        customer_id=customer_id,
+        type=event_type,
+        payload=json.dumps(payload, ensure_ascii=False),
+        created_by=actor_id,
+        occurred_at=occurred_at,
+    )
+    session.add(event)
+    session.commit()
+    session.refresh(event)
+
+    entity_type = "lead" if lead_id else "customer"
+    entity_id = lead_id or customer_id or ""
+    log_action(session, actor_id, f"key_event:{event_type}", entity_type, entity_id, {"event_id": event.id})
+    return event
+
+
+def record_book_sent(
+    session: Session,
+    actor_id: str,
+    *,
+    lead_id: str | None = None,
+    customer_id: str | None = None,
+    sent_at: datetime,
+) -> KeyEvent:
+    """Record that a book was sent to the prospect."""
+    return _record_key_event(
+        session, actor_id,
+        lead_id=lead_id,
+        customer_id=customer_id,
+        event_type="book_sent",
+        payload={"sent_at": sent_at.isoformat(), "responded_at": None, "confirmed_reading": False},
+        occurred_at=sent_at,
+    )
+
+
+def confirm_small_course(
+    session: Session,
+    actor_id: str,
+    *,
+    lead_id: str | None = None,
+    customer_id: str | None = None,
+    attended_at: datetime,
+    course_name: str | None = None,
+) -> KeyEvent:
+    """Record that the prospect attended a small (preview) course."""
+    return _record_key_event(
+        session, actor_id,
+        lead_id=lead_id,
+        customer_id=customer_id,
+        event_type="attended_small_course",
+        payload={"attended_at": attended_at.isoformat(), "course_name": course_name},
+        occurred_at=attended_at,
+    )
+
+
+def record_big_course(
+    session: Session,
+    actor_id: str,
+    *,
+    lead_id: str | None = None,
+    customer_id: str | None = None,
+    purchase_date: datetime,
+    contract_amount: float,
+) -> KeyEvent:
+    """Record that the customer purchased a big course."""
+    return _record_key_event(
+        session, actor_id,
+        lead_id=lead_id,
+        customer_id=customer_id,
+        event_type="purchased_big_course",
+        payload={"contract_amount": contract_amount, "purchase_date": purchase_date.isoformat()},
+        occurred_at=purchase_date,
+    )
