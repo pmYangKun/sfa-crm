@@ -62,11 +62,15 @@ async def global_exception_handler(request: Request, exc: Exception):
 from app.api.auth import router as auth_router  # noqa: E402
 from app.api.leads import router as leads_router  # noqa: E402
 from app.api.customers import router as customers_router  # noqa: E402
+from app.api.followups import router as followups_router  # noqa: E402
+from app.api.key_events import router as key_events_router  # noqa: E402
 from app.api.webhooks import router as webhooks_router  # noqa: E402
 
 app.include_router(auth_router, prefix="/api/v1", tags=["auth"])
 app.include_router(leads_router, prefix="/api/v1", tags=["leads"])
 app.include_router(customers_router, prefix="/api/v1", tags=["customers"])
+app.include_router(followups_router, prefix="/api/v1", tags=["followups"])
+app.include_router(key_events_router, prefix="/api/v1", tags=["key_events"])
 app.include_router(webhooks_router, prefix="/api/v1", tags=["webhooks"])
 
 

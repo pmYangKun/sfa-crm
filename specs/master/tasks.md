@@ -146,16 +146,16 @@
 
 **独立验收**：录入跟进 → last_followup_at 更新；录入送书 KeyEvent → 可后续更新阅读状态；attended_small_course 触发转化
 
-- [ ] T057 实现 FollowUp 模型：`backend/app/models/followup.py`
-- [ ] T058 实现 KeyEvent 模型（含 payload JSON 字段）：`backend/app/models/key_event.py`
-- [ ] T059 实现 `log_followup` Action（创建 FollowUp + 更新 last_followup_at）：`backend/app/services/lead_service.py`
-- [ ] T060 实现 `POST /leads/{id}/followups`、`POST /customers/{id}/followups` 接口：`backend/app/api/followups.py`
-- [ ] T061 [P] 实现 `GET /leads/{id}/followups`、`GET /customers/{id}/followups` 接口：`backend/app/api/followups.py`
-- [ ] T062 实现关键事件录入（record_book_sent / confirm_small_course / record_big_course Actions）：`backend/app/services/lead_service.py`
-- [ ] T063 实现 `POST /leads/{id}/key-events`、`POST /customers/{id}/key-events` 接口：`backend/app/api/key_events.py`
-- [ ] T064 [P] 实现 `PATCH /key-events/{id}` 接口（更新 payload 字段，如确认阅读）：`backend/app/api/key_events.py`
-- [ ] T065 前端：在线索/客户详情页中实现跟进记录录入表单和列表：`frontend/src/app/leads/[id]/page.tsx`、`frontend/src/app/customers/[id]/page.tsx`
-- [ ] T066 [P] 前端：实现关键事件录入 UI（送书、拜访KP、购买大课）：`frontend/src/components/leads/key-event-form.tsx`
+- [x] T057 实现 FollowUp 模型：`backend/app/models/followup.py`
+- [x] T058 实现 KeyEvent 模型（含 payload JSON 字段）：`backend/app/models/key_event.py`
+- [x] T059 实现 `log_followup` Action（创建 FollowUp + 更新 last_followup_at）：`backend/app/services/lead_service.py`
+- [x] T060 实现 `POST /leads/{id}/followups`、`POST /customers/{id}/followups` 接口：`backend/app/api/followups.py`
+- [x] T061 [P] 实现 `GET /leads/{id}/followups`、`GET /customers/{id}/followups` 接口：`backend/app/api/followups.py`
+- [x] T062 实现关键事件录入（record_book_sent / confirm_small_course / record_big_course Actions）：`backend/app/services/lead_service.py`
+- [x] T063 实现 `POST /leads/{id}/key-events`、`POST /customers/{id}/key-events` 接口：`backend/app/api/key_events.py`
+- [x] T064 [P] 实现 `PATCH /key-events/{id}` 接口（更新 payload 字段，如确认阅读）：`backend/app/api/key_events.py`
+- [x] T065 前端：在线索/客户详情页中实现跟进记录录入表单和列表：`frontend/src/app/leads/[id]/page.tsx`、`frontend/src/app/customers/[id]/page.tsx`
+- [x] T066 [P] 前端：实现关键事件录入 UI（送书、拜访KP、购买大课）：`frontend/src/components/leads/key-event-form.tsx`
 
 **检查点**：US6+US7 可独立运行和验证
 
