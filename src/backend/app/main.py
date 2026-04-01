@@ -8,11 +8,12 @@ from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
 
-from app.api import auth, contacts, customers, followups, key_events, leads, webhooks
+from app.api import auth, contacts, customers, followups, key_events, leads, reports, webhooks
 from app.core.init_db import init_db
 from app.services.rate_limiter import user_limiter
 from app.services.customer_service import run_conversion_window_reminders
 from app.services.release_service import run_auto_release
+from app.services.report_service import run_generate_daily_reports
 
 limiter = Limiter(key_func=get_remote_address)
 
@@ -27,6 +28,8 @@ async def lifespan(app: FastAPI):
     _scheduler.add_job(run_auto_release, "cron", hour=2, minute=0, id="auto_release")
     # Schedule daily conversion window reminders at 09:00
     _scheduler.add_job(run_conversion_window_reminders, "cron", hour=9, minute=0, id="conversion_window")
+    # Schedule daily report generation at 18:00
+    _scheduler.add_job(run_generate_daily_reports, "cron", hour=18, minute=0, id="daily_report")
     _scheduler.start()
 
     yield
@@ -65,6 +68,7 @@ app.include_router(customers.router, prefix="", tags=["customers"])
 app.include_router(contacts.router, prefix="", tags=["contacts"])
 app.include_router(followups.router, prefix="", tags=["followups"])
 app.include_router(key_events.router, prefix="", tags=["key_events"])
+app.include_router(reports.router, prefix="", tags=["reports"])
 app.include_router(webhooks.router, prefix="/webhooks", tags=["webhooks"])
 
 
