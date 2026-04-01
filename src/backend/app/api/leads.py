@@ -20,6 +20,7 @@ from app.services.lead_service import (
     release_lead,
 )
 from app.services.permission_service import get_visible_user_ids
+from app.services.rate_limiter import limiter
 from app.services.uniqueness_service import check_uniqueness
 
 router = APIRouter()
@@ -274,6 +275,7 @@ def assign_lead_endpoint(
 
 
 @router.post("/leads/{lead_id}/claim")
+@limiter.limit("10/minute")
 def claim_lead_endpoint(
     lead_id: str,
     request: Request,

@@ -93,16 +93,16 @@
 
 **独立验收**：主管分配线索 → 私有池满时阻断；销售抢占 → 速率超限时账号锁定；并发抢占先到先得
 
-- [ ] T037 实现 SlowAPI 速率限制器（按用户 ID 计数）：`backend/app/services/rate_limiter.py`
-- [ ] T038 实现 `assign_lead` Action（权限校验 + 私有池上限校验 + 日志）：`backend/app/services/lead_service.py`
-- [ ] T039 实现 `POST /leads/{id}/assign` 接口：`backend/app/api/leads.py`
-- [ ] T040 实现 `claim_lead` Action（大区规则校验 + 速率限制 + 并发保护）：`backend/app/services/lead_service.py`
-- [ ] T041 实现 `POST /leads/{id}/claim` 接口（接入 SlowAPI 限速）：`backend/app/api/leads.py`
-- [ ] T042 实现大区抢占规则引擎（读取 SystemConfig.region_claim_rules，支持三种模式）：`backend/app/services/lead_service.py`
-- [ ] T043 实现 `release_lead` Action（手动释放）：`backend/app/services/lead_service.py`
-- [ ] T044 [P] 实现 `POST /leads/{id}/release` 和 `POST /leads/{id}/mark-lost` 接口：`backend/app/api/leads.py`
-- [ ] T045 前端：实现"公共线索库"页面（仅显示本大区，含抢占按钮）：`frontend/src/app/public-pool/page.tsx`
-- [ ] T046 [P] 前端：主管视图"团队线索"页面（含分配操作）：`frontend/src/app/leads/team/page.tsx`
+- [x] T037 实现 SlowAPI 速率限制器（按用户 ID 计数）：`backend/app/services/rate_limiter.py`
+- [x] T038 实现 `assign_lead` Action（权限校验 + 私有池上限校验 + 日志）：`backend/app/services/lead_service.py`
+- [x] T039 实现 `POST /leads/{id}/assign` 接口：`backend/app/api/leads.py`
+- [x] T040 实现 `claim_lead` Action（大区规则校验 + 速率限制 + 并发保护）：`backend/app/services/lead_service.py`
+- [x] T041 实现 `POST /leads/{id}/claim` 接口（接入 SlowAPI 限速）：`backend/app/api/leads.py`
+- [x] T042 实现大区抢占规则引擎（读取 SystemConfig.region_claim_rules，支持三种模式）：`backend/app/services/lead_service.py`
+- [x] T043 实现 `release_lead` Action（手动释放）：`backend/app/services/lead_service.py`
+- [x] T044 [P] 实现 `POST /leads/{id}/release` 和 `POST /leads/{id}/mark-lost` 接口：`backend/app/api/leads.py`
+- [x] T045 前端：实现"公共线索库"页面（仅显示本大区，含抢占按钮）：`frontend/src/app/public-pool/page.tsx`
+- [x] T046 [P] 前端：主管视图"团队线索"页面（含分配操作）：`frontend/src/app/leads/team/page.tsx`
 
 **检查点**：US2+US3 可独立运行和验证
 
