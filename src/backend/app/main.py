@@ -42,8 +42,10 @@ async def global_exception_handler(request: Request, exc: Exception):
 
 # ── Register routers ─────────────────────────────────────────────────────────
 from app.api.auth import router as auth_router  # noqa: E402
+from app.api.leads import router as leads_router  # noqa: E402
 
 app.include_router(auth_router, prefix="/api/v1", tags=["auth"])
+app.include_router(leads_router, prefix="/api/v1", tags=["leads"])
 
 
 @app.get("/")

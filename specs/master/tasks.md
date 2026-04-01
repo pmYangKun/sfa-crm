@@ -71,17 +71,17 @@
 
 **独立验收**：录入有组织机构代码的线索 → 重复时被阻断；录入相似名称线索 → 主管收到预警；新线索出现在公共线索库
 
-- [ ] T026 实现 Lead 模型（含所有字段和约束）：`backend/app/models/lead.py`
-- [ ] T027 [P] 实现 Contact 模型：`backend/app/models/contact.py`
-- [ ] T028 [P] 实现 ContactRelation 模型：`backend/app/models/contact.py`
-- [ ] T029 实现唯一性检测服务（精确匹配 unified_code + rapidfuzz 模糊匹配 + 去法律后缀预处理）：`backend/app/services/uniqueness_service.py`
-- [ ] T030 实现 `POST /leads` 接口（调用唯一性检测，返回 201/202/409）：`backend/app/api/leads.py`
-- [ ] T031 实现 `GET /leads` 接口（支持 pool/stage/region/search 筛选，DataScope 过滤）：`backend/app/api/leads.py`
-- [ ] T032 [P] 实现 `GET /leads/{id}` 接口（含联系人、跟进、关键事件）：`backend/app/api/leads.py`
-- [ ] T033 [P] 实现联系人重复检测逻辑（wechat_id/phone 重复时自动创建 ContactRelation）：`backend/app/services/lead_service.py`
-- [ ] T034 前端：实现"我的线索"列表页（默认列 + 列显示/隐藏 + 筛选条件保存）：`frontend/src/app/leads/page.tsx`
-- [ ] T035 [P] 前端：实现线索录入表单（唯一性预警提示 UI）：`frontend/src/app/leads/new/page.tsx`
-- [ ] T036 [P] 前端：实现线索详情页（基本信息 + 联系人列表）：`frontend/src/app/leads/[id]/page.tsx`
+- [x] T026 实现 Lead 模型（含所有字段和约束）：`backend/app/models/lead.py`
+- [x] T027 [P] 实现 Contact 模型：`backend/app/models/contact.py`
+- [x] T028 [P] 实现 ContactRelation 模型：`backend/app/models/contact.py`
+- [x] T029 实现唯一性检测服务（精确匹配 unified_code + rapidfuzz 模糊匹配 + 去法律后缀预处理）：`backend/app/services/uniqueness_service.py`
+- [x] T030 实现 `POST /leads` 接口（调用唯一性检测，返回 201/202/409）：`backend/app/api/leads.py`
+- [x] T031 实现 `GET /leads` 接口（支持 pool/stage/region/search 筛选，DataScope 过滤）：`backend/app/api/leads.py`
+- [x] T032 [P] 实现 `GET /leads/{id}` 接口（含联系人、跟进、关键事件）：`backend/app/api/leads.py`
+- [x] T033 [P] 实现联系人重复检测逻辑（wechat_id/phone 重复时自动创建 ContactRelation）：`backend/app/services/lead_service.py`
+- [x] T034 前端：实现"我的线索"列表页（默认列 + 列显示/隐藏 + 筛选条件保存）：`frontend/src/app/leads/page.tsx`
+- [x] T035 [P] 前端：实现线索录入表单（唯一性预警提示 UI）：`frontend/src/app/leads/new/page.tsx`
+- [x] T036 [P] 前端：实现线索详情页（基本信息 + 联系人列表）：`frontend/src/app/leads/[id]/page.tsx`
 
 **检查点**：US1 可独立运行和验证
 
