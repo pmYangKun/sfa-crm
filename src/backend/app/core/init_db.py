@@ -176,6 +176,7 @@ def _seed_initial_users(session: Session):
         password_hash=pwd_context.hash("test123"),
         org_node_id=root.id,
     ))
+    session.flush()
     if sales_role:
         session.add(UserRole(user_id=sales_id, role_id=sales_role.id))
         session.add(UserDataScope(user_id=sales_id, scope="self_only"))
@@ -188,6 +189,7 @@ def _seed_initial_users(session: Session):
         password_hash=pwd_context.hash("test123"),
         org_node_id=root.id,
     ))
+    session.flush()
     if manager_role:
         session.add(UserRole(user_id=manager_id, role_id=manager_role.id))
         session.add(UserDataScope(user_id=manager_id, scope="current_and_below"))
