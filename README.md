@@ -50,8 +50,10 @@ Spec 里有业务逻辑、对象定义、行为约束。AI 基于这些生成代
 │   ├── contracts/api-contracts.md   # API 接口契约
 │   ├── quickstart.md                # 启动指南
 │   └── tasks.md                     # 110 个实现任务
-├── backend/                         # FastAPI 后端（待实现）
-├── frontend/                        # Next.js 前端（待实现）
+├── src/
+│   ├── backend/                     # FastAPI 后端（已实现）
+│   ├── frontend/                    # Next.js 前端（已实现）
+│   └── docker-compose.yml
 ├── skills/                          # Claude Code Skill 文件
 │   └── check-prd/                   # PRD 质量检查工具（独立子项目）
 ├── memory/                          # Claude 跨会话记忆文件
@@ -71,7 +73,8 @@ Spec 里有业务逻辑、对象定义、行为约束。AI 基于这些生成代
 | 第五集 | Ontology 设计：对象建模、Actions、AI-native CRM | 完成 |
 | 第六集 | Spec 阶段：线索/客户拆分、RBAC、数据权限分离 | 完成 |
 | 第七集 | Plan 阶段：技术栈选型，AI Agent 方案 | 完成 |
-| 第八集 | Spec Coding 的正确打开方式：spec-kit 定位与协作分工 | 进行中 |
+| 第八集 | Spec Coding 的正确打开方式：spec-kit 定位与协作分工 | 完成 |
+| 编码阶段 | 110 个任务全部实现，14 个 Phase 完成 | 完成 |
 
 ---
 
@@ -94,7 +97,7 @@ Spec 里有业务逻辑、对象定义、行为约束。AI 基于这些生成代
 cd src/backend
 python -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
-python -m app.core.init_db        # 初始化 DB + 种入测试数据
+python -c "from app.core.init_db import init_db; init_db()"  # 初始化 DB + 种入测试数据
 uvicorn app.main:app --reload     # http://localhost:8000/docs
 
 # 前端（新终端）

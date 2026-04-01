@@ -270,11 +270,11 @@
 
 **目的**：多用户故事共同影响的优化项
 
-- [ ] T106 [P] 补充 `backend/tests/integration/` 关键路径集成测试（线索去重、池分配、速率限制、转化流程）
-- [ ] T107 [P] 实现前端通知轮询（释放通知、转化窗口提醒）：`frontend/src/components/notifications/notification-bell.tsx`
-- [ ] T108 [P] 前端：数据概览页（主管视图：各销售业绩、私有池使用率、转化漏斗）：`frontend/src/app/dashboard/page.tsx`
-- [ ] T109 [P] 按 `quickstart.md` 验证本地完整启动流程，修复发现问题
-- [ ] T110 [P] 补充 README.md 开发者文档
+- [x] T106 [P] 补充 `backend/tests/integration/` 关键路径集成测试（线索去重、池分配、速率限制、转化流程）
+- [x] T107 [P] 实现前端通知轮询（释放通知、转化窗口提醒）：`frontend/src/components/notifications/notification-bell.tsx`
+- [x] T108 [P] 前端：数据概览页（主管视图：各销售业绩、私有池使用率、转化漏斗）：`frontend/src/app/dashboard/page.tsx`
+- [x] T109 [P] 按 `quickstart.md` 验证本地完整启动流程，修复发现问题
+- [x] T110 [P] 补充 README.md 开发者文档
 
 ---
 
