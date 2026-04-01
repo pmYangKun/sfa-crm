@@ -13,47 +13,38 @@ from app.services.permission_service import get_visible_user_ids
 router = APIRouter()
 
 
+def _lead_count(session: Session, visible_ids: list[str] | None, **filters) -> int:
+    stmt = select(func.count(Lead.id))
+    if visible_ids is not None:
+        stmt = stmt.where(Lead.owner_id.in_(visible_ids))  # type: ignore
+    for k, v in filters.items():
+        stmt = stmt.where(getattr(Lead, k) == v)
+    return session.exec(stmt).one()
+
+
 @router.get("/dashboard/stats")
 def get_dashboard_stats(
     session: Session = Depends(get_session),
     current_user: User = Depends(require_permission("lead.view")),
 ):
-    visible_ids = get_visible_user_ids(session, current_user.id)
+    visible_ids = get_visible_user_ids(session, current_user)
 
-    # Lead counts
-    total_leads = session.exec(
-        select(func.count(Lead.id)).where(Lead.owner_id.in_(visible_ids))  # type: ignore
-    ).one()
-    active_leads = session.exec(
-        select(func.count(Lead.id)).where(
-            Lead.owner_id.in_(visible_ids),  # type: ignore
-            Lead.stage == "active",
-        )
-    ).one()
-    converted_leads = session.exec(
-        select(func.count(Lead.id)).where(
-            Lead.owner_id.in_(visible_ids),  # type: ignore
-            Lead.stage == "converted",
-        )
-    ).one()
-    lost_leads = session.exec(
-        select(func.count(Lead.id)).where(
-            Lead.owner_id.in_(visible_ids),  # type: ignore
-            Lead.stage == "lost",
-        )
-    ).one()
+    total_leads = _lead_count(session, visible_ids)
+    active_leads = _lead_count(session, visible_ids, stage="active")
+    converted_leads = _lead_count(session, visible_ids, stage="converted")
+    lost_leads = _lead_count(session, visible_ids, stage="lost")
 
-    # Public pool count
+    # Public pool count (global, not scoped)
     public_leads = session.exec(
         select(func.count(Lead.id)).where(Lead.pool == "public", Lead.stage == "active")
     ).one()
 
     # Customer count
-    total_customers = session.exec(
-        select(func.count(Customer.id)).where(Customer.owner_id.in_(visible_ids))  # type: ignore
-    ).one()
+    cust_stmt = select(func.count(Customer.id))
+    if visible_ids is not None:
+        cust_stmt = cust_stmt.where(Customer.owner_id.in_(visible_ids))  # type: ignore
+    total_customers = session.exec(cust_stmt).one()
 
-    # Conversion rate
     conversion_rate = (
         round(converted_leads / total_leads * 100, 1) if total_leads > 0 else 0
     )
@@ -75,7 +66,14 @@ def get_team_stats(
     current_user: User = Depends(require_permission("lead.view")),
 ):
     """Per-sales stats for manager view."""
-    visible_ids = get_visible_user_ids(session, current_user.id)
+    visible_ids = get_visible_user_ids(session, current_user)
+
+    # If scope is "all", get all active users
+    if visible_ids is None:
+        all_users = session.exec(
+            select(User).where(User.is_active == True)  # noqa: E712
+        ).all()
+        visible_ids = [u.id for u in all_users]
 
     team_data = []
     for uid in visible_ids:
