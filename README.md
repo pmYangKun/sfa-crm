@@ -83,6 +83,61 @@ Spec 里有业务逻辑、对象定义、行为约束。AI 基于这些生成代
 
 ---
 
+## 开发者快速启动
+
+详细文档见 [`specs/master/quickstart.md`](specs/master/quickstart.md)。
+
+### 一分钟启动
+
+```bash
+# 后端
+cd src/backend
+python -m venv .venv && source .venv/bin/activate
+pip install -e ".[dev]"
+python -m app.core.init_db        # 初始化 DB + 种入测试数据
+uvicorn app.main:app --reload     # http://localhost:8000/docs
+
+# 前端（新终端）
+cd src/frontend
+npm install
+npm run dev                       # http://localhost:3000
+```
+
+### 初始账号
+
+| 账号 | 密码 | 角色 |
+|------|------|------|
+| `admin` | `admin123` | 系统管理员 |
+| `sales01` | `test123` | 销售 |
+| `manager01` | `test123` | 战队队长 |
+
+### AI 功能配置
+
+登录 Admin → 系统配置 → LLM 配置 → 填入 API Key，点击激活。支持 Anthropic 和 OpenAI 兼容 Provider。
+
+### 运行集成测试
+
+```bash
+cd src/backend
+pytest tests/integration/ -v
+```
+
+---
+
+## 技术栈
+
+| 层 | 技术 |
+|----|------|
+| 后端 | FastAPI + SQLModel + SQLite (WAL) |
+| 前端 | Next.js 14 App Router |
+| AI Agent | Vercel AI SDK + Anthropic API (Tool Use) |
+| 认证 | JWT (python-jose) |
+| 权限 | RBAC + DataScope (Role/Permission/UserDataScope) |
+| 调度 | APScheduler (自动释放、日报生成) |
+| 限流 | SlowAPI (IP + 用户级) |
+
+---
+
 ## 关于「极有可能翻车」
 
 这不是谦虚。Ontology 建模、API-first 架构、Copilot 协同——每一个单独拿出来都是重量级工程挑战，三个叠在一起没有人知道会发生什么。
