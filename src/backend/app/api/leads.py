@@ -2,16 +2,19 @@ import uuid
 from datetime import datetime
 from typing import Annotated, Literal, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from pydantic import BaseModel
 from sqlmodel import Session, select
 
 from app.core.database import get_session
 from app.core.deps import get_current_user, require_permission
+from app.models.config import SystemConfig
 from app.models.lead import Lead
 from app.models.org import User
 from app.services.audit_service import log_action
+from app.services.lead_service import assign_lead, claim_lead, mark_lead_lost, release_lead
 from app.services.permission_service import get_visible_user_ids
+from app.services.rate_limiter import user_limiter
 from app.services.uniqueness_service import check_uniqueness
 
 router = APIRouter()
@@ -164,3 +167,93 @@ def get_lead(
         raise HTTPException(status_code=403, detail="无权访问")
 
     return lead
+
+
+# ── POST /leads/{id}/assign (T039) ────────────────────────────────────────────
+
+class AssignRequest(BaseModel):
+    assignee_id: str
+
+
+@router.post("/leads/{lead_id}/assign", response_model=LeadResponse)
+def assign_lead_endpoint(
+    lead_id: str,
+    body: AssignRequest,
+    session: SessionDep,
+    current_user: CurrentUser,
+    _: Annotated[None, Depends(require_permission("lead:assign"))],
+):
+    try:
+        return assign_lead(session, current_user.id, lead_id, body.assignee_id)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+
+# ── POST /leads/{id}/claim (T041) ─────────────────────────────────────────────
+
+def _claim_limit_callable(request: Request) -> str:
+    """Dynamic rate-limit string read from SystemConfig at request time."""
+    from app.core.database import engine as _engine
+    from sqlmodel import Session as _Session
+    with _Session(_engine) as s:
+        config = s.get(SystemConfig, "claim_rate_limit")
+        return f"{int(config.value)}/minute" if config else "10/minute"
+
+
+@router.post("/leads/{lead_id}/claim", response_model=LeadResponse)
+@user_limiter.limit(_claim_limit_callable)
+def claim_lead_endpoint(
+    request: Request,
+    lead_id: str,
+    session: SessionDep,
+    current_user: CurrentUser,
+    _: Annotated[None, Depends(require_permission("lead:claim"))],
+):
+    try:
+        return claim_lead(session, current_user, lead_id)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+
+# ── POST /leads/{id}/release + mark-lost (T044) ───────────────────────────────
+
+@router.post("/leads/{lead_id}/release", response_model=LeadResponse)
+def release_lead_endpoint(
+    lead_id: str,
+    session: SessionDep,
+    current_user: CurrentUser,
+    _: Annotated[None, Depends(require_permission("lead:release"))],
+):
+    lead = session.get(Lead, lead_id)
+    if not lead:
+        raise HTTPException(status_code=404, detail="线索不存在")
+
+    visible_ids = get_visible_user_ids(session, current_user)
+    if lead.owner_id not in visible_ids:
+        raise HTTPException(status_code=403, detail="无权操作")
+
+    try:
+        return release_lead(session, current_user.id, lead_id)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+
+@router.post("/leads/{lead_id}/mark-lost", response_model=LeadResponse)
+def mark_lost_endpoint(
+    lead_id: str,
+    session: SessionDep,
+    current_user: CurrentUser,
+    _: Annotated[None, Depends(require_permission("lead:mark_lost"))],
+):
+    lead = session.get(Lead, lead_id)
+    if not lead:
+        raise HTTPException(status_code=404, detail="线索不存在")
+
+    visible_ids = get_visible_user_ids(session, current_user)
+    if lead.owner_id not in visible_ids:
+        raise HTTPException(status_code=403, detail="无权操作")
+
+    try:
+        return mark_lead_lost(session, current_user.id, lead_id)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))

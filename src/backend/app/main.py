@@ -6,13 +6,17 @@ from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
 
 from app.api import auth, leads
+from app.services.rate_limiter import user_limiter
 
 limiter = Limiter(key_func=get_remote_address)
 
 app = FastAPI(title="SFA CRM API", version="0.1.0")
 
+# Register both limiters; SlowAPI only needs one in app.state for middleware,
+# but both raise RateLimitExceeded which is caught by the handler below.
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+user_limiter.app = app
 
 app.add_middleware(
     CORSMiddleware,
