@@ -6,6 +6,7 @@ import { api } from "@/lib/api";
 interface AuthUser {
   user_id: string;
   name: string;
+  roles: string[];  // role names from DB
 }
 
 interface AuthContextValue {
@@ -13,7 +14,12 @@ interface AuthContextValue {
   login: (login: string, password: string) => Promise<void>;
   logout: () => void;
   loading: boolean;
+  isAdmin: boolean;
+  isManager: boolean;
 }
+
+const MANAGER_ROLES = ["战队队长", "大区总", "销售VP", "督导"];
+const ADMIN_ROLES = ["系统管理员"];
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
@@ -31,12 +37,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   async function login(loginId: string, password: string) {
-    const res = await api.post<{ access_token: string; user_id: string; name: string }>(
+    const res = await api.post<{ access_token: string; user_id: string; name: string; roles: string[] }>(
       "/auth/login",
       { login: loginId, password }
     );
     localStorage.setItem("access_token", res.access_token);
-    const authUser = { user_id: res.user_id, name: res.name };
+    const authUser: AuthUser = { user_id: res.user_id, name: res.name, roles: res.roles ?? [] };
     localStorage.setItem("auth_user", JSON.stringify(authUser));
     setUser(authUser);
   }
@@ -47,8 +53,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
   }
 
+  const isAdmin = user?.roles.some(r => ADMIN_ROLES.includes(r)) ?? false;
+  const isManager = user?.roles.some(r => MANAGER_ROLES.includes(r)) ?? false;
+
   return (
-    <AuthContext.Provider value={{ user, login, logout, loading }}>
+    <AuthContext.Provider value={{ user, login, logout, loading, isAdmin, isManager }}>
       {children}
     </AuthContext.Provider>
   );
