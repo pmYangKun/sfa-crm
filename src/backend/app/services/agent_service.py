@@ -103,11 +103,11 @@ def _dispatch_tool(tool_name: str, tool_input: dict, actor_id: str, session: Ses
                 "pool": lead.pool, "region": lead.region, "owner_id": lead.owner_id}
 
     elif tool_name == "assign_lead":
-        assign_lead(session, tool_input["lead_id"], actor_id, tool_input["assignee_id"])
+        assign_lead(session, actor_id, tool_input["lead_id"], tool_input["assignee_id"])
         return {"ok": True}
 
     elif tool_name == "release_lead":
-        release_lead(session, tool_input["lead_id"], actor_id)
+        release_lead(session, actor_id, tool_input["lead_id"])
         return {"ok": True}
 
     elif tool_name == "mark_lead_lost":
@@ -115,14 +115,14 @@ def _dispatch_tool(tool_name: str, tool_input: dict, actor_id: str, session: Ses
         if not lead:
             return {"error": "线索不存在"}
         lead.stage = "lost"
-        if reason := tool_input.get("reason"):
-            lead.lost_reason = reason
+        from datetime import datetime
+        lead.lost_at = datetime.utcnow()
         session.add(lead)
         session.commit()
         return {"ok": True}
 
     elif tool_name == "convert_lead":
-        convert_lead(session, tool_input["lead_id"], actor_id)
+        convert_lead(session, actor_id, tool_input["lead_id"])
         return {"ok": True}
 
     elif tool_name == "list_customers":

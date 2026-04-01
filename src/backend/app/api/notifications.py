@@ -5,6 +5,7 @@ GET  /notifications              — list my notifications (paginated)
 PATCH /notifications/{id}        — mark as read
 POST /notifications/mark-all-read — mark all as read
 """
+from datetime import datetime
 from typing import Annotated, Optional
 
 from fastapi import APIRouter, Depends, Query, status
@@ -29,7 +30,9 @@ class NotificationResponse(BaseModel):
     is_read: bool
     entity_type: Optional[str]
     entity_id: Optional[str]
-    created_at: str
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
 
 
 class NotificationUpdate(BaseModel):

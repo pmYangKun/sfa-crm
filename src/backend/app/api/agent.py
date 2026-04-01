@@ -238,6 +238,32 @@ def delete_skill(
     session.commit()
 
 
+# ── GET /agent/chat-config (server-side Next.js reads this to instantiate provider) ──
+
+class ChatConfigResponse(BaseModel):
+    provider: str
+    model_name: str
+    api_key: str
+    base_url: Optional[str]
+
+
+@router.get("/chat-config", response_model=Optional[ChatConfigResponse])
+def get_chat_config(
+    session: SessionDep,
+    _: Annotated[None, Depends(get_current_user)],
+):
+    """Returns full LLM config (including api_key) for use by the Next.js server-side route."""
+    config = session.exec(select(LLMConfig).where(LLMConfig.is_active == True)).first()  # noqa: E712
+    if not config:
+        return None
+    return ChatConfigResponse(
+        provider=config.provider,
+        model_name=config.model_name,
+        api_key=config.api_key,
+        base_url=config.base_url,
+    )
+
+
 # ── GET /agent/tools (for frontend to know what tools exist) ──────────────────
 
 @router.get("/tools")
