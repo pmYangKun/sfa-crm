@@ -64,7 +64,8 @@ export async function POST(req: Request) {
   };
 
   // 5. Stream response with tool use
-  const result = streamText({
+  const result = await streamText({
+    // @ts-expect-error — SDK version type mismatch between ai and @ai-sdk/anthropic
     model,
     system: `你是 SFA CRM 的 AI 助手。你可以帮助用户搜索线索、分配线索、释放线索、录入跟进记录等。请用中文回答。`,
     messages,

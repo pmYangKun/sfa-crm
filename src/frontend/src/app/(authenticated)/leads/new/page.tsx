@@ -31,7 +31,7 @@ export default function NewLeadPage() {
 
   const updateContact = (idx: number, field: keyof ContactInput, value: string | boolean) => {
     const updated = [...contacts];
-    (updated[idx] as Record<string, unknown>)[field] = value;
+    (updated[idx] as unknown as Record<string, unknown>)[field] = value;
     setContacts(updated);
   };
 
