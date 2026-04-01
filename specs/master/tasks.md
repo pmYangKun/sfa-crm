@@ -167,9 +167,9 @@
 
 **独立验收**：手动触发提醒任务 → 窗口内客户生成提醒记录；窗口外无记录；客户字段无变化
 
-- [ ] T067 实现转化窗口检测定时任务（每日运行，派生判断逻辑）：`backend/app/services/customer_service.py`
-- [ ] T068 将窗口提醒任务注册到 APScheduler：`backend/app/main.py`
-- [ ] T069 前端：客户详情页"转化窗口"区块（仅窗口期内显示，含倒计时和课时购买状态）：`frontend/src/app/customers/[id]/page.tsx`
+- [x] T067 实现转化窗口检测定时任务（每日运行，派生判断逻辑）：`backend/app/services/customer_service.py`
+- [x] T068 将窗口提醒任务注册到 APScheduler：`backend/app/main.py`
+- [x] T069 前端：客户详情页"转化窗口"区块（仅窗口期内显示，含倒计时和课时购买状态）：`frontend/src/app/customers/[id]/page.tsx`
 
 **检查点**：US8 可独立验证
 
@@ -181,10 +181,10 @@
 
 **独立验收**：添加重复微信号联系人 → 自动创建 ContactRelation + 通知；手动建立关系 → 触发冲突检测
 
-- [ ] T070 实现 `add_contact` Action（含重复检测 + 自动创建 ContactRelation）：`backend/app/services/lead_service.py`
-- [ ] T071 实现 `POST /leads/{id}/contacts`、`POST /customers/{id}/contacts` 接口：`backend/app/api/contacts.py`
-- [ ] T072 [P] 实现 `link_contacts` Action 和 `POST /contacts/link` 接口：`backend/app/api/contacts.py`
-- [ ] T073 前端：联系人管理 UI（添加联系人、标记决策人、建立关系）：`frontend/src/components/contacts/contact-panel.tsx`
+- [x] T070 实现 `add_contact` Action（含重复检测 + 自动创建 ContactRelation）：`backend/app/services/lead_service.py`
+- [x] T071 实现 `POST /leads/{id}/contacts`、`POST /customers/{id}/contacts` 接口：`backend/app/api/contacts.py`
+- [x] T072 [P] 实现 `link_contacts` Action 和 `POST /contacts/link` 接口：`backend/app/api/contacts.py`
+- [x] T073 前端：联系人管理 UI（添加联系人、标记决策人、建立关系）：`frontend/src/components/contacts/contact-panel.tsx`
 
 **检查点**：US9 可独立验证
 
@@ -196,13 +196,13 @@
 
 **独立验收**：手动触发日报生成 → 有跟进记录时生成草稿 → 销售可编辑提交 → 主管可查看
 
-- [ ] T074 实现 DailyReport 模型：`backend/app/models/report.py`
-- [ ] T075 实现日报生成定时任务（汇总当天 FollowUp，生成草稿）：`backend/app/services/report_service.py`
-- [ ] T076 将日报任务注册到 APScheduler：`backend/app/main.py`
-- [ ] T077 实现 `submit_daily_report` Action 和 `POST /reports/daily/{id}/submit` 接口：`backend/app/api/reports.py`
-- [ ] T078 [P] 实现 `GET /reports/daily`、`GET /reports/daily/today-draft`、`GET /reports/team` 接口：`backend/app/api/reports.py`
-- [ ] T079 前端：实现"我的日报"页面（草稿编辑 + 提交 + 历史）：`frontend/src/app/reports/page.tsx`
-- [ ] T080 [P] 前端：主管"团队日报"页面：`frontend/src/app/reports/team/page.tsx`
+- [x] T074 实现 DailyReport 模型：`backend/app/models/report.py`
+- [x] T075 实现日报生成定时任务（汇总当天 FollowUp，生成草稿）：`backend/app/services/report_service.py`
+- [x] T076 将日报任务注册到 APScheduler：`backend/app/main.py`
+- [x] T077 实现 `submit_daily_report` Action 和 `POST /reports/daily/{id}/submit` 接口：`backend/app/api/reports.py`
+- [x] T078 [P] 实现 `GET /reports/daily`、`GET /reports/daily/today-draft`、`GET /reports/team` 接口：`backend/app/api/reports.py`
+- [x] T079 前端：实现"我的日报"页面（草稿编辑 + 提交 + 历史）：`frontend/src/app/reports/page.tsx`
+- [x] T080 [P] 前端：主管"团队日报"页面：`frontend/src/app/reports/team/page.tsx`
 
 **检查点**：US10 可独立验证
 
