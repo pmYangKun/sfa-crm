@@ -15,11 +15,17 @@ from app.core.database import get_session
 from app.core.deps import get_current_user, require_permission
 from app.models.customer import Customer
 from app.models.lead import Lead
-from app.models.org import User
+from app.models.org import OrgNode, User
 from app.services.customer_service import get_conversion_window_status
 from app.services.permission_service import get_visible_user_ids
 
 router = APIRouter()
+
+
+# ── Reassign schema (T083) ────────────────────────────────────────────────────
+
+class ReassignRequest(BaseModel):
+    new_owner_id: str
 
 SessionDep = Annotated[Session, Depends(get_session)]
 CurrentUser = Annotated[User, Depends(get_current_user)]
@@ -138,3 +144,28 @@ def get_customer(
         lead_source=lead.source if lead else None,
         conversion_window=get_conversion_window_status(customer),
     )
+
+
+# ── POST /customers/{id}/reassign (T083) ─────────────────────────────────────
+
+@router.post("/customers/{customer_id}/reassign", response_model=CustomerResponse)
+def reassign_customer(
+    customer_id: str,
+    body: ReassignRequest,
+    session: SessionDep,
+    current_user: CurrentUser,
+    _: Annotated[None, Depends(require_permission("customer:reassign"))],
+):
+    customer = session.get(Customer, customer_id)
+    if not customer:
+        raise HTTPException(status_code=404, detail="客户不存在")
+
+    new_owner = session.get(User, body.new_owner_id)
+    if not new_owner or not new_owner.is_active:
+        raise HTTPException(status_code=400, detail="新归属人不存在或已停用")
+
+    customer.owner_id = body.new_owner_id
+    session.add(customer)
+    session.commit()
+    session.refresh(customer)
+    return _to_customer_response(customer)
