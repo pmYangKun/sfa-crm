@@ -70,6 +70,11 @@ from app.api.followups import router as followups_router  # noqa: E402
 from app.api.key_events import router as key_events_router  # noqa: E402
 from app.api.contacts import router as contacts_router  # noqa: E402
 from app.api.reports import router as reports_router  # noqa: E402
+from app.api.org import router as org_router  # noqa: E402
+from app.api.users import router as users_router  # noqa: E402
+from app.api.roles import router as roles_router  # noqa: E402
+from app.api.config import router as config_router  # noqa: E402
+from app.api.audit import router as audit_router  # noqa: E402
 from app.api.webhooks import router as webhooks_router  # noqa: E402
 
 app.include_router(auth_router, prefix="/api/v1", tags=["auth"])
@@ -79,6 +84,11 @@ app.include_router(followups_router, prefix="/api/v1", tags=["followups"])
 app.include_router(key_events_router, prefix="/api/v1", tags=["key_events"])
 app.include_router(contacts_router, prefix="/api/v1", tags=["contacts"])
 app.include_router(reports_router, prefix="/api/v1", tags=["reports"])
+app.include_router(org_router, prefix="/api/v1", tags=["org"])
+app.include_router(users_router, prefix="/api/v1", tags=["users"])
+app.include_router(roles_router, prefix="/api/v1", tags=["roles"])
+app.include_router(config_router, prefix="/api/v1", tags=["config"])
+app.include_router(audit_router, prefix="/api/v1", tags=["audit"])
 app.include_router(webhooks_router, prefix="/api/v1", tags=["webhooks"])
 
 

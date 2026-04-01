@@ -214,10 +214,10 @@
 
 **独立验收**：用 sales 账号访问他人线索 → 403；用 manager 账号查看团队 → 正确范围；转移线索后原销售立即看不到
 
-- [ ] T081 在所有 Lead/Customer/FollowUp 接口中接入 `require_permission()` 校验：`backend/app/api/leads.py`、`backend/app/api/customers.py` 等
-- [ ] T082 在所有列表接口中接入 DataScope 过滤（`permission_service.apply_data_scope()`）：`backend/app/services/permission_service.py`
-- [ ] T083 实现 `reassign_customer` Action 和 `POST /customers/{id}/reassign` 接口：`backend/app/api/customers.py`
-- [ ] T084 前端：根据当前用户角色动态渲染菜单（销售/主管/Admin 三套菜单）：`frontend/src/app/layout.tsx`、`frontend/src/components/nav/sidebar.tsx`
+- [x] T081 在所有 Lead/Customer/FollowUp 接口中接入 `require_permission()` 校验：`backend/app/api/leads.py`、`backend/app/api/customers.py` 等
+- [x] T082 在所有列表接口中接入 DataScope 过滤（`permission_service.apply_data_scope()`）：`backend/app/services/permission_service.py`
+- [x] T083 实现 `reassign_customer` Action 和 `POST /customers/{id}/reassign` 接口：`backend/app/api/customers.py`
+- [x] T084 前端：根据当前用户角色动态渲染菜单（销售/主管/Admin 三套菜单）：`frontend/src/app/layout.tsx`、`frontend/src/components/nav/sidebar.tsx`
 
 **检查点**：US11 权限体系全面生效
 
@@ -229,16 +229,16 @@
 
 **独立验收**：新增 OrgNode → 用户挂载后数据范围正确；新增用户并分配角色 → 权限生效；自定义角色权限调整立即生效
 
-- [ ] T085 实现组织管理接口（OrgNode CRUD + 停用校验）：`backend/app/api/org.py`
-- [ ] T086 实现用户管理接口（创建/停用用户 + 角色分配 + DataScope 配置）：`backend/app/api/users.py`
-- [ ] T087 [P] 实现角色权限管理接口（角色 CRUD + 权限点配置）：`backend/app/api/roles.py`
-- [ ] T088 [P] 实现系统配置接口（`GET /config`、`PATCH /config`）：`backend/app/api/config.py`
-- [ ] T089 [P] 实现操作日志接口（`GET /audit-logs`）：`backend/app/api/audit.py`
-- [ ] T090 前端：Admin 组织管理页面（OrgNode 树可视化 + 用户挂载）：`frontend/src/app/admin/org/page.tsx`
-- [ ] T091 [P] 前端：Admin 用户管理页面（用户列表 + 角色分配 + DataScope 配置）：`frontend/src/app/admin/users/page.tsx`
-- [ ] T092 [P] 前端：Admin 权限管理页面（角色列表 + 权限点配置）：`frontend/src/app/admin/roles/page.tsx`
-- [ ] T093 [P] 前端：Admin 系统配置页面（含 LLM 配置 + Skill 管理入口）：`frontend/src/app/admin/config/page.tsx`
-- [ ] T094 [P] 前端：操作日志页面：`frontend/src/app/admin/logs/page.tsx`
+- [x] T085 实现组织管理接口（OrgNode CRUD + 停用校验）：`backend/app/api/org.py`
+- [x] T086 实现用户管理接口（创建/停用用户 + 角色分配 + DataScope 配置）：`backend/app/api/users.py`
+- [x] T087 [P] 实现角色权限管理接口（角色 CRUD + 权限点配置）：`backend/app/api/roles.py`
+- [x] T088 [P] 实现系统配置接口（`GET /config`、`PATCH /config`）：`backend/app/api/config.py`
+- [x] T089 [P] 实现操作日志接口（`GET /audit-logs`）：`backend/app/api/audit.py`
+- [x] T090 前端：Admin 组织管理页面（OrgNode 树可视化 + 用户挂载）：`frontend/src/app/admin/org/page.tsx`
+- [x] T091 [P] 前端：Admin 用户管理页面（用户列表 + 角色分配 + DataScope 配置）：`frontend/src/app/admin/users/page.tsx`
+- [x] T092 [P] 前端：Admin 权限管理页面（角色列表 + 权限点配置）：`frontend/src/app/admin/roles/page.tsx`
+- [x] T093 [P] 前端：Admin 系统配置页面（含 LLM 配置 + Skill 管理入口）：`frontend/src/app/admin/config/page.tsx`
+- [x] T094 [P] 前端：操作日志页面：`frontend/src/app/admin/logs/page.tsx`
 
 **检查点**：US12+US13+US14 Admin 功能可独立验证
 
