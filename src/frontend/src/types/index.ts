@@ -49,6 +49,7 @@ export interface Customer {
   owner_id: string;
   source: string;
   created_at: string;
+  days_since_conversion: number;
 }
 
 // ── Contact ───────────────────────────────────────────────────────────────────
