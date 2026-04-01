@@ -12,6 +12,7 @@ from sqlmodel import Session, select
 
 from app.models.config import SystemConfig
 from app.models.contact import Contact, ContactRelation
+from app.models.customer import Customer
 from app.models.lead import Lead
 from app.models.org import OrgNode, User
 from app.services.audit_service import log_action
@@ -317,3 +318,65 @@ def release_lead(session: Session, actor_id: str, lead_id: str) -> Lead:
 
     log_action(session, actor_id, "lead:release", "lead", lead_id, {})
     return lead
+
+
+# ── Lead conversion (T051) ────────────────────────────────────────────────────
+
+def convert_lead(
+    session: Session,
+    actor_id: str,
+    lead_id: str,
+) -> Customer:
+    """
+    Convert an active lead to a Customer.
+    - Creates a Customer record mirroring the lead's core fields.
+    - Migrates contacts from lead → customer.
+    - Marks lead.stage = 'converted'.
+    Permission check (lead:convert) is enforced at the API layer.
+    """
+    lead = session.get(Lead, lead_id)
+    if not lead:
+        raise ValueError(f"Lead {lead_id} not found")
+    if lead.stage != "active":
+        raise ValueError("只能转化活跃线索")
+    if not lead.owner_id:
+        raise ValueError("线索必须有归属人才能转化")
+
+    # Idempotency check
+    existing = session.exec(
+        select(Customer).where(Customer.lead_id == lead_id)
+    ).first()
+    if existing:
+        raise ValueError("线索已转化为客户")
+
+    customer = Customer(
+        id=str(uuid.uuid4()),
+        lead_id=lead_id,
+        company_name=lead.company_name,
+        unified_code=lead.unified_code,
+        region=lead.region,
+        owner_id=lead.owner_id,
+        source=lead.source,
+    )
+    session.add(customer)
+    session.flush()  # get customer.id
+
+    # Migrate contacts
+    contacts = session.exec(
+        select(Contact).where(Contact.lead_id == lead_id)
+    ).all()
+    for contact in contacts:
+        contact.lead_id = None
+        contact.customer_id = customer.id
+        session.add(contact)
+
+    # Mark lead as converted
+    lead.stage = "converted"
+    lead.converted_at = datetime.utcnow()
+    session.add(lead)
+
+    session.commit()
+    session.refresh(customer)
+
+    log_action(session, actor_id, "lead:convert", "lead", lead_id, {"customer_id": customer.id})
+    return customer
