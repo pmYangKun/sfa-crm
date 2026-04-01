@@ -8,6 +8,7 @@ from sqlmodel import Session
 from app.core.database import create_db_and_tables, engine
 from app.models.auth import Permission, Role, RolePermission, UserDataScope, UserRole
 from app.models.config import SystemConfig
+from app.models.llm_config import ConversationMessage, LLMConfig, Skill
 from app.models.org import OrgNode, User
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
