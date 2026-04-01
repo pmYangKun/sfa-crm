@@ -11,6 +11,7 @@ from slowapi.util import get_remote_address
 from app.api import auth, customers, followups, key_events, leads, webhooks
 from app.core.init_db import init_db
 from app.services.rate_limiter import user_limiter
+from app.services.customer_service import run_conversion_window_reminders
 from app.services.release_service import run_auto_release
 
 limiter = Limiter(key_func=get_remote_address)
@@ -24,6 +25,8 @@ async def lifespan(app: FastAPI):
 
     # Schedule daily auto-release at 02:00
     _scheduler.add_job(run_auto_release, "cron", hour=2, minute=0, id="auto_release")
+    # Schedule daily conversion window reminders at 09:00
+    _scheduler.add_job(run_conversion_window_reminders, "cron", hour=9, minute=0, id="conversion_window")
     _scheduler.start()
 
     yield
@@ -72,5 +75,10 @@ def health():
 @app.post("/admin/trigger-auto-release", tags=["admin"])
 def trigger_auto_release():
     """Manual trigger for testing the auto-release job."""
-    result = run_auto_release()
-    return result
+    return run_auto_release()
+
+
+@app.post("/admin/trigger-conversion-reminders", tags=["admin"])
+def trigger_conversion_reminders():
+    """Manual trigger for testing the conversion window reminder job."""
+    return run_conversion_window_reminders()

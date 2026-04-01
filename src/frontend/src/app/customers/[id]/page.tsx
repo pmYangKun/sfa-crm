@@ -6,6 +6,13 @@ import { useParams } from "next/navigation";
 import { api } from "@/lib/api";
 import type { FollowUp } from "@/types";
 
+interface ConversionWindow {
+  active: boolean;
+  days_elapsed: number;
+  days_remaining: number;
+  window_days: number;
+}
+
 interface CustomerDetail {
   id: string;
   lead_id: string;
@@ -18,6 +25,7 @@ interface CustomerDetail {
   days_since_conversion: number;
   lead_region: string | null;
   lead_source: string | null;
+  conversion_window: ConversionWindow;
 }
 
 const SOURCE_LABEL: Record<string, string> = {
@@ -153,6 +161,21 @@ export default function CustomerDetailPage() {
         </dl>
       </div>
 
+      {/* Conversion window (T069) — only shown within window */}
+      {customer.conversion_window && (
+        <div className={`card window-card ${customer.conversion_window.active ? "window-active" : "window-closed"}`}>
+          <h3>大课转化窗口</h3>
+          {customer.conversion_window.active ? (
+            <div className="window-status">
+              <span className="window-countdown">还剩 <strong>{customer.conversion_window.days_remaining}</strong> 天</span>
+              <span className="window-hint">窗口期第 {customer.conversion_window.days_elapsed} / {customer.conversion_window.window_days} 天</span>
+            </div>
+          ) : (
+            <p className="window-closed-label">窗口已关闭（{customer.conversion_window.days_elapsed} 天前转化）</p>
+          )}
+        </div>
+      )}
+
       {/* Source lead */}
       <div className="card">
         <h3>来源线索</h3>
@@ -272,6 +295,15 @@ export default function CustomerDetailPage() {
         .fu-type-tag { background: #f0f0f0; padding: 1px 6px; border-radius: 4px; font-size: 11px; color: #595959; }
         .fu-date { font-size: 12px; color: var(--color-text-secondary); }
         .fu-content { font-size: 13px; margin: 0; }
+
+        /* Conversion window */
+        .window-card { border-left: 4px solid #1677ff; }
+        .window-active { border-left-color: #fa8c16; }
+        .window-closed { border-left-color: #d9d9d9; opacity: 0.7; }
+        .window-status { display: flex; align-items: center; gap: 16px; }
+        .window-countdown { font-size: 20px; font-weight: 600; color: #fa8c16; }
+        .window-hint { font-size: 13px; color: var(--color-text-secondary); }
+        .window-closed-label { font-size: 13px; color: var(--color-text-secondary); margin: 0; }
 
         .hint { color: var(--color-text-secondary); font-size: 13px; }
         .error { color: #e53e3e; font-size: 13px; }

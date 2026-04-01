@@ -16,6 +16,7 @@ from app.core.deps import get_current_user, require_permission
 from app.models.customer import Customer
 from app.models.lead import Lead
 from app.models.org import User
+from app.services.customer_service import get_conversion_window_status
 from app.services.permission_service import get_visible_user_ids
 
 router = APIRouter()
@@ -45,6 +46,8 @@ class CustomerDetailResponse(CustomerResponse):
     # Source lead info (read-only reference)
     lead_region: Optional[str] = None
     lead_source: Optional[str] = None
+    # Derived conversion window
+    conversion_window: dict
 
 
 class CustomerListResponse(BaseModel):
@@ -133,4 +136,5 @@ def get_customer(
         days_since_conversion=days,
         lead_region=lead.region if lead else None,
         lead_source=lead.source if lead else None,
+        conversion_window=get_conversion_window_status(customer),
     )
