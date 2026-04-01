@@ -136,12 +136,14 @@ def create_lead(
             },
         )
 
-    # Create the lead
+    # Create the lead — assign to current user's private pool
     lead = Lead(
         company_name=body.company_name,
         unified_code=body.unified_code,
         region=body.region,
         source=body.source,
+        owner_id=current_user.id,
+        pool="private",
     )
     session.add(lead)
     session.flush()

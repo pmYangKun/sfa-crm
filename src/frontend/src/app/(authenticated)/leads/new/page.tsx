@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { api, ApiError } from '@/lib/api';
 
 interface ContactInput {
@@ -12,12 +12,20 @@ interface ContactInput {
   wechat_id: string;
 }
 
+const SOURCE_MAP: Record<string, string> = {
+  '转介绍': 'referral', 'referral': 'referral',
+  '自然流量': 'organic', 'organic': 'organic',
+  'KOC/SEM': 'koc_sem', 'koc_sem': 'koc_sem',
+  '外呼': 'outbound', '主动外呼': 'outbound', 'outbound': 'outbound',
+};
+
 export default function NewLeadPage() {
   const router = useRouter();
-  const [companyName, setCompanyName] = useState('');
+  const searchParams = useSearchParams();
+  const [companyName, setCompanyName] = useState(searchParams.get('company') || searchParams.get('company_name') || '');
   const [unifiedCode, setUnifiedCode] = useState('');
-  const [region, setRegion] = useState('华北');
-  const [source, setSource] = useState('referral');
+  const [region, setRegion] = useState(searchParams.get('region') || '华北');
+  const [source, setSource] = useState(SOURCE_MAP[searchParams.get('source') || ''] || 'referral');
   const [contacts, setContacts] = useState<ContactInput[]>([
     { name: '', role: '', is_key_decision_maker: false, phone: '', wechat_id: '' },
   ]);

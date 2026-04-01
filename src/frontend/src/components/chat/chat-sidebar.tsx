@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
 
 interface Message {
@@ -9,8 +10,75 @@ interface Message {
   content: string;
 }
 
+/**
+ * Parse [[nav:label|url]] markers in AI response and split into
+ * text segments and navigation button segments.
+ */
+function parseNavMarkers(text: string): Array<{ type: 'text'; value: string } | { type: 'nav'; label: string; url: string }> {
+  const parts: Array<{ type: 'text'; value: string } | { type: 'nav'; label: string; url: string }> = [];
+  const regex = /\[\[nav:(.+?)\|(.+?)\]\]/g;
+  let lastIndex = 0;
+  let match;
+
+  while ((match = regex.exec(text)) !== null) {
+    if (match.index > lastIndex) {
+      parts.push({ type: 'text', value: text.slice(lastIndex, match.index) });
+    }
+    parts.push({ type: 'nav', label: match[1].trim(), url: match[2].trim() });
+    lastIndex = regex.lastIndex;
+  }
+
+  if (lastIndex < text.length) {
+    parts.push({ type: 'text', value: text.slice(lastIndex) });
+  }
+
+  return parts;
+}
+
+function MessageContent({ content, onNavigate }: { content: string; onNavigate: (url: string) => void }) {
+  const parts = parseNavMarkers(content);
+
+  if (parts.length === 1 && parts[0].type === 'text') {
+    return <>{content}</>;
+  }
+
+  return (
+    <>
+      {parts.map((part, i) => {
+        if (part.type === 'text') {
+          return <span key={i}>{part.value}</span>;
+        }
+        return (
+          <button
+            key={i}
+            onClick={() => onNavigate(part.url)}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 4,
+              margin: '4px 2px',
+              padding: '6px 12px',
+              background: '#1890ff',
+              color: '#fff',
+              border: 'none',
+              borderRadius: 6,
+              cursor: 'pointer',
+              fontSize: 13,
+              fontWeight: 500,
+              whiteSpace: 'nowrap',
+            }}
+          >
+            <span style={{ fontSize: 14 }}>→</span> {part.label}
+          </button>
+        );
+      })}
+    </>
+  );
+}
+
 export default function ChatSidebar() {
   const { user } = useAuth();
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
@@ -21,6 +89,39 @@ export default function ChatSidebar() {
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  const handleNavigate = useCallback((url: string) => {
+    // Normalize LLM-generated sub-path URLs to hash-anchor format
+    // e.g. /leads/{id}/followup → /leads/{id}#followup
+    const subPathMap: Record<string, string> = {
+      'followup': 'followup',
+      'follow-up': 'followup',
+      'key-events': 'keyevent',
+      'key-event': 'keyevent',
+      'keyevent': 'keyevent',
+      'actions': 'actions',
+    };
+    let normalized = url;
+    const leadSubPath = normalized.match(/^(\/leads\/[^/?#]+)\/([\w-]+)/);
+    if (leadSubPath) {
+      const anchor = subPathMap[leadSubPath[2]];
+      if (anchor) {
+        // Preserve any query params from the original URL
+        const qIdx = normalized.indexOf('?');
+        const query = qIdx >= 0 ? normalized.slice(qIdx).split('#')[0] : '';
+        normalized = `${leadSubPath[1]}${query}#${anchor}`;
+      }
+    }
+
+    router.push(normalized.split('#')[0]);
+    const hash = normalized.split('#')[1];
+    if (hash) {
+      setTimeout(() => {
+        const el = document.getElementById(hash);
+        el?.scrollIntoView({ behavior: 'smooth' });
+      }, 500);
+    }
+  }, [router]);
 
   if (!user) return null;
 
@@ -66,26 +167,16 @@ export default function ChatSidebar() {
       setMessages(prev => [...prev, { id: assistantId, role: 'assistant', content: '' }]);
 
       const decoder = new TextDecoder();
-      let buffer = '';
 
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
 
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split('\n');
-        buffer = lines.pop() || '';
-
-        for (const line of lines) {
-          if (line.startsWith('0:')) {
-            // Text delta from Vercel AI SDK data stream
-            try {
-              const text = JSON.parse(line.slice(2));
-              setMessages(prev => prev.map(m =>
-                m.id === assistantId ? { ...m, content: m.content + text } : m
-              ));
-            } catch { /* skip non-JSON lines */ }
-          }
+        const chunk = decoder.decode(value, { stream: true });
+        if (chunk) {
+          setMessages(prev => prev.map(m =>
+            m.id === assistantId ? { ...m, content: m.content + chunk } : m
+          ));
         }
       }
     } catch (err) {
@@ -120,7 +211,7 @@ export default function ChatSidebar() {
       {open && (
         <div style={{
           position: 'fixed', bottom: 96, right: 24, zIndex: 999,
-          width: 400, height: 520, background: '#fff',
+          width: 420, height: 560, background: '#fff',
           borderRadius: 12, boxShadow: '0 4px 24px rgba(0,0,0,0.15)',
           display: 'flex', flexDirection: 'column', overflow: 'hidden',
         }}>
@@ -128,8 +219,10 @@ export default function ChatSidebar() {
           <div style={{
             padding: '12px 16px', background: '#1890ff', color: '#fff',
             fontWeight: 600, fontSize: 15,
+            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
           }}>
-            AI 助手
+            <span>AI 助手 (Copilot)</span>
+            <span style={{ fontSize: 11, opacity: 0.8 }}>查询直答 · 操作导航</span>
           </div>
 
           {/* Messages */}
@@ -138,23 +231,30 @@ export default function ChatSidebar() {
             display: 'flex', flexDirection: 'column', gap: 12,
           }}>
             {messages.length === 0 && (
-              <p style={{ color: '#999', textAlign: 'center', marginTop: 40 }}>
-                输入消息开始对话，例如：&ldquo;帮我搜索华为相关线索&rdquo;
-              </p>
+              <div style={{ color: '#999', textAlign: 'center', marginTop: 32, fontSize: 13, lineHeight: 2 }}>
+                <p style={{ fontSize: 14, marginBottom: 8 }}>你可以这样问我：</p>
+                <p>&ldquo;帮我搜一下华北的线索&rdquo;</p>
+                <p>&ldquo;帮我给数字颗粒录一条拜访记录&rdquo;</p>
+                <p>&ldquo;我想把这条线索转成客户&rdquo;</p>
+              </div>
             )}
             {messages.map(msg => (
               <div
                 key={msg.id}
                 style={{
                   alignSelf: msg.role === 'user' ? 'flex-end' : 'flex-start',
-                  background: msg.role === 'user' ? '#1890ff' : '#f0f0f0',
+                  background: msg.role === 'user' ? '#1890ff' : '#f5f5f5',
                   color: msg.role === 'user' ? '#fff' : '#333',
                   padding: '8px 12px', borderRadius: 8,
-                  maxWidth: '80%', fontSize: 14, lineHeight: 1.5,
+                  maxWidth: '85%', fontSize: 14, lineHeight: 1.6,
                   whiteSpace: 'pre-wrap', wordBreak: 'break-word',
                 }}
               >
-                {msg.content || (loading ? '思考中...' : '')}
+                {msg.role === 'assistant' ? (
+                  <MessageContent content={msg.content || (loading ? '思考中...' : '')} onNavigate={handleNavigate} />
+                ) : (
+                  msg.content
+                )}
               </div>
             ))}
             <div ref={bottomRef} />

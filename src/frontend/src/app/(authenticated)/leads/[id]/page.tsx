@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
-import { Lead, Contact, FollowUp, PaginatedResponse } from '@/types';
+import { Lead, Contact, FollowUp, KeyEvent, PaginatedResponse } from '@/types';
 import KeyEventForm from '@/components/leads/key-event-form';
 
 interface LeadDetail extends Lead {
@@ -15,19 +15,23 @@ export default function LeadDetailPage() {
   const router = useRouter();
   const [lead, setLead] = useState<LeadDetail | null>(null);
   const [followups, setFollowups] = useState<FollowUp[]>([]);
+  const [keyEvents, setKeyEvents] = useState<KeyEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [fuContent, setFuContent] = useState('');
   const [fuType, setFuType] = useState('phone');
   const [submitting, setSubmitting] = useState(false);
+  const [actionLoading, setActionLoading] = useState('');
 
   const loadData = async () => {
     try {
-      const [leadData, fuData] = await Promise.all([
+      const [leadData, fuData, keData] = await Promise.all([
         api.get<LeadDetail>(`/leads/${id}`),
         api.get<PaginatedResponse<FollowUp>>(`/leads/${id}/followups?size=50`),
+        api.get<PaginatedResponse<KeyEvent>>(`/leads/${id}/key-events?size=50`),
       ]);
       setLead(leadData);
       setFollowups(fuData.items);
+      setKeyEvents(keData.items);
     } catch {
       router.push('/leads');
     } finally {
@@ -36,6 +40,18 @@ export default function LeadDetailPage() {
   };
 
   useEffect(() => { loadData(); }, [id]);
+
+  // Auto-scroll to hash anchor (e.g. #followup, #keyevent, #actions) after data loads
+  useEffect(() => {
+    if (!loading && lead) {
+      const hash = window.location.hash.slice(1);
+      if (hash) {
+        setTimeout(() => {
+          document.getElementById(hash)?.scrollIntoView({ behavior: 'smooth' });
+        }, 100);
+      }
+    }
+  }, [loading, lead]);
 
   const handleAddFollowup = async () => {
     if (!fuContent.trim()) return;
@@ -55,11 +71,57 @@ export default function LeadDetailPage() {
     }
   };
 
+  const handleConvert = async () => {
+    if (!confirm('确认将此线索转化为客户？')) return;
+    setActionLoading('convert');
+    try {
+      await api.post(`/leads/${id}/convert`, {});
+      loadData();
+    } catch (err) {
+      alert('转化失败：' + (err instanceof Error ? err.message : '未知错误'));
+    } finally {
+      setActionLoading('');
+    }
+  };
+
+  const handleRelease = async () => {
+    if (!confirm('确认释放此线索到公共池？')) return;
+    setActionLoading('release');
+    try {
+      await api.post(`/leads/${id}/release`, {});
+      loadData();
+    } catch (err) {
+      alert('释放失败：' + (err instanceof Error ? err.message : '未知错误'));
+    } finally {
+      setActionLoading('');
+    }
+  };
+
+  const handleMarkLost = async () => {
+    if (!confirm('确认标记此线索为流失？')) return;
+    setActionLoading('lost');
+    try {
+      await api.post(`/leads/${id}/mark-lost`, {});
+      loadData();
+    } catch (err) {
+      alert('标记失败：' + (err instanceof Error ? err.message : '未知错误'));
+    } finally {
+      setActionLoading('');
+    }
+  };
+
   if (loading) return <p>加载中...</p>;
   if (!lead) return <p>线索不存在</p>;
 
   const stageLabel = { active: '活跃', converted: '已转化', lost: '已流失' }[lead.stage] || lead.stage;
   const sourceLabel = { referral: '转介绍', organic: '自然流量', koc_sem: 'KOC/SEM', outbound: '外呼' }[lead.source] || lead.source;
+  const keyEventLabel: Record<string, string> = {
+    visited_kp: '拜访KP',
+    book_sent: '赠书',
+    attended_small_course: '参加小课',
+    purchased_big_course: '购买大课',
+    contact_relation_discovered: '发现关系',
+  };
 
   return (
     <div>
@@ -78,6 +140,28 @@ export default function LeadDetailPage() {
           <div><div style={{ color: '#999', fontSize: 13 }}>组织机构代码</div><div>{lead.unified_code || '-'}</div></div>
           <div><div style={{ color: '#999', fontSize: 13 }}>创建时间</div><div>{new Date(lead.created_at).toLocaleString()}</div></div>
         </div>
+        {lead.stage === 'active' && (
+          <div id="actions" style={{ display: 'flex', gap: 8, marginTop: 20, paddingTop: 16, borderTop: '1px solid #f0f0f0' }}>
+            <button onClick={handleConvert} disabled={!!actionLoading} style={{
+              padding: '6px 16px', background: '#52c41a', color: '#fff',
+              border: 'none', borderRadius: 4, cursor: actionLoading ? 'not-allowed' : 'pointer',
+            }}>
+              {actionLoading === 'convert' ? '处理中...' : '转化客户'}
+            </button>
+            <button onClick={handleRelease} disabled={!!actionLoading} style={{
+              padding: '6px 16px', background: '#faad14', color: '#fff',
+              border: 'none', borderRadius: 4, cursor: actionLoading ? 'not-allowed' : 'pointer',
+            }}>
+              {actionLoading === 'release' ? '处理中...' : '释放线索'}
+            </button>
+            <button onClick={handleMarkLost} disabled={!!actionLoading} style={{
+              padding: '6px 16px', background: '#ff4d4f', color: '#fff',
+              border: 'none', borderRadius: 4, cursor: actionLoading ? 'not-allowed' : 'pointer',
+            }}>
+              {actionLoading === 'lost' ? '处理中...' : '标记流失'}
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Contacts */}
@@ -110,7 +194,7 @@ export default function LeadDetailPage() {
       </div>
 
       {/* Follow-ups */}
-      <div style={{ background: '#fff', padding: 24, borderRadius: 8, marginBottom: 24 }}>
+      <div id="followup" style={{ background: '#fff', padding: 24, borderRadius: 8, marginBottom: 24 }}>
         <h2 style={{ fontSize: 18, marginBottom: 16 }}>跟进记录</h2>
         <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
           <select value={fuType} onChange={e => setFuType(e.target.value)}
@@ -147,9 +231,28 @@ export default function LeadDetailPage() {
       </div>
 
       {/* Key Events */}
-      <div style={{ background: '#fff', padding: 24, borderRadius: 8 }}>
+      <div id="keyevent" style={{ background: '#fff', padding: 24, borderRadius: 8 }}>
         <h2 style={{ fontSize: 18, marginBottom: 16 }}>关键事件</h2>
         <KeyEventForm entityType="lead" entityId={id} onCreated={loadData} />
+        {keyEvents.length === 0 ? <p style={{ color: '#999', marginTop: 16 }}>暂无关键事件</p> : (
+          <div style={{ marginTop: 16 }}>
+            {keyEvents.map(ke => (
+              <div key={ke.id} style={{ padding: '12px 0', borderBottom: '1px solid #f0f0f0' }}>
+                <div style={{ display: 'flex', gap: 8, marginBottom: 4 }}>
+                  <span style={{ padding: '2px 8px', background: '#f6ffed', border: '1px solid #b7eb8f', borderRadius: 4, fontSize: 12 }}>
+                    {keyEventLabel[ke.type] || ke.type}
+                  </span>
+                  <span style={{ color: '#999', fontSize: 13 }}>{new Date(ke.occurred_at).toLocaleString()}</span>
+                </div>
+                {ke.payload && Object.keys(ke.payload).length > 0 && (
+                  <p style={{ fontSize: 13, color: '#666', marginTop: 4 }}>
+                    {Object.entries(ke.payload).map(([k, v]) => `${k}: ${v}`).join('、')}
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

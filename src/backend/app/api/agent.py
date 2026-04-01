@@ -11,6 +11,7 @@ from sqlmodel import Session, select
 
 from app.core.database import get_session
 from app.core.deps import get_client_ip, require_permission
+from app.models.config import SystemConfig
 from app.models.llm_config import LLMConfig, Skill
 from app.models.org import User
 from app.services.agent_service import (
@@ -35,6 +36,7 @@ class LLMConfigRequest(BaseModel):
     provider: str
     model: str
     api_key: Optional[str] = None
+    system_prompt: Optional[str] = None
 
 
 class SkillCreateRequest(BaseModel):
@@ -65,15 +67,19 @@ def get_llm_config_full(
     session: Session = Depends(get_session),
     current_user: User = Depends(require_permission("agent.chat")),
 ):
-    """Full LLM config including API key — called server-side only by Next.js API Route."""
+    """Full LLM config including API key + system prompt — called server-side only by Next.js API Route."""
     config = get_active_llm_config(session)
     if not config:
         return {"configured": False}
+    # Read system prompt from config
+    prompt_cfg = session.get(SystemConfig, "agent_system_prompt")
+    system_prompt = prompt_cfg.value if prompt_cfg else ""
     return {
         "configured": True,
         "provider": config.provider,
         "model": config.model,
         "api_key": config.api_key,
+        "system_prompt": system_prompt,
     }
 
 
@@ -81,7 +87,7 @@ def get_llm_config_full(
 def save_llm_config(
     body: LLMConfigRequest,
     session: Session = Depends(get_session),
-    current_user: User = Depends(require_permission("config.update")),
+    current_user: User = Depends(require_permission("config.manage")),
 ):
     """Create or update LLM config. Deactivates existing configs and creates a new active one."""
     # Deactivate all existing configs
@@ -98,6 +104,14 @@ def save_llm_config(
     )
     new_config.is_active = True
     session.add(new_config)
+
+    # Update system prompt if provided
+    if body.system_prompt is not None:
+        prompt_cfg = session.get(SystemConfig, "agent_system_prompt")
+        if prompt_cfg:
+            prompt_cfg.value = body.system_prompt
+            session.add(prompt_cfg)
+
     session.commit()
     return {"success": True}
 
@@ -106,7 +120,7 @@ def save_llm_config(
 def create_skill(
     body: SkillCreateRequest,
     session: Session = Depends(get_session),
-    current_user: User = Depends(require_permission("config.update")),
+    current_user: User = Depends(require_permission("config.manage")),
 ):
     skill = Skill(
         name=body.name,

@@ -111,6 +111,27 @@ DEFAULT_CONFIGS = [
     ("daily_report_generate_at", "18:00", "日报生成时间"),
     ("name_similarity_threshold", "85", "公司名模糊匹配阈值（0-100）"),
     ("region_claim_rules", "{}", "各大区抢占规则 JSON"),
+    ("agent_system_prompt", """你是 SFA CRM 的 AI 助手（Copilot）。你的职责是帮助销售团队高效管理线索、客户和跟进工作。
+
+## 你的能力
+- 查询工具：search_leads、get_lead_detail、get_followup_history、list_customers
+- 导航工具：navigate_create_lead、navigate_log_followup、navigate_create_key_event、navigate_convert_lead、navigate_release_lead、navigate_mark_lost
+
+## 关键规则
+1. **查询操作**直接调用查询工具，获取数据后向用户展示结果
+2. **写入操作**必须调用对应的 navigate_* 工具，工具会返回包含 url 字段的结果。你必须使用工具返回的 url（不要自己编造 URL），将其格式化为导航标记：[[nav:按钮文字|工具返回的url]]
+3. **多步骤操作**一次展示所有步骤，每个步骤都要调用对应的 navigate 工具获取正确 URL，然后给出导航按钮
+4. 用中文回答，语气专业简洁，像一个懂业务的助手
+5. 回答时关注业务价值，不要暴露技术细节（如ID、API等）
+6. 如果用户描述了与客户的沟通内容，主动建议录入跟进记录和关键事件
+
+## 导航标记格式
+[[nav:按钮文字|url]]
+
+示例：navigate_create_lead 工具返回 {"url": "/leads/new?company_name=ABC&region=华北"}
+你应输出：[[nav:去创建线索|/leads/new?company_name=ABC&region=华北]]
+
+重要：永远不要自己构造 /leads/xxx 这样的 URL，必须从 navigate 工具的返回值中获取。""", "AI助手系统提示词"),
 ]
 
 
@@ -177,7 +198,7 @@ def init_db():
             id=str(uuid.uuid4()),
             name="管理员",
             login="admin",
-            password_hash=pwd_context.hash("admin123"),
+            password_hash=pwd_context.hash("12345"),
             org_node_id=root.id,
         )
         session.add(admin_user)
@@ -191,7 +212,7 @@ def init_db():
             id=str(uuid.uuid4()),
             name="销售01",
             login="sales01",
-            password_hash=pwd_context.hash("test123"),
+            password_hash=pwd_context.hash("12345"),
             org_node_id=team_north1.id,
         )
         session.add(sales_user)
@@ -205,7 +226,7 @@ def init_db():
             id=str(uuid.uuid4()),
             name="队长01",
             login="manager01",
-            password_hash=pwd_context.hash("test123"),
+            password_hash=pwd_context.hash("12345"),
             org_node_id=team_north1.id,
         )
         session.add(manager_user)
