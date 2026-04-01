@@ -13,12 +13,12 @@
 
 **目的**：搭建前后端项目骨架，配置基础工具链
 
-- [ ] T001 创建 `backend/` 目录，初始化 Python 项目：`backend/pyproject.toml`（依赖：fastapi、sqlmodel、uvicorn、python-jose、slowapi、rapidfuzz、apscheduler）
-- [ ] T002 [P] 创建 `frontend/` 目录，初始化 Next.js 项目：`frontend/package.json`（依赖：next、ai、@ai-sdk/anthropic、typescript）
-- [ ] T003 [P] 创建 `docker-compose.yml`，定义 backend / frontend 两个服务，挂载 SQLite 数据卷
-- [ ] T004 [P] 创建 `backend/Dockerfile` 和 `frontend/Dockerfile`
-- [ ] T005 [P] 配置 backend 代码格式化工具：`backend/.ruff.toml`
-- [ ] T006 [P] 配置 frontend TypeScript 和 ESLint：`frontend/tsconfig.json`、`frontend/.eslintrc.json`
+- [x] T001 创建 `backend/` 目录，初始化 Python 项目：`backend/pyproject.toml`（依赖：fastapi、sqlmodel、uvicorn、python-jose、slowapi、rapidfuzz、apscheduler）
+- [x] T002 [P] 创建 `frontend/` 目录，初始化 Next.js 项目：`frontend/package.json`（依赖：next、ai、@ai-sdk/anthropic、typescript）
+- [x] T003 [P] 创建 `docker-compose.yml`，定义 backend / frontend 两个服务，挂载 SQLite 数据卷
+- [x] T004 [P] 创建 `backend/Dockerfile` 和 `frontend/Dockerfile`
+- [x] T005 [P] 配置 backend 代码格式化工具：`backend/.ruff.toml`
+- [x] T006 [P] 配置 frontend TypeScript 和 ESLint：`frontend/tsconfig.json`、`frontend/.eslintrc.json`
 
 **检查点**：`docker-compose up --build` 可以启动，前后端服务均可访问
 

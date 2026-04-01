@@ -1,2 +1,59 @@
 # skills/check-prd 是独立 git 仓库
 skills/check-prd/
+
+# === Python ===
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+venv/
+*.egg-info/
+dist/
+build/
+*.egg
+.pytest_cache/
+.ruff_cache/
+
+# === Node.js ===
+node_modules/
+.next/
+out/
+dist/
+build/
+*.tsbuildinfo
+next-env.d.ts
+
+# === IDE ===
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# === OS ===
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# === Environment ===
+.env
+.env.local
+.env.*.local
+
+# === Database ===
+*.db
+*.db-wal
+*.db-shm
+
+# === Logs ===
+*.log
+npm-debug.log*
+
+# === Docker ===
+docker-compose.override.yml
+
+# === Misc ===
+*.tmp
+*.bak
+coverage/
