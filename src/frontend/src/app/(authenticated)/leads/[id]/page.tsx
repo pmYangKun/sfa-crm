@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useParams, useRouter, useSearchParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { Lead, Contact, FollowUp, KeyEvent, PaginatedResponse } from '@/types';
 import KeyEventForm from '@/components/leads/key-event-form';
@@ -13,13 +13,13 @@ interface LeadDetail extends Lead {
 export default function LeadDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [lead, setLead] = useState<LeadDetail | null>(null);
   const [followups, setFollowups] = useState<FollowUp[]>([]);
   const [keyEvents, setKeyEvents] = useState<KeyEvent[]>([]);
   const [loading, setLoading] = useState(true);
-  const [fuContent, setFuContent] = useState(searchParams.get('fu_content') || '');
-  const [fuType, setFuType] = useState(searchParams.get('fu_type') || 'phone');
+  const [fuContent, setFuContent] = useState('');
+  const [fuType, setFuType] = useState('phone');
+  const [prefillKeType, setPrefillKeType] = useState<string | undefined>(undefined);
   const [submitting, setSubmitting] = useState(false);
   const [actionLoading, setActionLoading] = useState('');
 
@@ -42,21 +42,25 @@ export default function LeadDetailPage() {
 
   useEffect(() => { loadData(); }, [id]);
 
-  // Sync form fields when URL search params change (e.g. Copilot nav button clicked)
+  // Read prefill data from sessionStorage (written by Copilot nav button)
   useEffect(() => {
-    const paramContent = searchParams.get('fu_content');
-    const paramType = searchParams.get('fu_type');
-    if (paramContent) setFuContent(paramContent);
-    if (paramType) setFuType(paramType);
+    const raw = sessionStorage.getItem('copilot_prefill');
+    if (!raw) return;
+    sessionStorage.removeItem('copilot_prefill');
 
-    // Also scroll to hash anchor when params change (covers Copilot nav)
+    const params = new URLSearchParams(raw);
+    if (params.get('fu_content')) setFuContent(params.get('fu_content')!);
+    if (params.get('fu_type')) setFuType(params.get('fu_type')!);
+    if (params.get('ke_type')) setPrefillKeType(params.get('ke_type')!);
+
+    // Scroll to the relevant section
     const hash = window.location.hash.slice(1);
     if (hash) {
       setTimeout(() => {
         document.getElementById(hash)?.scrollIntoView({ behavior: 'smooth' });
       }, 300);
     }
-  }, [searchParams]);
+  }, [id]);
 
   // Auto-scroll to hash anchor on initial page load
   useEffect(() => {
@@ -250,7 +254,7 @@ export default function LeadDetailPage() {
       {/* Key Events */}
       <div id="keyevent" style={{ background: '#fff', padding: 24, borderRadius: 8 }}>
         <h2 style={{ fontSize: 18, marginBottom: 16 }}>关键事件</h2>
-        <KeyEventForm entityType="lead" entityId={id} onCreated={loadData} initialType={searchParams.get('ke_type') || undefined} />
+        <KeyEventForm entityType="lead" entityId={id} onCreated={loadData} initialType={prefillKeType} />
         {keyEvents.length === 0 ? <p style={{ color: '#999', marginTop: 16 }}>暂无关键事件</p> : (
           <div style={{ marginTop: 16 }}>
             {keyEvents.map(ke => (

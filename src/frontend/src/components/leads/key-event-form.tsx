@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { api } from '@/lib/api';
 
 interface Props {
@@ -21,6 +21,10 @@ const EVENT_TYPES = [
 export default function KeyEventForm({ entityType, entityId, onCreated, initialType }: Props) {
   const [type, setType] = useState(initialType || 'visited_kp');
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (initialType) setType(initialType);
+  }, [initialType]);
 
   const handleSubmit = async () => {
     setSubmitting(true);
