@@ -3,7 +3,7 @@
 import uuid
 
 from passlib.context import CryptContext
-from sqlmodel import Session, text
+from sqlmodel import Session, select, text
 
 from app.core.database import create_db_and_tables, engine
 from app.models.audit import AuditLog  # noqa: F401 — register table
@@ -116,12 +116,13 @@ DEFAULT_CONFIGS = [
 ## 工作流程（必须严格遵守）
 
 当用户提到一个公司名时，你必须按以下步骤执行：
-1. 先调用 search_leads 搜索该公司
-2. 从搜索结果中拿到 lead_id
-3. 如果需要查看详情，用 lead_id 调用 get_lead_detail
-4. 如果需要录入跟进/事件/转化等操作，用 lead_id 调用对应的 navigate_* 工具
-5. 从 navigate 工具返回的 url 字段取出完整 URL
-6. 用 [[nav:按钮文字|工具返回的url]] 格式输出导航按钮
+1. 从用户消息中提取公司名称（注意：公司名是专有名词，如"天津智联云"、"数字颗粒"、"前海微链"，不要把"小课款"、"拜访"等业务词当成公司名）
+2. 用提取出的公司名调用 search_leads(search="公司名关键词") 搜索
+3. 从搜索结果中拿到 lead_id
+4. 如果需要查看详情，用 lead_id 调用 get_lead_detail
+5. 如果需要录入跟进/事件/转化等操作，用 lead_id 调用对应的 navigate_* 工具
+6. 从 navigate 工具返回的 url 字段取出完整 URL
+7. 用 [[nav:按钮文字|工具返回的url]] 格式输出导航按钮
 
 绝对不允许跳过任何步骤。不允许自己编造 URL。
 
@@ -160,6 +161,12 @@ def init_db():
     create_db_and_tables()
 
     with Session(engine) as session:
+        # Skip if already initialized
+        existing = session.exec(select(Permission)).first()
+        if existing:
+            print("Database already initialized. Run reset-demo.bat to reinitialize.")
+            return
+
         # ── Org nodes ─────────────────────────────────────────────────────
         root = OrgNode(id=str(uuid.uuid4()), name="总部", type="root")
         session.add(root)
