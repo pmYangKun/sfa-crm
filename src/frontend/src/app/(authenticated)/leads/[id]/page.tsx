@@ -42,7 +42,23 @@ export default function LeadDetailPage() {
 
   useEffect(() => { loadData(); }, [id]);
 
-  // Auto-scroll to hash anchor (e.g. #followup, #keyevent, #actions) after data loads
+  // Sync form fields when URL search params change (e.g. Copilot nav button clicked)
+  useEffect(() => {
+    const paramContent = searchParams.get('fu_content');
+    const paramType = searchParams.get('fu_type');
+    if (paramContent) setFuContent(paramContent);
+    if (paramType) setFuType(paramType);
+
+    // Also scroll to hash anchor when params change (covers Copilot nav)
+    const hash = window.location.hash.slice(1);
+    if (hash) {
+      setTimeout(() => {
+        document.getElementById(hash)?.scrollIntoView({ behavior: 'smooth' });
+      }, 300);
+    }
+  }, [searchParams]);
+
+  // Auto-scroll to hash anchor on initial page load
   useEffect(() => {
     if (!loading && lead) {
       const hash = window.location.hash.slice(1);
