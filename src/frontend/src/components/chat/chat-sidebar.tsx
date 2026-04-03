@@ -91,6 +91,17 @@ export default function ChatSidebar() {
   }, [messages]);
 
   const handleNavigate = useCallback((url: string) => {
+    // Validate: /leads/{id} URLs must use UUID format IDs (not company names)
+    const leadIdMatch = url.match(/^\/leads\/([^/?#]+)/);
+    if (leadIdMatch) {
+      const id = decodeURIComponent(leadIdMatch[1]);
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+      if (!isUUID && id !== 'new') {
+        alert('导航链接无效，请重新向 AI 提问。');
+        return;
+      }
+    }
+
     // Normalize LLM-generated sub-path URLs to hash-anchor format
     // e.g. /leads/{id}/followup → /leads/{id}#followup
     const subPathMap: Record<string, string> = {
@@ -106,7 +117,6 @@ export default function ChatSidebar() {
     if (leadSubPath) {
       const anchor = subPathMap[leadSubPath[2]];
       if (anchor) {
-        // Preserve any query params from the original URL
         const qIdx = normalized.indexOf('?');
         const query = qIdx >= 0 ? normalized.slice(qIdx).split('#')[0] : '';
         normalized = `${leadSubPath[1]}${query}#${anchor}`;
