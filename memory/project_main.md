@@ -88,11 +88,17 @@ type: project
 ### 演示体验优化（2026-04-03）
 
 - Chat 面板从浮动小窗改为右侧全高侧栏（Agentforce 风格）
-- navigate 工具支持预填表单（followup_type/content/event_type 通过 URL params 传递）
-- search_leads/get_lead_detail 返回 detail_url，防止 LLM 编造 URL
+- navigate 工具支持预填表单（sessionStorage 传递 followup_type/content/event_type）
+- search_leads/get_lead_detail 返回 detail_url + last_followup_at，防止 LLM 编造 URL
+- Copilot 工具增加 DataScope 过滤（search_leads/list_customers），与正式 API 一致
+- system prompt 重写为工作流程式，解决 DeepSeek 不调工具就编 URL 的问题
+- 新增 sales02（李思远）、sales03（张磊），3 个销售差异化活跃度（高/中/低）
+- 新增团队分析能力：manager 可问"谁在偷懒"，AI 按 owner 分组分析跟进节奏
 - init_db 自动从 `src/backend/.env` 读取 LLM API Key（不进 Git）
-- 演示案例精简为 10 个独立案例，每个可单独执行
+- init_db 增加幂等检查，避免重复初始化报错
+- 演示案例精简为 8 个独立案例，含团队偷懒检测（案例 6）
 - README 重构：演示信息前置，修正账号密码
+- 新增 `reset-demo.bat` 一键重置演示数据
 
 ---
 
@@ -101,7 +107,8 @@ type: project
 - ✅ 全部 14 Phase 编码完成（T001-T110）
 - ✅ Copilot 端到端跑通（DeepSeek Tool Use）
 - ✅ 9 篇公众号文章完成
-- ✅ 演示体验优化（全高面板、表单预填、案例重构）
-- LLM API Key 配置：`src/backend/.env`（在 .gitignore 中）
-- 演示案例：`src/demo/copilot-cases.md`（10 个独立案例）
-- 一键启动：`start.bat`
+- ✅ 演示体验全面优化（全高面板、预填、团队分析、权限过滤）
+- LLM API Key：`src/backend/.env`（在 .gitignore 中）
+- 演示案例：`src/demo/copilot-cases.md`（8 个独立案例）
+- 一键启动：`start.bat` | 一键重置：`reset-demo.bat`
+- 演示账号：admin / sales01（王小明）/ sales02（李思远）/ sales03（张磊）/ manager01（陈队长），密码均为 12345

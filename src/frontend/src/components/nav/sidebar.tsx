@@ -48,7 +48,7 @@ export default function Sidebar() {
       display: 'flex', flexDirection: 'column', position: 'fixed', left: 0, top: 0,
     }}>
       <div style={{ padding: '20px 16px', borderBottom: '1px solid #ffffff20', fontSize: 18, fontWeight: 'bold' }}>
-        SFA CRM
+        杨堃的 SFA CRM
       </div>
       <nav style={{ flex: 1, padding: '8px 0' }}>
         {NAV_ITEMS.map(item => (
