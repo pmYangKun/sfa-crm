@@ -214,7 +214,7 @@ def execute_tool(
                 stmt = stmt.where(Lead.company_name.contains(args["search"]))  # type: ignore
             if args.get("region"):
                 stmt = stmt.where(Lead.region == args["region"])
-            leads = session.exec(stmt.limit(20)).all()
+            leads = session.exec(stmt.limit(50)).all()
             results = []
             for l in leads:
                 owner_name = None
@@ -228,6 +228,7 @@ def execute_tool(
                     "pool": l.pool,
                     "owner": owner_name or "公共池",
                     "source": l.source,
+                    "last_followup_at": l.last_followup_at,
                     "detail_url": f"/leads/{l.id}",
                 })
             return {"success": True, "count": len(results), "leads": results}
