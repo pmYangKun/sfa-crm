@@ -131,7 +131,11 @@ DEFAULT_CONFIGS = [
 示例：navigate_create_lead 工具返回 {"url": "/leads/new?company_name=ABC&region=华北"}
 你应输出：[[nav:去创建线索|/leads/new?company_name=ABC&region=华北]]
 
-重要：永远不要自己构造 /leads/xxx 这样的 URL，必须从 navigate 工具的返回值中获取。""", "AI助手系统提示词"),
+## ⚠️ URL 规则（严格遵守）
+- 工具返回的数据中包含 detail_url 字段（如 "/leads/abc-123"），这是系统生成的正确链接
+- 生成导航按钮时，必须使用 navigate_* 工具返回的 url，或查询工具返回的 detail_url
+- **绝对禁止**自己拼接 /leads/xxx 这样的 URL，ID 是 UUID 格式，你无法猜出来
+- 如果你想建议用户"录入跟进"或"记录事件"，必须先调用对应的 navigate_* 工具获取正确 URL""", "AI助手系统提示词"),
 ]
 
 
@@ -265,6 +269,34 @@ def init_db():
                 session.exec(text(stmt))
             except Exception:
                 pass  # Table may not exist yet; indexes created when tables exist
+
+
+    # ── LLM config from env ────────────────────────────────────────────────
+    _init_llm_config(session)
+
+
+def _init_llm_config(session: Session):
+    """Read LLM_PROVIDER / LLM_MODEL / LLM_API_KEY from .env and seed LLMConfig."""
+    import os
+    from dotenv import load_dotenv
+    load_dotenv()
+
+    api_key = os.getenv("LLM_API_KEY", "")
+    if not api_key:
+        return  # No key configured, skip
+
+    provider = os.getenv("LLM_PROVIDER", "deepseek")
+    model = os.getenv("LLM_MODEL", "deepseek-chat")
+
+    config = LLMConfig(
+        id=str(uuid.uuid4()),
+        provider=provider,
+        model=model,
+        api_key=api_key,
+        is_active=True,
+    )
+    session.add(config)
+    session.commit()
 
 
 if __name__ == "__main__":

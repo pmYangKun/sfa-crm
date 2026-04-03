@@ -112,12 +112,14 @@ TOOL_DEFINITIONS = [
     {
         "name": "navigate_log_followup",
         "mode": "navigate",
-        "description": "引导用户去录入跟进记录",
+        "description": "引导用户去录入跟进记录，可预填跟进类型和内容",
         "parameters": {
             "type": "object",
             "properties": {
                 "lead_id": {"type": "string", "description": "线索ID"},
                 "company_name": {"type": "string", "description": "公司名称（用于显示）"},
+                "followup_type": {"type": "string", "description": "跟进类型：phone/wechat/visit/other"},
+                "content": {"type": "string", "description": "跟进内容摘要（从用户对话中提取）"},
             },
             "required": ["lead_id"],
         },
@@ -131,6 +133,7 @@ TOOL_DEFINITIONS = [
             "properties": {
                 "lead_id": {"type": "string", "description": "线索ID"},
                 "company_name": {"type": "string", "description": "公司名称（用于显示）"},
+                "event_type": {"type": "string", "description": "事件类型：visited_kp/book_sent/attended_small_course/purchased_big_course/contact_relation_discovered"},
             },
             "required": ["lead_id"],
         },
@@ -212,6 +215,7 @@ def execute_tool(
                     "pool": l.pool,
                     "owner": owner_name or "公共池",
                     "source": l.source,
+                    "detail_url": f"/leads/{l.id}",
                 })
             return {"success": True, "count": len(results), "leads": results}
 
@@ -238,6 +242,7 @@ def execute_tool(
                     "source": lead.source,
                     "created_at": lead.created_at,
                     "last_followup_at": lead.last_followup_at,
+                    "detail_url": f"/leads/{lead.id}",
                 },
                 "contacts": [
                     {"name": c.name, "role": c.role, "phone": c.phone, "is_kp": c.is_key_decision_maker}
@@ -302,19 +307,29 @@ def execute_tool(
         elif tool_name == "navigate_log_followup":
             lead_id = args["lead_id"]
             name = args.get("company_name", "")
+            params = []
+            if args.get("followup_type"):
+                params.append(f"fu_type={quote(args['followup_type'])}")
+            if args.get("content"):
+                params.append(f"fu_content={quote(args['content'])}")
+            qs = ("?" + "&".join(params)) if params else ""
             return {
                 "action": "navigate",
                 "label": f"录入跟进{': ' + name if name else ''}",
-                "url": f"/leads/{lead_id}#followup",
+                "url": f"/leads/{lead_id}{qs}#followup",
             }
 
         elif tool_name == "navigate_create_key_event":
             lead_id = args["lead_id"]
             name = args.get("company_name", "")
+            params = []
+            if args.get("event_type"):
+                params.append(f"ke_type={quote(args['event_type'])}")
+            qs = ("?" + "&".join(params)) if params else ""
             return {
                 "action": "navigate",
                 "label": f"记录关键事件{': ' + name if name else ''}",
-                "url": f"/leads/{lead_id}#keyevent",
+                "url": f"/leads/{lead_id}{qs}#keyevent",
             }
 
         elif tool_name == "navigate_convert_lead":

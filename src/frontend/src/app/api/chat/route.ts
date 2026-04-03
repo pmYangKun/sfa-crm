@@ -146,14 +146,23 @@ export async function POST(req: Request) {
         (args) => exec('navigate_create_lead', args),
       ),
       navigate_log_followup: defineTool(
-        '引导用户去录入跟进记录（返回导航链接）',
-        { lead_id: { type: 'string', description: '线索ID' }, company_name: { type: 'string', description: '公司名称' } },
+        '引导用户去录入跟进记录，可预填跟进类型和内容',
+        {
+          lead_id: { type: 'string', description: '线索ID' },
+          company_name: { type: 'string', description: '公司名称' },
+          followup_type: { type: 'string', description: '跟进类型：phone/wechat/visit/other' },
+          content: { type: 'string', description: '跟进内容摘要（从用户对话中提取）' },
+        },
         ['lead_id'],
         (args) => exec('navigate_log_followup', args),
       ),
       navigate_create_key_event: defineTool(
         '引导用户去记录关键事件（拜访KP、赠书、小课、大课等）',
-        { lead_id: { type: 'string', description: '线索ID' }, company_name: { type: 'string', description: '公司名称' } },
+        {
+          lead_id: { type: 'string', description: '线索ID' },
+          company_name: { type: 'string', description: '公司名称' },
+          event_type: { type: 'string', description: '事件类型：visited_kp/book_sent/attended_small_course/purchased_big_course/contact_relation_discovered' },
+        },
         ['lead_id'],
         (args) => exec('navigate_create_key_event', args),
       ),

@@ -5,6 +5,41 @@
 
 ---
 
+## 快速体验
+
+### 启动
+
+Windows 用户双击 `start.bat`，等待两个终端窗口启动完成后访问：
+
+- **前端：** http://localhost:3000/login
+- **后端 API 文档：** http://localhost:8000/docs
+
+> 如果首次启动或数据库被清除，需要先初始化数据库：
+> ```bash
+> cd src/backend
+> python -c "from app.core.init_db import init_db; init_db()"
+> ```
+
+### 演示账号
+
+| 账号 | 密码 | 角色 | 数据范围 |
+|------|------|------|---------|
+| `admin` | `12345` | 系统管理员 | 全部 |
+| `sales01` | `12345` | 销售 | 仅自己 |
+| `manager01` | `12345` | 战队队长 | 本队及下属 |
+
+### AI Copilot 配置
+
+首次使用需配置 LLM：
+1. 用 `admin` 登录
+2. 进入「Admin → LLM 配置」
+3. 填入 API Key（支持 DeepSeek、Anthropic 等 OpenAI 兼容 Provider）
+4. 点击保存并激活
+
+配置完成后，任意用户登录都可以使用右下角的 AI 助手。演示案例见 [`src/demo/copilot-cases.md`](src/demo/copilot-cases.md)。
+
+---
+
 ## 这是什么
 
 一个正在进行中的实验性工程项目，目标是：**基于 Spec Coding，从零构建一个 AI-Native 的 SFA CRM 产品**。
@@ -106,17 +141,9 @@ npm install
 npm run dev                       # http://localhost:3000
 ```
 
-### 初始账号
+### 账号与 AI 配置
 
-| 账号 | 密码 | 角色 |
-|------|------|------|
-| `admin` | `admin123` | 系统管理员 |
-| `sales01` | `test123` | 销售 |
-| `manager01` | `test123` | 战队队长 |
-
-### AI 功能配置
-
-登录 Admin → 系统配置 → LLM 配置 → 填入 API Key，点击激活。支持 Anthropic 和 OpenAI 兼容 Provider。
+见本文档顶部「快速体验」章节。
 
 ### 运行集成测试
 

@@ -7,6 +7,7 @@ interface Props {
   entityType: 'lead' | 'customer';
   entityId: string;
   onCreated: () => void;
+  initialType?: string;
 }
 
 const EVENT_TYPES = [
@@ -17,8 +18,8 @@ const EVENT_TYPES = [
   { value: 'contact_relation_discovered', label: '发现人脉关系' },
 ];
 
-export default function KeyEventForm({ entityType, entityId, onCreated }: Props) {
-  const [type, setType] = useState('visited_kp');
+export default function KeyEventForm({ entityType, entityId, onCreated, initialType }: Props) {
+  const [type, setType] = useState(initialType || 'visited_kp');
   const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async () => {

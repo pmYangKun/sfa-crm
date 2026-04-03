@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { api } from '@/lib/api';
 import { Lead, Contact, FollowUp, KeyEvent, PaginatedResponse } from '@/types';
 import KeyEventForm from '@/components/leads/key-event-form';
@@ -13,12 +13,13 @@ interface LeadDetail extends Lead {
 export default function LeadDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [lead, setLead] = useState<LeadDetail | null>(null);
   const [followups, setFollowups] = useState<FollowUp[]>([]);
   const [keyEvents, setKeyEvents] = useState<KeyEvent[]>([]);
   const [loading, setLoading] = useState(true);
-  const [fuContent, setFuContent] = useState('');
-  const [fuType, setFuType] = useState('phone');
+  const [fuContent, setFuContent] = useState(searchParams.get('fu_content') || '');
+  const [fuType, setFuType] = useState(searchParams.get('fu_type') || 'phone');
   const [submitting, setSubmitting] = useState(false);
   const [actionLoading, setActionLoading] = useState('');
 
@@ -233,7 +234,7 @@ export default function LeadDetailPage() {
       {/* Key Events */}
       <div id="keyevent" style={{ background: '#fff', padding: 24, borderRadius: 8 }}>
         <h2 style={{ fontSize: 18, marginBottom: 16 }}>关键事件</h2>
-        <KeyEventForm entityType="lead" entityId={id} onCreated={loadData} />
+        <KeyEventForm entityType="lead" entityId={id} onCreated={loadData} initialType={searchParams.get('ke_type') || undefined} />
         {keyEvents.length === 0 ? <p style={{ color: '#999', marginTop: 16 }}>暂无关键事件</p> : (
           <div style={{ marginTop: 16 }}>
             {keyEvents.map(ke => (

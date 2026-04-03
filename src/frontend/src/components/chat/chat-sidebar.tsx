@@ -192,47 +192,62 @@ export default function ChatSidebar() {
 
   return (
     <>
-      {/* Toggle button */}
-      <button
-        onClick={() => setOpen(!open)}
-        style={{
-          position: 'fixed', bottom: 24, right: 24, zIndex: 1000,
-          width: 56, height: 56, borderRadius: '50%',
-          background: '#1890ff', color: '#fff', border: 'none',
-          fontSize: 24, cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-        }}
-        title="AI 助手"
-      >
-        {open ? '✕' : '🤖'}
-      </button>
+      {/* Toggle button — only visible when panel is closed */}
+      {!open && (
+        <button
+          onClick={() => setOpen(true)}
+          style={{
+            position: 'fixed', bottom: 24, right: 24, zIndex: 1000,
+            width: 56, height: 56, borderRadius: '50%',
+            background: '#1890ff', color: '#fff', border: 'none',
+            fontSize: 24, cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}
+          title="AI 助手"
+        >
+          🤖
+        </button>
+      )}
 
-      {/* Chat panel */}
+      {/* Chat panel — full-height right sidebar */}
       {open && (
         <div style={{
-          position: 'fixed', bottom: 96, right: 24, zIndex: 999,
-          width: 420, height: 560, background: '#fff',
-          borderRadius: 12, boxShadow: '0 4px 24px rgba(0,0,0,0.15)',
+          position: 'fixed', top: 0, right: 0, bottom: 0, zIndex: 999,
+          width: 420, background: '#fff',
+          boxShadow: '-4px 0 24px rgba(0,0,0,0.12)',
           display: 'flex', flexDirection: 'column', overflow: 'hidden',
         }}>
           {/* Header */}
           <div style={{
-            padding: '12px 16px', background: '#1890ff', color: '#fff',
-            fontWeight: 600, fontSize: 15,
+            padding: '16px 20px', background: '#1890ff', color: '#fff',
+            fontWeight: 600, fontSize: 16,
             display: 'flex', justifyContent: 'space-between', alignItems: 'center',
           }}>
-            <span>AI 助手 (Copilot)</span>
-            <span style={{ fontSize: 11, opacity: 0.8 }}>查询直答 · 操作导航</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span>🤖</span>
+              <span>AI 助手 (Copilot)</span>
+            </div>
+            <button
+              onClick={() => setOpen(false)}
+              style={{
+                background: 'transparent', border: 'none', color: '#fff',
+                fontSize: 20, cursor: 'pointer', padding: '0 4px',
+                lineHeight: 1, opacity: 0.85,
+              }}
+              title="关闭"
+            >
+              ✕
+            </button>
           </div>
 
           {/* Messages */}
           <div style={{
-            flex: 1, overflowY: 'auto', padding: 16,
+            flex: 1, overflowY: 'auto', padding: 20,
             display: 'flex', flexDirection: 'column', gap: 12,
           }}>
             {messages.length === 0 && (
-              <div style={{ color: '#999', textAlign: 'center', marginTop: 32, fontSize: 13, lineHeight: 2 }}>
-                <p style={{ fontSize: 14, marginBottom: 8 }}>你可以这样问我：</p>
+              <div style={{ color: '#999', textAlign: 'center', marginTop: 60, fontSize: 13, lineHeight: 2.2 }}>
+                <p style={{ fontSize: 15, marginBottom: 12, color: '#666' }}>你可以这样问我：</p>
                 <p>&ldquo;帮我搜一下华北的线索&rdquo;</p>
                 <p>&ldquo;帮我给数字颗粒录一条拜访记录&rdquo;</p>
                 <p>&ldquo;我想把这条线索转成客户&rdquo;</p>
@@ -262,7 +277,7 @@ export default function ChatSidebar() {
 
           {/* Input */}
           <form onSubmit={handleSubmit} style={{
-            padding: '8px 12px', borderTop: '1px solid #f0f0f0',
+            padding: '12px 16px', borderTop: '1px solid #e8e8e8',
             display: 'flex', gap: 8,
           }}>
             <input
