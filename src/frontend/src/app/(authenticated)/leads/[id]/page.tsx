@@ -52,24 +52,16 @@ export default function LeadDetailPage() {
     if (params.get('fu_content')) setFuContent(params.get('fu_content')!);
     if (params.get('fu_type')) setFuType(params.get('fu_type')!);
     if (params.get('ke_type')) setPrefillKeType(params.get('ke_type')!);
+  }); // no deps — runs every render, but sessionStorage is consumed immediately
 
-    // Scroll to the relevant section
-    const hash = window.location.hash.slice(1);
-    if (hash) {
-      setTimeout(() => {
-        document.getElementById(hash)?.scrollIntoView({ behavior: 'smooth' });
-      }, 300);
-    }
-  }, [id]);
-
-  // Auto-scroll to hash anchor on initial page load
+  // Auto-scroll to hash anchor after page loads
   useEffect(() => {
     if (!loading && lead) {
       const hash = window.location.hash.slice(1);
       if (hash) {
         setTimeout(() => {
           document.getElementById(hash)?.scrollIntoView({ behavior: 'smooth' });
-        }, 100);
+        }, 200);
       }
     }
   }, [loading, lead]);

@@ -123,20 +123,23 @@ export default function ChatSidebar() {
       }
     }
 
-    // Store prefill params in sessionStorage so the target page can read them
-    // (router.push preserves chat state but useState initials don't re-run)
+    // Write prefill data to sessionStorage, then navigate
     const urlObj = new URL(normalized, window.location.origin);
-    if (urlObj.searchParams.toString()) {
-      sessionStorage.setItem('copilot_prefill', urlObj.searchParams.toString());
+    const searchStr = urlObj.searchParams.toString();
+    if (searchStr) {
+      sessionStorage.setItem('copilot_prefill', searchStr);
     }
-
-    const path = urlObj.pathname;
     const hash = urlObj.hash.slice(1);
-    router.push(path);
+
+    // Add timestamp to force React to re-mount the page component
+    // (router.push to the same path without this won't re-trigger useEffect)
+    const navPath = `${urlObj.pathname}?_t=${Date.now()}`;
+    router.push(navPath);
+
     if (hash) {
       setTimeout(() => {
         document.getElementById(hash)?.scrollIntoView({ behavior: 'smooth' });
-      }, 500);
+      }, 600);
     }
   }, [router]);
 

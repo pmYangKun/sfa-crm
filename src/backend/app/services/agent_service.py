@@ -192,16 +192,29 @@ def execute_tool(
     from app.models.followup import FollowUp
     from app.models.lead import Lead
     from app.models.org import User
+    from app.services.permission_service import get_visible_user_ids
 
     try:
+        # Get current user for DataScope filtering
+        current_user = session.get(User, user_id)
+
         # ── Read tools ────────────────────────────────────────────────
         if tool_name == "search_leads":
             stmt = select(Lead).where(Lead.stage == "active")
+
+            # DataScope filtering
+            if current_user:
+                visible_ids = get_visible_user_ids(session, current_user)
+                if visible_ids is not None:
+                    stmt = stmt.where(
+                        Lead.owner_id.in_(visible_ids) | (Lead.pool == "public")  # type: ignore
+                    )
+
             if args.get("search"):
                 stmt = stmt.where(Lead.company_name.contains(args["search"]))  # type: ignore
             if args.get("region"):
                 stmt = stmt.where(Lead.region == args["region"])
-            leads = session.exec(stmt.limit(10)).all()
+            leads = session.exec(stmt.limit(20)).all()
             results = []
             for l in leads:
                 owner_name = None
@@ -273,6 +286,10 @@ def execute_tool(
 
         elif tool_name == "list_customers":
             stmt = select(Customer)
+            if current_user:
+                visible_ids = get_visible_user_ids(session, current_user)
+                if visible_ids is not None:
+                    stmt = stmt.where(Customer.owner_id.in_(visible_ids))  # type: ignore
             if args.get("search"):
                 stmt = stmt.where(Customer.company_name.contains(args["search"]))  # type: ignore
             customers = session.exec(stmt.limit(10)).all()

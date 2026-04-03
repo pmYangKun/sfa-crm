@@ -85,9 +85,23 @@ type: project
 
 ---
 
+### 演示体验优化（2026-04-03）
+
+- Chat 面板从浮动小窗改为右侧全高侧栏（Agentforce 风格）
+- navigate 工具支持预填表单（followup_type/content/event_type 通过 URL params 传递）
+- search_leads/get_lead_detail 返回 detail_url，防止 LLM 编造 URL
+- init_db 自动从 `src/backend/.env` 读取 LLM API Key（不进 Git）
+- 演示案例精简为 10 个独立案例，每个可单独执行
+- README 重构：演示信息前置，修正账号密码
+
+---
+
 ## 当前状态
 
 - ✅ 全部 14 Phase 编码完成（T001-T110）
 - ✅ Copilot 端到端跑通（DeepSeek Tool Use）
 - ✅ 9 篇公众号文章完成
-- 辅助文件：`src/demo/copilot-cases.md`（Copilot 演示案例集）、`start.bat`（一键启动脚本）
+- ✅ 演示体验优化（全高面板、表单预填、案例重构）
+- LLM API Key 配置：`src/backend/.env`（在 .gitignore 中）
+- 演示案例：`src/demo/copilot-cases.md`（10 个独立案例）
+- 一键启动：`start.bat`

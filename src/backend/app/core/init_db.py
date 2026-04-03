@@ -222,23 +222,24 @@ def init_db():
         session.add(UserDataScope(user_id=admin_user.id, scope="all"))
         session.flush()
 
-        sales_user = User(
-            id=str(uuid.uuid4()),
-            name="销售01",
-            login="sales01",
-            password_hash=pwd_context.hash("12345"),
-            org_node_id=team_north1.id,
-        )
-        session.add(sales_user)
-        session.flush()
-
-        session.add(UserRole(user_id=sales_user.id, role_id=role_map["销售"]))
-        session.add(UserDataScope(user_id=sales_user.id, scope="self_only"))
-        session.flush()
+        # Sales users — 3 salespeople with different activity levels
+        sales_users = []
+        for login, name in [("sales01", "王小明"), ("sales02", "李思远"), ("sales03", "张磊")]:
+            u = User(
+                id=str(uuid.uuid4()), name=name, login=login,
+                password_hash=pwd_context.hash("12345"),
+                org_node_id=team_north1.id,
+            )
+            session.add(u)
+            session.flush()
+            session.add(UserRole(user_id=u.id, role_id=role_map["销售"]))
+            session.add(UserDataScope(user_id=u.id, scope="self_only"))
+            session.flush()
+            sales_users.append(u)
 
         manager_user = User(
             id=str(uuid.uuid4()),
-            name="队长01",
+            name="陈队长",
             login="manager01",
             password_hash=pwd_context.hash("12345"),
             org_node_id=team_north1.id,
