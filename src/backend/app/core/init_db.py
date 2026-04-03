@@ -274,6 +274,10 @@ def init_db():
     # ── LLM config from env ────────────────────────────────────────────────
     _init_llm_config(session)
 
+    # ── Seed demo data ───────────────────────────────────────────────────
+    from app.core.seed_data import seed
+    seed()
+
 
 def _init_llm_config(session: Session):
     """Read LLM_PROVIDER / LLM_MODEL / LLM_API_KEY from .env and seed LLMConfig."""
