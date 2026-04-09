@@ -19,14 +19,18 @@ Windows 用户双击 `start.bat`，等待两个终端窗口启动完成后访问
 > cd src/backend
 > python -c "from app.core.init_db import init_db; init_db()"
 > ```
+>
+> 需要重置演示数据时，双击 `reset-demo.bat` 即可一键恢复初始状态。
 
 ### 演示账号
 
 | 账号 | 密码 | 角色 | 数据范围 |
 |------|------|------|---------|
 | `admin` | `12345` | 系统管理员 | 全部 |
-| `sales01` | `12345` | 销售 | 仅自己 |
-| `manager01` | `12345` | 战队队长 | 本队及下属 |
+| `sales01` | `12345` | 销售（王小明） | 仅自己 |
+| `sales02` | `12345` | 销售（李思远） | 仅自己 |
+| `sales03` | `12345` | 销售（张磊） | 仅自己 |
+| `manager01` | `12345` | 战队队长（陈队长） | 本队及下属 |
 
 ### AI Copilot 配置
 
@@ -68,15 +72,7 @@ Spec 里有业务逻辑、对象定义、行为约束。AI 基于这些生成代
 ## Repo 结构
 
 ```
-├── articles/                        # 系列文章，每集记录一次对话的过程和结论
-│   ├── session-01-skill提炼.md
-│   ├── session-02-skill迭代.md
-│   ├── session-03-check-prd.md
-│   ├── session-04-需求采集.md
-│   ├── session-05-ontology.md
-│   ├── session-06-老登反击.md
-│   ├── session-07-技术栈.md
-│   └── session-08-speccoding.md
+├── docs/                            # 项目文档（PRD 等）
 ├── spec/archive/                    # 原始规格文件归档（已整合至 specs/master/spec.md）
 ├── specs/master/                    # spec-kit 产出文档（设计唯一真相源）
 │   ├── spec.md                      # 业务规格
@@ -117,7 +113,7 @@ Spec 里有业务逻辑、对象定义、行为约束。AI 基于这些生成代
 
 每一集都有对应文章，由 Claude（克劳蛋）执笔，杨老师盖章。
 
-文章存在 `articles/` 目录下，也会同步发布到杨老师的公众号**PM杨堃**。
+文章同步发布在杨老师的公众号**PM杨堃**。
 
 ---
 
