@@ -59,21 +59,10 @@ type: project
 
 后续修复：Copilot 端到端（DeepSeek Tool Use）、TypeScript 编译、Dashboard API、quickstart 文档拆分。
 
-### 已发布文章（9 篇）
+### 文档
 
-均在 `articles/` 目录下，文件名格式 `session-{编号}-{主题}.md`。
-
-| 编号 | 主题 |
-|------|------|
-| 01 | skill 提炼 |
-| 02 | skill 迭代 |
-| 03 | check-prd 工具与 PRD 验证 |
-| 04 | 需求采集与架构方向 |
-| 05 | Ontology 设计 |
-| 06 | Spec 阶段：线索客户拆分、RBAC |
-| 07 | 技术栈与 AI Agent 架构 |
-| 08 | Spec Coding 正确打开方式 |
-| 09 | （最新）风格修订版 |
+- `articles/` 目录已移除，会话记录迁移至 `Kun's Context` 仓库
+- `docs/` — PRD 文档（SFA-CRM-PRD.md / .docx）
 
 ---
 
@@ -88,6 +77,7 @@ type: project
 ### 演示体验优化（2026-04-03）
 
 - Chat 面板从浮动小窗改为右侧全高侧栏（Agentforce 风格）
+- Chat 导航关键路径：`chat-sidebar.tsx`（handleNavigate）→ sessionStorage(`copilot_prefill`) → 目标页读取；`/leads/new` 用 `useSearchParams` 读 URL 参数
 - navigate 工具支持预填表单（sessionStorage 传递 followup_type/content/event_type）
 - search_leads/get_lead_detail 返回 detail_url + last_followup_at，防止 LLM 编造 URL
 - Copilot 工具增加 DataScope 过滤（search_leads/list_customers），与正式 API 一致

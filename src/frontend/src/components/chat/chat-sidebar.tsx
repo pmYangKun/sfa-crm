@@ -133,7 +133,9 @@ export default function ChatSidebar() {
 
     // Add timestamp to force React to re-mount the page component
     // (router.push to the same path without this won't re-trigger useEffect)
-    const navPath = `${urlObj.pathname}?_t=${Date.now()}`;
+    const navPath = searchStr
+      ? `${urlObj.pathname}?${searchStr}&_t=${Date.now()}`
+      : `${urlObj.pathname}?_t=${Date.now()}`;
     router.push(navPath);
 
     if (hash) {
