@@ -107,33 +107,100 @@ type: project
 
 ## 内容策略与心智构建（2026-05-02 确立）
 
-SFA CRM 后续作为持续内容母体，构建：
-- 「vibe coding 达人」标签
-- 「现代 CRM 专家」标签
+### 顶层目标
 
-**顶层目标：** 通过 SFA CRM 公开验证并传递「**对话式 + 行为驱动 + Spec 工程化**」的现代 CRM 形态。SFA CRM 不只是 vibe coding 演示，更是用项目验证杨堃对 RAO / AI Native CRM 判断的载体。
+通过 SFA CRM 项目，公开验证并传递「**对话式 + 行为驱动 + Spec 工程化**」的现代 CRM 形态，构建「vibe coding 达人」+「现代 CRM 专家」双心智。
 
-**核心原则：**
-- 转化路径不外露——不喊买课/咨询，沿用既有引流（视频号→公众号→个人微信 goYangkunGo）
-- 内容寄生在产品迭代和专业讨论上，不为了写而写
+SFA CRM 不只是 vibe coding 演示，更是用项目验证杨堃对 RAO / AI Native CRM 判断的载体。
 
-**详细路线图（私有，仅本地访问）：**
-`D:\BaiduSyncdisk\Doc.Work\Programming\claudecode\SFACRM-private\content-plan.md`
-（项目内 junction：`docs/private/content-plan.md`，被 .gitignore 屏蔽不进 GitHub）
+### 核心原则（不可逾越）
 
-**结构概要：**
+- **转化路径不外露**：不喊买课/咨询，沿用既有引流（视频号→公众号→个人微信 goYangkunGo）
+- **内容寄生在产品迭代和专业讨论上**，不为了写而写
+- AI 不代写杨老师本人声音长文（编辑辅助限于错别字 / 结构 / 前后呼应）
 
-- **阶段 1：奠基（1-2 周）**：公网部署 + Mobile 形态调整（Chat 移动化为主入口）+ 首页 onboarding + GitHub README 门面化 + Session 10 集大成文
-- **阶段 1 之后：持续运营期（无终点）**：不再分大 Phase，4 轨道并行螺旋上升，靠主题攻势制造节奏感：
-  - 轨道 A：专业讨论（杨老师硬观点）
-  - 轨道 B：功能扩展（借鉴 Gong / Headless / RAO）
-  - 轨道 C：AI 玩法实验（MCP / Skill / Tool Use）
-  - 轨道 D：心智构建（克劳蛋系列）
+### 项目两条探索路径（叙述维度，非执行隔离）
 
-**两条探索路径**（叙述维度）：
-- 路径 1：CRM 业务形态变革（对话驱动、行为驱动、Gong/RAO 哲学）
-- 路径 2：ToB 软件 × AI 架构变革（Headless / MCP / 业务自助 SQL/Skill）
+| 路径 | 主题 | 心智锚定 |
+|------|------|---------|
+| 路径 1：CRM 业务形态变革 | 表单驱动 → 对话驱动；借鉴 Gong / RAO 行为驱动哲学；半结构化数据沉淀；Next Best Action | 「现代 CRM 专家」 |
+| 路径 2：ToB × AI 架构变革 | Headless 360 / MCP 化 / 业务人员自助 SQL 与 Skill / Tool Use / Agentic 编排 | 「vibe coding 达人」+ 架构理解 |
 
-**主题攻势节奏**：每 1-2 个月选一主题，4 轨道全部倾斜。不预先承诺顺序，按当下兴趣/热点/反馈动态选取。
+两路径主要作用是写文章时的叙述抓手，主题攻势内部会两路混合。
 
-下次讨论 SFA CRM 内容/文章/部署时，先读 content-plan.md 看当前主题攻势状态。
+### 阶段 1：奠基（1-2 周）
+
+**目标**：让 SFA CRM 从"听说"变成"读者亲手摸到"。
+
+**关键动作：**
+1. **公网部署**（用户准备服务器）：数据脱敏、演示账号公开化、LLM API Key 服务端代理、简单防刷 + 每日重置数据、PV/UV 统计
+2. **Mobile 形态调整**（不重写，重设）：现有 Chat 移动化为主入口；体现「行为驱动」哲学（Next Best Action 雏形）；不押注 chat-only，桌面端仍有表单
+3. **首页与登录后引导**：首页三件套（系统用途 / GitHub / 系列文章入口）+ 登录后简单 onboarding；移动端 Chat 必须有"我能干啥"的引导
+4. **GitHub README 门面化**：30 秒 demo 视频 + 在线试玩按钮 + 设计文档锚点
+5. **写 Session 10 集大成文**（克劳蛋人设）：「这个 CRM 现在你可以自己玩了」
+
+**阶段成功标志：**
+- Demo URL 任何人能点开就玩，演示数据稳定
+- Session 10 发布后从公众号文章可直跳 demo
+- 移动端 Chat 模式下新用户能在 1 分钟内理解"能做什么"
+
+### 阶段 1 之后：持续运营期（无终点）
+
+不再分大 Phase——4 个轨道并行螺旋上升，靠主题攻势制造节奏感。
+
+**4 个并行轨道：**
+
+| 轨道 | 内容 | 节奏 |
+|------|------|------|
+| A. 专业讨论 | 杨老师本人硬观点短文 | 每月 1-2 篇 |
+| B. 功能扩展 | SFA CRM 借鉴 Gong / Headless / RAO 形态落地 | 跟主题攻势 |
+| C. AI 玩法实验 | MCP / Skill / Tool Use / Agentic 编排 | 跟主题攻势 |
+| D. 心智构建 | 克劳蛋系列把每次迭代记录成文章 | 每 1-2 周 1 篇 |
+
+四轨道**互相喂料**——专业讨论决定要扩展哪些功能，功能扩展过程产生克劳蛋故事，AI 玩法实验既是技术弹药也是文章素材。
+
+**主题攻势机制：** 每 1-2 个月选一个主题，4 轨道全部向其倾斜。**不预先承诺顺序**，按当下兴趣 / 热点 / 反馈动态选取，可以打到一半切换到另一个主题。
+
+**每个主题攻势完整产出形态：**
+- 1 篇杨老师硬观点短文（轨道 A）
+- 2-4 篇克劳蛋系列文章（轨道 D）
+- 实际功能 / 技术上线（轨道 B/C）
+- 必要时配视频号短视频（用户自拍，AI 不介入选题）
+
+**主题攻势候选池（未排序，灵活选取，可持续增长）：**
+
+路径 1（CRM 业务形态）：
+- 对话式 CRM（借鉴 Gong 哲学，Mobile + 大客户打分 + Next Best Action）
+- 半结构化数据治理（对话 / 会议 / 邮件如何沉淀为 CRM 资产）
+- 销售行为预测与 AI 决策安全边界
+- 客户健康度评分与流失预警
+- 销售漏斗的"行为驱动"重构（vs 传统阶段驱动）
+
+路径 2（ToB 架构变革）：
+- Headless 360 与 MCP 化（对齐 Salesforce / HubSpot 头部尝试）
+- 业务人员自助 SQL / Skill 配置（能力下放，AI 辅助下的低门槛）
+- Tool Use 与 Agentic 编排（API 层 AI 接口设计）
+- 多租户与数据隔离在 AI Native 系统中的实现
+- 权限边界：AI 哪些操作必须人审批
+- 与现有 CRM（Salesforce / 钉钉 / 企微）的对接和迁移
+
+### 持续运营期成功标志（leading indicators）
+
+- 公众号搜「vibe coding」「现代 CRM」「AI CRM」能搜到杨堃文章
+- 至少有一篇硬观点文被同行 / 微信群截图传播
+- 出现非杨堃自己渠道的引用（行业自媒体 / 群推荐 / 咨询公司援引）
+- 私域加人速度自然上升
+- 项目 commit 历史持续生长（每月有非维护性新增）
+
+### 关键参考资源（执行时必读）
+
+| 场景 | 必读文件 |
+|------|---------|
+| 写克劳蛋系列文章 | 全局 memory：`writing_claudegg_sfacrm_series.md` + `writing_claudegg_voice.md` |
+| 写杨老师本人短文（编辑辅助） | 全局 memory：`writing_yk_voice.md` |
+| AI 立场表述 | 全局 memory：`user_ai_era_stance.md` |
+| 文章存放路径 | 全局 memory：`reference_articles.md` |
+| 多平台分发原则 | 全局 memory：`project_content_platforms.md` |
+| Gong / RAO 已有论述 | `Kun's Context\articles\wechat_archive\articles\2026\20260412-AI Native企业软件的机会在哪里.md` |
+
+下次讨论 SFA CRM 内容 / 文章 / 部署时，本节即为完整路线图。
