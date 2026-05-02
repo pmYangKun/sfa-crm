@@ -107,22 +107,33 @@ type: project
 
 ## 内容策略与心智构建（2026-05-02 确立）
 
-后续 SFA CRM 项目定位为「持续内容母体」，目标在读者心目中构建：
+SFA CRM 后续作为持续内容母体，构建：
 - 「vibe coding 达人」标签
 - 「现代 CRM 专家」标签
 
-**核心原则（不可逾越）：**
-- **转化路径不外露**——不直接喊买课/咨询，沿用既有引流（视频号→公众号→个人微信 goYangkunGo）
-- **公开 demo 部署**作为最强心智物证
-- **内容双线**：克劳蛋系列（过程叙事）+ 杨老师本人硬观点短文（专家立场）
+**顶层目标：** 通过 SFA CRM 公开验证并传递「**对话式 + 行为驱动 + Spec 工程化**」的现代 CRM 形态。SFA CRM 不只是 vibe coding 演示，更是用项目验证杨堃对 RAO / AI Native CRM 判断的载体。
+
+**核心原则：**
+- 转化路径不外露——不喊买课/咨询，沿用既有引流（视频号→公众号→个人微信 goYangkunGo）
+- 内容寄生在产品迭代和专业讨论上，不为了写而写
 
 **详细路线图（私有，仅本地访问）：**
 `D:\BaiduSyncdisk\Doc.Work\Programming\claudecode\SFACRM-private\content-plan.md`
 （项目内 junction：`docs/private/content-plan.md`，被 .gitignore 屏蔽不进 GitHub）
 
-**三阶段概要：**
-1. 心智物证落地（2-3 周）：公网部署 demo + GitHub README 门面化 + Session 10 集大成文
-2. 内容浓度战役（2-3 个月）：克劳蛋系列 6-10 篇 + 杨老师硬观点 4-6 篇双线
-3. 项目长青化（3-6 个月）：项目持续迭代 + 方法论沉淀，转化自然发生
+**结构概要：**
 
-下次讨论 SFA CRM 内容/文章/部署时，先读 content-plan.md 看当前阶段。
+- **阶段 1：奠基（1-2 周）**：公网部署 + Mobile 形态调整（Chat 移动化为主入口）+ 首页 onboarding + GitHub README 门面化 + Session 10 集大成文
+- **阶段 1 之后：持续运营期（无终点）**：不再分大 Phase，4 轨道并行螺旋上升，靠主题攻势制造节奏感：
+  - 轨道 A：专业讨论（杨老师硬观点）
+  - 轨道 B：功能扩展（借鉴 Gong / Headless / RAO）
+  - 轨道 C：AI 玩法实验（MCP / Skill / Tool Use）
+  - 轨道 D：心智构建（克劳蛋系列）
+
+**两条探索路径**（叙述维度）：
+- 路径 1：CRM 业务形态变革（对话驱动、行为驱动、Gong/RAO 哲学）
+- 路径 2：ToB 软件 × AI 架构变革（Headless / MCP / 业务自助 SQL/Skill）
+
+**主题攻势节奏**：每 1-2 个月选一主题，4 轨道全部倾斜。不预先承诺顺序，按当下兴趣/热点/反馈动态选取。
+
+下次讨论 SFA CRM 内容/文章/部署时，先读 content-plan.md 看当前主题攻势状态。
