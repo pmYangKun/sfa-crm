@@ -1,7 +1,7 @@
 # 数据模型设计
 
 **项目**: SFA CRM | **日期**: 2026-03-31
-**依据**: `spec/ontology.md` + `specs/master/research.md`
+**依据**: `docs/early-design/ontology.md` + `specs/master/research.md`
 
 ---
 

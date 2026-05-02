@@ -26,7 +26,8 @@ type: project
 - 三次方向纠偏：最终确定 Ontology 数据底座 + API-first + Copilot 三层架构
 - 完成 Ontology 设计（Lead/Customer 拆分、RBAC 四表、OrgNode 树、DataScope 五档）
 - 引入 spec-kit，完成 constitution v1.1.0 + spec.md + plan.md + data-model.md + tasks.md（110 任务，14 Phase）
-- Spec 文件目录：`spec/`，归档：`spec/archive/`
+- 早期业务设计归档：`docs/early-design/`（含 business-context / ontology / specifications，已整合至 `specs/master/spec.md`）
+- Spec-kit 自动产物：`specs/master/`
 
 ### 重大设计决策（设计阶段确定，至今未变）
 

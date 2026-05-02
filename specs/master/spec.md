@@ -1,6 +1,6 @@
 # SFA CRM — 功能规格
 
-**分支**: `master` | **来源**: `spec/ontology.md` + `spec/specifications.md` + `spec/business-context.md`
+**分支**: `master` | **来源**: `docs/early-design/ontology.md` + `docs/early-design/specifications.md` + `docs/early-design/business-context.md`
 
 ---
 

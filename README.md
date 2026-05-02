@@ -72,8 +72,8 @@ Spec 里有业务逻辑、对象定义、行为约束。AI 基于这些生成代
 ## Repo 结构
 
 ```
-├── docs/                            # 项目文档（PRD 等）
-├── spec/archive/                    # 原始规格文件归档（已整合至 specs/master/spec.md）
+├── docs/                            # 项目文档（PRD、早期业务设计归档等）
+│   └── early-design/                # 项目从 0 到 1 的业务理解 / Ontology 设计（已整合至 specs/master/spec.md）
 ├── specs/master/                    # spec-kit 产出文档（设计唯一真相源）
 │   ├── spec.md                      # 业务规格
 │   ├── plan.md                      # 实现计划
