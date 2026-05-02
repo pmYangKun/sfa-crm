@@ -102,3 +102,27 @@ type: project
 - 演示案例：`src/demo/copilot-cases.md`（8 个独立案例）
 - 一键启动：`start.bat` | 一键重置：`reset-demo.bat`
 - 演示账号：admin / sales01（王小明）/ sales02（李思远）/ sales03（张磊）/ manager01（陈队长），密码均为 12345
+
+---
+
+## 内容策略与心智构建（2026-05-02 确立）
+
+后续 SFA CRM 项目定位为「持续内容母体」，目标在读者心目中构建：
+- 「vibe coding 达人」标签
+- 「现代 CRM 专家」标签
+
+**核心原则（不可逾越）：**
+- **转化路径不外露**——不直接喊买课/咨询，沿用既有引流（视频号→公众号→个人微信 goYangkunGo）
+- **公开 demo 部署**作为最强心智物证
+- **内容双线**：克劳蛋系列（过程叙事）+ 杨老师本人硬观点短文（专家立场）
+
+**详细路线图（私有，仅本地访问）：**
+`D:\BaiduSyncdisk\Doc.Work\Programming\claudecode\SFACRM-private\content-plan.md`
+（项目内 junction：`docs/private/content-plan.md`，被 .gitignore 屏蔽不进 GitHub）
+
+**三阶段概要：**
+1. 心智物证落地（2-3 周）：公网部署 demo + GitHub README 门面化 + Session 10 集大成文
+2. 内容浓度战役（2-3 个月）：克劳蛋系列 6-10 篇 + 杨老师硬观点 4-6 篇双线
+3. 项目长青化（3-6 个月）：项目持续迭代 + 方法论沉淀，转化自然发生
+
+下次讨论 SFA CRM 内容/文章/部署时，先读 content-plan.md 看当前阶段。
