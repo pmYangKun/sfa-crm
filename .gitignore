@@ -60,3 +60,6 @@ coverage/
 
 # === Mermaid render cache ===
 .mermaid-cache/
+
+# === 私有文档（内容策略/内部笔记，不公开） ===
+docs/private/
