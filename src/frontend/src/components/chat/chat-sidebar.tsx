@@ -7,32 +7,12 @@ import {
   PENDING_PROMPT_EVENT,
   PENDING_PROMPT_KEY,
 } from '@/components/onboarding/onboarding-panel';
+import { parseNavMarkers } from '@/lib/parse-nav-markers';
 
 interface Message {
   id: string;
   role: 'user' | 'assistant';
   content: string;
-}
-
-function parseNavMarkers(text: string): Array<{ type: 'text'; value: string } | { type: 'nav'; label: string; url: string }> {
-  const parts: Array<{ type: 'text'; value: string } | { type: 'nav'; label: string; url: string }> = [];
-  const regex = /\[\[nav:(.+?)\|(.+?)\]\]/g;
-  let lastIndex = 0;
-  let match;
-
-  while ((match = regex.exec(text)) !== null) {
-    if (match.index > lastIndex) {
-      parts.push({ type: 'text', value: text.slice(lastIndex, match.index) });
-    }
-    parts.push({ type: 'nav', label: match[1].trim(), url: match[2].trim() });
-    lastIndex = regex.lastIndex;
-  }
-
-  if (lastIndex < text.length) {
-    parts.push({ type: 'text', value: text.slice(lastIndex) });
-  }
-
-  return parts;
 }
 
 function MessageContent({ content, onNavigate }: { content: string; onNavigate: (url: string) => void }) {

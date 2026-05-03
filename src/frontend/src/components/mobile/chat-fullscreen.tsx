@@ -2,11 +2,16 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useAuth } from '@/lib/auth-context';
+import { api } from '@/lib/api';
 import OnboardingCardsMobile from '@/components/onboarding/onboarding-cards-mobile';
 import {
   PENDING_PROMPT_EVENT,
   PENDING_PROMPT_KEY,
 } from '@/components/onboarding/onboarding-panel';
+import { parseNavMarkers } from '@/lib/parse-nav-markers';
+import { parseNavUrl } from '@/lib/parse-nav-url';
+import ChatFormCard, { ChatFormCardState } from './chat-form-card';
+import MobileFormSheet from './mobile-form-sheet';
 import { TABBAR_HEIGHT } from './kingkong-tabbar';
 
 interface Message {
@@ -27,8 +32,41 @@ export default function ChatFullscreen() {
   const loadingRef = useRef(loading);
   loadingRef.current = loading;
 
+  // 每张待确认卡片独立状态，cardKey = `${msgId}-${navIndex}`
+  const [cardStates, setCardStates] = useState<Record<string, ChatFormCardState>>({});
+  const [openCardKey, setOpenCardKey] = useState<string | null>(null);
+
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  // 监听消息流，发现新的 nav 标记时往 cardStates 加；已存在的卡不动（保留用户编辑状态）
+  useEffect(() => {
+    setCardStates((prev) => {
+      let changed = false;
+      const next = { ...prev };
+      for (const msg of messages) {
+        if (msg.role !== 'assistant') continue;
+        const parts = parseNavMarkers(msg.content);
+        let navIdx = 0;
+        for (const p of parts) {
+          if (p.type !== 'nav') continue;
+          const cardKey = `${msg.id}-${navIdx}`;
+          if (!next[cardKey]) {
+            const parsed = parseNavUrl(p.url, p.label);
+            next[cardKey] = {
+              cardKey,
+              parsed,
+              values: { ...parsed.prefill },
+              status: 'pending',
+            };
+            changed = true;
+          }
+          navIdx++;
+        }
+      }
+      return changed ? next : prev;
+    });
   }, [messages]);
 
   const sendPrompt = useCallback(async (text: string) => {
@@ -109,6 +147,48 @@ export default function ChatFullscreen() {
     return () => window.removeEventListener(PENDING_PROMPT_EVENT, consume);
   }, [user, sendPrompt]);
 
+  const handleSheetClose = useCallback((lastValues: Record<string, string>) => {
+    setCardStates((prev) => {
+      if (!openCardKey || !prev[openCardKey]) return prev;
+      return {
+        ...prev,
+        [openCardKey]: { ...prev[openCardKey], values: lastValues },
+      };
+    });
+    setOpenCardKey(null);
+  }, [openCardKey]);
+
+  const handleSheetSubmit = useCallback(async (values: Record<string, string>): Promise<{ id: string }> => {
+    const key = openCardKey;
+    if (!key) throw new Error('no open card');
+    const card = cardStates[key];
+    if (!card?.parsed.submit) throw new Error('该对象类型本期不支持提交');
+
+    setCardStates((prev) => ({
+      ...prev,
+      [key]: { ...prev[key], status: 'submitting', values },
+    }));
+
+    try {
+      const body = card.parsed.submit.buildBody(values);
+      const res = await api.post<{ id: string }>(card.parsed.submit.path, body);
+      const id = res.id ?? 'unknown';
+      setCardStates((prev) => ({
+        ...prev,
+        [key]: { ...prev[key], status: 'submitted', createdId: id, values },
+      }));
+      setOpenCardKey(null);
+      return { id };
+    } catch (e) {
+      const errorMsg = e instanceof Error ? e.message : '提交失败';
+      setCardStates((prev) => ({
+        ...prev,
+        [key]: { ...prev[key], status: 'failed', errorMsg, values },
+      }));
+      throw e;
+    }
+  }, [openCardKey, cardStates]);
+
   if (!user) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -121,6 +201,7 @@ export default function ChatFullscreen() {
   const showOnboarding = messages.length === 0 && !loading;
 
   return (
+    <>
     <div
       data-testid="chat-fullscreen"
       style={{
@@ -162,27 +243,98 @@ export default function ChatFullscreen() {
           <OnboardingCardsMobile currentLoginName={loginName} collapsed={false} />
         )}
         <div style={{ padding: 12, display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {messages.map((msg) => (
-            <div
-              key={msg.id}
-              data-testid={`chat-msg-${msg.role}`}
-              style={{
-                alignSelf: msg.role === 'user' ? 'flex-end' : 'flex-start',
-                background: msg.role === 'user' ? '#1890ff' : '#fff',
-                color: msg.role === 'user' ? '#fff' : '#262626',
-                padding: '8px 12px',
-                borderRadius: 8,
-                maxWidth: '85%',
-                fontSize: 14,
-                lineHeight: 1.6,
-                whiteSpace: 'pre-wrap',
-                wordBreak: 'break-word',
-                boxShadow: msg.role === 'assistant' ? '0 1px 2px rgba(0,0,0,0.04)' : 'none',
-              }}
-            >
-              {msg.content || (loading ? '思考中...' : '')}
-            </div>
-          ))}
+          {messages.map((msg) => {
+            if (msg.role === 'user') {
+              return (
+                <div
+                  key={msg.id}
+                  data-testid="chat-msg-user"
+                  style={{
+                    alignSelf: 'flex-end',
+                    background: '#1890ff',
+                    color: '#fff',
+                    padding: '8px 12px',
+                    borderRadius: 8,
+                    maxWidth: '85%',
+                    fontSize: 14,
+                    lineHeight: 1.6,
+                    whiteSpace: 'pre-wrap',
+                    wordBreak: 'break-word',
+                  }}
+                >
+                  {msg.content}
+                </div>
+              );
+            }
+
+            // assistant：把消息切成 text + nav 段，nav 段渲染为 ChatFormCard
+            const parts = parseNavMarkers(msg.content);
+            let navIdx = 0;
+            return (
+              <div
+                key={msg.id}
+                data-testid="chat-msg-assistant"
+                style={{
+                  alignSelf: 'stretch',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 4,
+                }}
+              >
+                {parts.map((p, i) => {
+                  if (p.type === 'text') {
+                    if (!p.value.trim()) return null;
+                    return (
+                      <div
+                        key={i}
+                        style={{
+                          alignSelf: 'flex-start',
+                          background: '#fff',
+                          color: '#262626',
+                          padding: '8px 12px',
+                          borderRadius: 8,
+                          maxWidth: '85%',
+                          fontSize: 14,
+                          lineHeight: 1.6,
+                          whiteSpace: 'pre-wrap',
+                          wordBreak: 'break-word',
+                          boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
+                        }}
+                      >
+                        {p.value}
+                      </div>
+                    );
+                  }
+                  const cardKey = `${msg.id}-${navIdx++}`;
+                  const card = cardStates[cardKey];
+                  if (!card) return null;
+                  return (
+                    <ChatFormCard
+                      key={i}
+                      state={card}
+                      onClick={() => setOpenCardKey(cardKey)}
+                    />
+                  );
+                })}
+                {/* 流式中且消息空时显示思考中 */}
+                {!msg.content && loading && (
+                  <div
+                    style={{
+                      alignSelf: 'flex-start',
+                      background: '#fff',
+                      color: '#999',
+                      padding: '8px 12px',
+                      borderRadius: 8,
+                      fontSize: 14,
+                      boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
+                    }}
+                  >
+                    思考中...
+                  </div>
+                )}
+              </div>
+            );
+          })}
           <div ref={bottomRef} />
         </div>
       </div>
@@ -216,5 +368,14 @@ export default function ChatFullscreen() {
         </button>
       </form>
     </div>
+
+    {/* Sheet 渲染在 chat-fullscreen 外，避开父级 position:fixed 创建的 stacking context */}
+    <MobileFormSheet
+      open={openCardKey !== null}
+      card={openCardKey ? cardStates[openCardKey] ?? null : null}
+      onClose={handleSheetClose}
+      onSubmit={handleSheetSubmit}
+    />
+    </>
   );
 }
