@@ -12,6 +12,7 @@ import { ensureBackendUp } from './helpers';
 
 test.describe('移动端真实 API 串测', () => {
   test.beforeEach(async ({ page, context }) => {
+    test.skip(test.info().project.name !== 'mobile-chromium', 'mobile only');
     const up = await ensureBackendUp(page);
     test.skip(!up, '后端未在 :8000 运行');
     await context.clearCookies();

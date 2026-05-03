@@ -8,6 +8,7 @@ import { ensureBackendUp } from './helpers';
 
 test.describe('PC 真实 API 串测', () => {
   test.beforeEach(async ({ page, context }) => {
+    test.skip(test.info().project.name !== 'pc-chromium', 'pc only');
     const up = await ensureBackendUp(page);
     test.skip(!up, '后端未在 :8000 运行');
     await context.clearCookies();

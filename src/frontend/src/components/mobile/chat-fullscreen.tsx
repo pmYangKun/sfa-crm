@@ -33,12 +33,16 @@ export default function ChatFullscreen() {
   loadingRef.current = loading;
   /** loading 时入队，本次结束自动消费下一个，避免快速连点丢 prompt */
   const queueRef = useRef<string[]>([]);
+  /** 同步追踪 messages 最新值（修 React 18 batching 导致 setMessages updater 异步执行的 bug） */
+  const messagesRef = useRef<Message[]>([]);
 
   // 每张待确认卡片独立状态，cardKey = `${msgId}-${navIndex}`
   const [cardStates, setCardStates] = useState<Record<string, ChatFormCardState>>({});
   const [openCardKey, setOpenCardKey] = useState<string | null>(null);
 
+  // 同步 messagesRef + 滚到底
   useEffect(() => {
+    messagesRef.current = messages;
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
@@ -81,11 +85,8 @@ export default function ChatFullscreen() {
     loadingRef.current = true;
 
     const userMsg: Message = { id: crypto.randomUUID(), role: 'user', content: trimmed };
-    let messagesForApi: Message[] = [];
-    setMessages((prev) => {
-      messagesForApi = [...prev, userMsg];
-      return messagesForApi;
-    });
+    const messagesForApi = [...messagesRef.current, userMsg];
+    setMessages(messagesForApi);
     setLoading(true);
 
     try {

@@ -27,3 +27,18 @@ type: feedback
 - 抓 `pageerror` + `console`，确保无 JS 异常
 - 在每个 phase 完成回报前都要跑过这个真实串测，全绿才能说完成
 - 单点 + mock 测试是 happy path 单元覆盖；真实串测是布局 / 状态机交叉 / 时序的兜底
+
+**`toBeVisible` 在 chat / 流式 UI 上是假阳性陷阱**
+
+`toBeVisible` 只检查 DOM 元素有非零尺寸 + 没有 `display:none` / `visibility:hidden`。在 chat 这种"loading 时显示思考中占位 / 收到响应后填内容"的 UI 上：
+- assistant `<div>` 在 loading 时含"思考中..."占位 → 被认定 visible
+- fetch 完成、响应为空 → 内容回到空 → 但断言已经过了
+- **测试假绿**，真实 bug 是后端没收到用户输入或返回了空响应
+
+强约束：**chat / 流式 UI 测试，不光断言 visible，还必须断言**：
+- 请求 body 含真实用户内容（用 `page.on('request')` 抓 `req.postData()` → 验证含 `"content":"<text>"`）
+- 响应 body 长度 > 阈值（用 `page.on('response')` 抓 → text length）
+- 元素的 `textContent` 长度 > 阈值，不只是元素存在
+
+惨痛案例：`messagesForApi = [...prev, userMsg]` 在 setMessages updater 闭包里赋值，React 18 自动批处理把 updater 推迟到 microtask，fetch 已用空 messagesForApi 启动 → 后端收到 `messages: []` → 返回空 → 用户输入完全没反馈。
+我连续多次 toBeVisible 都过了，全靠"思考中..."占位骗过断言。直到加了请求 body / 响应长度断言才暴露。修复：用 `messagesRef.current = messages` 同步追踪，sendPrompt 中 `[...messagesRef.current, userMsg]` 同步构建。

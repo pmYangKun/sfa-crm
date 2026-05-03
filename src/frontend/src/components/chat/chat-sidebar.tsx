@@ -69,9 +69,19 @@ export default function ChatSidebar() {
   loadingRef.current = loading;
   /** loading 时入队，本次结束自动消费下一个，避免快速连点丢 prompt */
   const queueRef = useRef<string[]>([]);
+  /** 同步追踪 messages 最新值。useCallback 闭包里读 messages 会 stale；
+   *  原代码用 setMessages(prev => { messagesForApi = ...; }) 闭包赋值，但 React 18
+   *  自动批处理可能把 updater 推迟到下一个 microtask，导致 fetch 时 messagesForApi 仍为 []。 */
+  const messagesRef = useRef(messages);
+  messagesRef.current = messages;
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  // 同步 messagesRef
+  useEffect(() => {
+    messagesRef.current = messages;
   }, [messages]);
 
   const handleNavigate = useCallback((url: string) => {
@@ -133,11 +143,9 @@ export default function ChatSidebar() {
     loadingRef.current = true;
 
     const userMsg: Message = { id: crypto.randomUUID(), role: 'user', content: trimmed };
-    let messagesForApi: Message[] = [];
-    setMessages(prev => {
-      messagesForApi = [...prev, userMsg];
-      return messagesForApi;
-    });
+    // 同步构建 messagesForApi，不依赖 setMessages 的 updater 异步执行
+    const messagesForApi = [...messagesRef.current, userMsg];
+    setMessages(messagesForApi);
     setLoading(true);
 
     try {

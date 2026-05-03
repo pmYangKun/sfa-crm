@@ -19,7 +19,7 @@ export default defineConfig({
   projects: [
     {
       name: 'pc-chromium',
-      testMatch: /(us1-|us4-|smoke-|pc-).*\.spec\.ts$/,
+      testMatch: /(us1-|us4-|smoke-|pc-|diag-).*\.spec\.ts$/,
       use: {
         ...devices['Desktop Chrome'],
         viewport: { width: 1440, height: 900 },
@@ -27,7 +27,7 @@ export default defineConfig({
     },
     {
       name: 'mobile-chromium',
-      testMatch: /(us2-|us3-|mobile-).*\.spec\.ts$/,
+      testMatch: /(us2-|us3-|mobile-|diag-).*\.spec\.ts$/,
       use: {
         browserName: 'chromium',
         viewport: { width: 390, height: 844 },
