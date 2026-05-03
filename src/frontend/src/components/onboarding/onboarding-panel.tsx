@@ -45,18 +45,40 @@ export default function OnboardingPanel({ currentLoginName }: { currentLoginName
         data-testid="onboarding-panel"
         style={{
           marginBottom: 32,
-          padding: '20px 24px',
-          background: 'linear-gradient(135deg, #f0f7ff 0%, #f9f0ff 100%)',
-          border: '1px solid #d6e4ff',
+          marginRight: 60,
+          padding: '24px 28px',
+          background: 'linear-gradient(135deg, #fff8e7 0%, #fff1d4 100%)',
+          border: '1px solid #ffe7a3',
+          borderLeft: '4px solid #fa8c16',
           borderRadius: 12,
+          boxShadow: '0 4px 16px rgba(250,140,22,0.12)',
+          position: 'relative',
         }}
       >
-        <div style={{ marginBottom: 16 }}>
-          <h2 style={{ margin: 0, fontSize: 18, fontWeight: 600, color: '#262626' }}>
-            👋 你好，{me?.displayName ?? currentLoginName}！试试下面的演示问题
+        <div
+          style={{
+            position: 'absolute',
+            top: -10,
+            left: 24,
+            background: '#fa8c16',
+            color: '#fff',
+            padding: '3px 12px',
+            borderRadius: 12,
+            fontSize: 11,
+            fontWeight: 600,
+            letterSpacing: 0.5,
+            boxShadow: '0 2px 6px rgba(250,140,22,0.3)',
+          }}
+        >
+          🚀 AI COPILOT 演示
+        </div>
+        <div style={{ marginBottom: 18, marginTop: 4 }}>
+          <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: '#262626' }}>
+            👋 你好，{me?.displayName ?? currentLoginName}！
           </h2>
-          <p style={{ margin: '6px 0 0', fontSize: 13, color: '#595959' }}>
-            点击任一卡片 → 问题自动发送到右下角 Chat 并执行
+          <p style={{ margin: '8px 0 0', fontSize: 14, color: '#595959', lineHeight: 1.6 }}>
+            可以直接点击下面的卡片，快速体验这种<strong style={{ color: '#262626' }}>对话式 CRM</strong>的能力——
+            AI 帮你查线索、录跟进、做决策，一句话就能跑完。
           </p>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 12 }}>

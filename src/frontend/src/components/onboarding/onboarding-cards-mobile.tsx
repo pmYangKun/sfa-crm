@@ -68,11 +68,11 @@ export default function OnboardingCardsMobile({ currentLoginName, collapsed }: O
               color: 'inherit',
             }}
           >
-            <div style={{ fontSize: 13, fontWeight: 600, color: '#262626', marginBottom: 4 }}>
+            <div style={{ fontSize: 14, fontWeight: 600, color: '#262626', marginBottom: 6 }}>
               {card.shortTitle}
             </div>
             {card.type === 'demo' && card.fullPrompt && (
-              <div style={{ fontSize: 11, color: '#595959', lineHeight: 1.5, background: '#fafafa', padding: 6, borderRadius: 4 }}>
+              <div style={{ fontSize: 13, color: '#595959', lineHeight: 1.6, background: '#fafafa', padding: 8, borderRadius: 4 }}>
                 &quot;{card.fullPrompt}&quot;
               </div>
             )}

@@ -56,7 +56,7 @@ export default function AuthenticatedLayout({
           position: 'relative',
         }}
       >
-        <div style={{ position: 'absolute', top: 16, right: 24 }}>
+        <div style={{ position: 'absolute', top: 16, right: 24, zIndex: 10 }}>
           <NotificationBell />
         </div>
         {children}
