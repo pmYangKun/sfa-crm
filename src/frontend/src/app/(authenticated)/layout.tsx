@@ -1,11 +1,13 @@
 'use client';
 
 import { useAuth } from '@/lib/auth-context';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useEffect } from 'react';
 import Sidebar from '@/components/nav/sidebar';
 import ChatSidebar from '@/components/chat/chat-sidebar';
 import NotificationBell from '@/components/notifications/notification-bell';
+import { useIsMobile } from '@/lib/viewport';
+import { pcToMobilePath } from '@/lib/route-map';
 
 export default function AuthenticatedLayout({
   children,
@@ -14,12 +16,21 @@ export default function AuthenticatedLayout({
 }) {
   const { user, loading } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     if (!loading && !user) {
       router.push('/login');
     }
   }, [user, loading, router]);
+
+  // 移动视口落在 PC layout → 弹去 /m/* 等价路由
+  useEffect(() => {
+    if (isMobile === true) {
+      router.replace(pcToMobilePath(pathname));
+    }
+  }, [isMobile, pathname, router]);
 
   if (loading) {
     return (
