@@ -76,17 +76,17 @@ description: "Task list for 登录页改造 + 移动端 + Onboarding（UX 版）
 
 ### Implementation for User Story 2
 
-- [ ] **T020** [P] [US2] 创建移动版项目亮点 `src/frontend/src/components/auth/highlights-panel-mobile.tsx`（精简版三段 + 公众号一行小字，无 GitHub），按 `contracts/ui-contracts.md § 2`。
-- [ ] **T021** [P] [US2] 创建移动引导卡片组件 `src/frontend/src/components/onboarding/onboarding-cards-mobile.tsx`，按 `contracts/ui-contracts.md § 4`，支持 `collapsed` prop。
-- [ ] **T022** [US2] 实现移动登录页 `src/frontend/src/app/m/login/page.tsx`：渲染 Hero + `<HighlightsPanelMobile>` + 双 `<RoleCard layout="mobile" onSelect={login}>`（垂直堆叠）。点卡片登录后跳 `/m/chat`。（依赖 T010, T020）
-- [ ] **T023** [US2] 创建移动全屏 Chat 容器 `src/frontend/src/components/mobile/chat-fullscreen.tsx`（仅基础版：消息列表 + 输入框 + 顶部 `<OnboardingCardsMobile collapsed={messages.length > 0}>`），暂不渲染 ChatFormCard——US3 再加。挂载时消费 `pending_prompt`。按 `contracts/ui-contracts.md § 8`。
-- [ ] **T024** [US2] 创建路由页面 `src/frontend/src/app/m/(mobile-app)/chat/page.tsx`：仅 `return <ChatFullscreen />`。
-- [ ] **T025** [P] [US2] 创建路由页面 `src/frontend/src/app/m/(mobile-app)/leads/page.tsx`：复用既有 Lead 列表组件（如有专门组件则直接 import；如逻辑藏在 `/leads/page.tsx` 内则需先抽离 → 抽离工作放到 T026）。
-- [ ] **T026** [US2] 抽离既有 PC `/leads/page.tsx` 中的 Lead 列表渲染逻辑为独立组件 `src/frontend/src/components/leads/lead-list.tsx`（如已有则跳过）；让 PC 和移动两端 page 都引用此组件。
-- [ ] **T027** [P] [US2] 创建路由页面 `src/frontend/src/app/m/(mobile-app)/customers/page.tsx`：同 T025 模式复用 Customer 列表。
-- [ ] **T028** [P] [US2] 创建路由页面 `src/frontend/src/app/m/(mobile-app)/followups/page.tsx`：跟进流（最近 N 条跟进 + 录入入口按钮）。如既有跟进展示组件可复用则用，否则做最简版（列表 + 跳到 chat 提示用户用 chat 录入）。
-- [ ] **T029** [P] [US2] 创建路由页面 `src/frontend/src/app/m/(mobile-app)/me/page.tsx`：账号信息展示 + "切换到 [对方角色]"主按钮（点击 → `<RoleSwitchConfirm>` → `quickSwitchRole`）+ "退出登录"链接。按 `research.md § Decision 8`。
-- [ ] **T030** [US2] 完善 `<KingKongTabbar>` activeTab 高亮逻辑：通过 `usePathname` 识别当前路由匹配哪个 tab。
+- [x] **T020** [P] [US2] 创建移动版项目亮点 `src/frontend/src/components/auth/highlights-panel-mobile.tsx`（精简版三段 + 公众号一行小字，无 GitHub），按 `contracts/ui-contracts.md § 2`。
+- [x] **T021** [P] [US2] 创建移动引导卡片组件 `src/frontend/src/components/onboarding/onboarding-cards-mobile.tsx`，按 `contracts/ui-contracts.md § 4`，支持 `collapsed` prop。
+- [x] **T022** [US2] 实现移动登录页 `src/frontend/src/app/m/login/page.tsx`：渲染 Hero + `<HighlightsPanelMobile>` + 双 `<RoleCard layout="mobile" onSelect={login}>`（垂直堆叠）。点卡片登录后跳 `/m/chat`。（依赖 T010, T020）
+- [x] **T023** [US2] 创建移动全屏 Chat 容器 `src/frontend/src/components/mobile/chat-fullscreen.tsx`（仅基础版：消息列表 + 输入框 + 顶部 `<OnboardingCardsMobile collapsed={messages.length > 0}>`），暂不渲染 ChatFormCard——US3 再加。挂载时消费 `pending_prompt`。按 `contracts/ui-contracts.md § 8`。
+- [x] **T024** [US2] 创建路由页面 `src/frontend/src/app/m/(mobile-app)/chat/page.tsx`：仅 `return <ChatFullscreen />`。
+- [x] **T025** [P] [US2] 创建路由页面 `src/frontend/src/app/m/(mobile-app)/leads/page.tsx`：复用既有 Lead 列表组件。
+- [x] **T026** [US2] ~~抽离 lead-list 组件~~ — 实际未抽离：直接 `import LeadsPage from '@/app/(authenticated)/leads/page'` 复用，符合 spec.md FR-029 + Assumption "可读不崩溃"最低保证策略。如未来移动端需要 fork 列表样式再考虑抽离。
+- [x] **T027** [P] [US2] 创建路由页面 `src/frontend/src/app/m/(mobile-app)/customers/page.tsx`：复用既有 PC CustomersPage。
+- [x] **T028** [P] [US2] 创建路由页面 `src/frontend/src/app/m/(mobile-app)/followups/page.tsx`：占位 + "去 AI 对话录入"CTA（spec assumption：跟进 detail 录入走 chat 内嵌卡片范式）。
+- [x] **T029** [P] [US2] 创建路由页面 `src/frontend/src/app/m/(mobile-app)/me/page.tsx`：当前角色卡片 + 切换按钮（→ confirm → quickSwitchRole）+ 退出登录。
+- [x] **T030** [US2] ~~完善 KingKongTabbar activeTab~~ — 已在 T007 创建时实现（`pathname === t.href` + chat 前缀匹配）。
 
 **Checkpoint US2**: 移动端基础闭环可独立走通，对应 quickstart.md B1-B4 + B6 + B7 全部 ✅。US3 的 chat 内嵌卡片范式尚未实现，B5 暂留。
 
