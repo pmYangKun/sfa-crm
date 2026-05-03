@@ -42,14 +42,48 @@ export default function OnboardingCardsMobile({ currentLoginName, collapsed }: O
     setConfirmTarget(null);
   };
 
+  const me = getRoleCardByLogin(currentLoginName);
+
   return (
     <>
       <div
         data-testid="onboarding-cards-mobile"
         style={{ padding: '12px 12px 4px', display: 'flex', flexDirection: 'column', gap: 8 }}
       >
-        <div style={{ fontSize: 12, color: '#8c8c8c', padding: '0 4px 4px' }}>
-          点击试试这些 demo 问题：
+        <div
+          style={{
+            background: 'linear-gradient(135deg, #fff8e7 0%, #fff1d4 100%)',
+            border: '1px solid #ffe7a3',
+            borderLeft: '4px solid #fa8c16',
+            borderRadius: 8,
+            padding: '12px 14px',
+            marginBottom: 4,
+            position: 'relative',
+          }}
+        >
+          <div
+            style={{
+              position: 'absolute',
+              top: -8,
+              left: 12,
+              background: '#fa8c16',
+              color: '#fff',
+              padding: '2px 8px',
+              borderRadius: 8,
+              fontSize: 10,
+              fontWeight: 600,
+              letterSpacing: 0.3,
+            }}
+          >
+            🚀 AI COPILOT 演示
+          </div>
+          <div style={{ fontSize: 14, fontWeight: 700, color: '#262626', marginTop: 4 }}>
+            👋 你好，{me?.displayName ?? currentLoginName}！
+          </div>
+          <div style={{ fontSize: 13, color: '#595959', lineHeight: 1.6, marginTop: 4 }}>
+            点下面的卡片，体验<strong style={{ color: '#262626' }}>对话式 CRM</strong>——
+            AI 一句话帮你查线索、录跟进、做决策。
+          </div>
         </div>
         {cards.map((card) => (
           <button

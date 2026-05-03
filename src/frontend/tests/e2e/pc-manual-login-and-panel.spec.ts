@@ -3,11 +3,11 @@ import { ensureBackendUp } from './helpers';
 
 /**
  * 用户反馈跟进：
- *  1. 登录页折叠式手动登录（管理员等）
- *  2. Dashboard OnboardingPanel 文案 + 视觉更新
+ *  1. 登录页两栏布局（左角色卡 + 介绍 / 右账号密码登录，常驻可见）
+ *  2. Dashboard OnboardingPanel 文案 + 视觉
  */
 
-test.describe('PC 登录页：手动登录折叠面板', () => {
+test.describe('PC 登录页：两栏布局 + 常驻账号密码登录', () => {
   test.beforeEach(async ({ page, context }) => {
     test.skip(test.info().project.name !== 'pc-chromium', 'pc only');
     const up = await ensureBackendUp(page);
@@ -20,42 +20,33 @@ test.describe('PC 登录页：手动登录折叠面板', () => {
     });
   });
 
-  test('默认收起：toggle 链接可见，密码输入框不渲染（不破坏 demo 心智）', async ({ page }) => {
-    await expect(page.getByTestId('manual-login-toggle')).toBeVisible();
-    await expect(page.getByTestId('manual-login-form')).toHaveCount(0);
-    await expect(page.locator('input[type="password"]')).toHaveCount(0);
-  });
-
-  test('点 toggle → 表单展开 → 用 admin/12345 真实登录', async ({ page }) => {
-    await page.getByTestId('manual-login-toggle').click();
+  test('登录表单常驻可见 + 角色卡片同时可见', async ({ page }) => {
+    await expect(page.getByTestId('role-cards-container')).toBeVisible();
     await expect(page.getByTestId('manual-login-form')).toBeVisible();
     await expect(page.getByTestId('manual-login-input')).toBeVisible();
     await expect(page.getByTestId('manual-password-input')).toBeVisible();
+    await expect(page.getByTestId('manual-login-submit')).toBeVisible();
+    await page.screenshot({ path: 'tests/screenshots/login-two-column.png', fullPage: true });
+  });
 
+  test('用 admin/12345 真实登录 → 跳 dashboard', async ({ page }) => {
     await page.getByTestId('manual-login-input').fill('admin');
     await page.getByTestId('manual-password-input').fill('12345');
     await page.getByTestId('manual-login-submit').click();
-
     await expect(page).toHaveURL(/\/dashboard/, { timeout: 10_000 });
-    await page.screenshot({ path: 'tests/screenshots/manual-login-admin-success.png', fullPage: true });
   });
 
   test('错误密码 → 显示错误 + 不跳转', async ({ page }) => {
-    await page.getByTestId('manual-login-toggle').click();
     await page.getByTestId('manual-login-input').fill('admin');
     await page.getByTestId('manual-password-input').fill('wrong');
     await page.getByTestId('manual-login-submit').click();
-
     await expect(page.getByTestId('manual-login-form')).toBeVisible();
     expect(page.url()).toContain('/login');
   });
 
-  test('点收起 → 表单消失', async ({ page }) => {
-    await page.getByTestId('manual-login-toggle').click();
-    await expect(page.getByTestId('manual-login-form')).toBeVisible();
-    await page.getByText('收起').click();
-    await expect(page.getByTestId('manual-login-form')).toHaveCount(0);
-    await expect(page.getByTestId('manual-login-toggle')).toBeVisible();
+  test('点角色卡仍然可一键登录（不受表单存在影响）', async ({ page }) => {
+    await page.getByTestId('role-card-sales01').click();
+    await expect(page).toHaveURL(/\/dashboard/, { timeout: 10_000 });
   });
 });
 
@@ -81,11 +72,10 @@ test.describe('PC Dashboard OnboardingPanel：文案 + 视觉', () => {
     await expect(panel).toContainText('对话式 CRM');
   });
 
-  test('引导区有彩色渐变背景 + 顶部"AI COPILOT 演示"徽标', async ({ page }) => {
+  test('引导区有暖橙渐变背景 + 顶部"AI COPILOT 演示"徽标', async ({ page }) => {
     const panel = page.getByTestId('onboarding-panel');
     await expect(panel).toBeVisible();
     await expect(panel).toContainText('AI COPILOT 演示');
-    // 截图供视觉走查
     await page.screenshot({ path: 'tests/screenshots/onboarding-panel-new-visual.png', fullPage: true });
   });
 });

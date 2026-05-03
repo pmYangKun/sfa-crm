@@ -45,7 +45,6 @@ export default function OnboardingPanel({ currentLoginName }: { currentLoginName
         data-testid="onboarding-panel"
         style={{
           marginBottom: 32,
-          marginRight: 60,
           padding: '24px 28px',
           background: 'linear-gradient(135deg, #fff8e7 0%, #fff1d4 100%)',
           border: '1px solid #ffe7a3',

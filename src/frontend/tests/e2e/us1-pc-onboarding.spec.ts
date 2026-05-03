@@ -26,9 +26,6 @@ test.describe('US1: PC 登录页基础（FR-001 ~ FR-005）', () => {
     await expect(page.getByTestId('role-card-sales01')).toContainText('销售·王小明');
     await expect(page.getByTestId('role-card-manager01')).toContainText('销售经理·陈队长');
 
-    // 不应有手动账号/密码输入框
-    await expect(page.locator('input[type="password"]')).toHaveCount(0);
-
     // 项目亮点
     await expect(page.getByTestId('highlights-panel-pc')).toBeVisible();
     await expect(page.getByTestId('highlights-panel-pc')).toContainText('VibeCoding');
