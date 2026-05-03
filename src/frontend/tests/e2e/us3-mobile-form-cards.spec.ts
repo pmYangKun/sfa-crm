@@ -105,7 +105,7 @@ test.describe('US3: chat 内嵌待确认卡片', () => {
   test('FR-026: 抽屉关闭不丢失编辑值', async ({ page }) => {
     await mockChatWithNav(
       page,
-      '请审核：[[nav:新建线索|/leads/new?company_name=深圳前海微链&region=华南]]',
+      '请审核：[[nav:新建线索|/leads/new?company_name=深圳前海微链&region=华南&source=referral]]',
     );
 
     await loginAsSales01(page);
@@ -135,7 +135,7 @@ test.describe('US3: chat 内嵌待确认卡片', () => {
   test('FR-027: 多张卡片状态独立', async ({ page }) => {
     await mockChatWithNav(
       page,
-      '同时建两个：[[nav:新建线索|/leads/new?company_name=A 公司&region=华南]] 和 [[nav:新建线索|/leads/new?company_name=B 公司&region=华北]]',
+      '同时建两个：[[nav:新建线索|/leads/new?company_name=A 公司&region=华南&source=referral]] 和 [[nav:新建线索|/leads/new?company_name=B 公司&region=华北&source=organic]]',
     );
     await mockCreateLead(page, '11111111-2222-3333-4444-555555555555');
 

@@ -21,6 +21,8 @@ export interface ParsedNav {
     method: 'POST';
     path: string;
     buildBody: (values: Record<string, string>) => Record<string, unknown>;
+    /** 必填字段（spec edge case：AI 没预填时 sheet 红色标记 + 允许用户补充） */
+    requiredFields: string[];
   };
 }
 
@@ -94,6 +96,7 @@ export function parseNavUrl(url: string, label: string): ParsedNav {
       submit: {
         method: 'POST',
         path: '/leads',
+        requiredFields: ['company_name', 'region', 'source'],
         buildBody: (p) => ({
           company_name: p.company_name ?? '',
           region: p.region ?? '华南',
@@ -117,6 +120,7 @@ export function parseNavUrl(url: string, label: string): ParsedNav {
         submit: {
           method: 'POST',
           path: `/leads/${leadId}/followups`,
+          requiredFields: ['fu_type', 'fu_content'],
           buildBody: (p) => ({
             type: p.fu_type ?? 'visit',
             content: p.fu_content ?? '',

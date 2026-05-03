@@ -27,12 +27,24 @@ export default function MobileFormSheet({ open, card, onClose, onSubmit }: Mobil
   if (!open || !card) return null;
 
   const supported = !!card.parsed.submit;
-  const fields = Object.keys(values).length > 0 ? Object.keys(values) : Object.keys(card.parsed.prefill);
+  const required = card.parsed.submit?.requiredFields ?? [];
+  // 必填 + AI 预填的字段都要在 sheet 里展示，缺失必填字段也要给 input 让用户补
+  const fieldKeys = Array.from(new Set<string>([
+    ...required,
+    ...Object.keys(values),
+  ]));
+  const fields = fieldKeys.length > 0 ? fieldKeys : Object.keys(card.parsed.prefill);
+  const isMissing = (key: string) => required.includes(key) && !values[key];
+  const hasMissing = fields.some(isMissing);
 
   const handleClose = () => onClose(values);
 
   const handleSubmit = async () => {
     if (!supported) return;
+    if (hasMissing) {
+      setError('请填完红色标记的必填字段');
+      return;
+    }
     setBusy(true);
     setError(null);
     try {
@@ -97,41 +109,50 @@ export default function MobileFormSheet({ open, card, onClose, onSubmit }: Mobil
             <p style={{ color: '#999', fontSize: 14 }}>AI 没有提供预填字段，请直接用 PC 端操作。</p>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: supported ? 0 : 12 }}>
-              {fields.map((key) => (
-                <div key={key}>
-                  <label style={{ display: 'block', fontSize: 12, color: '#595959', marginBottom: 4 }}>
-                    {fieldLabel(key)}
-                  </label>
-                  {key === 'fu_content' || key === 'ke_content' ? (
-                    <textarea
-                      value={values[key] ?? ''}
-                      onChange={(e) => setValues({ ...values, [key]: e.target.value })}
-                      data-testid={`sheet-field-${key}`}
-                      rows={3}
-                      style={{
-                        width: '100%', padding: 10, border: '1px solid #d9d9d9',
-                        borderRadius: 6, fontSize: 14, outline: 'none',
-                        boxSizing: 'border-box', fontFamily: 'inherit', resize: 'vertical',
-                      }}
-                    />
-                  ) : (
-                    <input
-                      value={values[key] ?? ''}
-                      onChange={(e) => setValues({ ...values, [key]: e.target.value })}
-                      data-testid={`sheet-field-${key}`}
-                      style={{
-                        width: '100%', padding: '10px 12px', border: '1px solid #d9d9d9',
-                        borderRadius: 6, fontSize: 14, outline: 'none', boxSizing: 'border-box',
-                      }}
-                    />
-                  )}
-                  {!supported && values[key] && (
-                    <div style={{ fontSize: 11, color: '#8c8c8c', marginTop: 2 }}>
-                      显示值：{displayValue(key, values[key])}
-                    </div>
-                  )}
-                </div>
-              ))}
+              {fields.map((key) => {
+                const missing = isMissing(key);
+                const borderColor = missing ? '#cf1322' : '#d9d9d9';
+                return (
+                  <div key={key} data-field-missing={missing ? 'true' : 'false'}>
+                    <label style={{ display: 'block', fontSize: 12, color: missing ? '#cf1322' : '#595959', marginBottom: 4 }}>
+                      {fieldLabel(key)}{required.includes(key) && <span style={{ color: '#cf1322' }}>*</span>}
+                    </label>
+                    {key === 'fu_content' || key === 'ke_content' ? (
+                      <textarea
+                        value={values[key] ?? ''}
+                        onChange={(e) => setValues({ ...values, [key]: e.target.value })}
+                        data-testid={`sheet-field-${key}`}
+                        rows={3}
+                        style={{
+                          width: '100%', padding: 10, border: `1px solid ${borderColor}`,
+                          borderRadius: 6, fontSize: 14, outline: 'none',
+                          boxSizing: 'border-box', fontFamily: 'inherit', resize: 'vertical',
+                        }}
+                      />
+                    ) : (
+                      <input
+                        value={values[key] ?? ''}
+                        onChange={(e) => setValues({ ...values, [key]: e.target.value })}
+                        data-testid={`sheet-field-${key}`}
+                        style={{
+                          width: '100%', padding: '10px 12px', border: `1px solid ${borderColor}`,
+                          borderRadius: 6, fontSize: 14, outline: 'none', boxSizing: 'border-box',
+                        }}
+                      />
+                    )}
+                    {missing && (
+                      <div style={{ fontSize: 11, color: '#cf1322', marginTop: 2 }}>
+                        必填字段，AI 没能从消息里提取，请手动补充
+                      </div>
+                    )}
+                    {!supported && values[key] && (
+                      <div style={{ fontSize: 11, color: '#8c8c8c', marginTop: 2 }}>
+                        显示值：{displayValue(key, values[key])}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           )}
           {error && (

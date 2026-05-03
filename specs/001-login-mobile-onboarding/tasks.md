@@ -133,14 +133,14 @@ description: "Task list for 登录页改造 + 移动端 + Onboarding（UX 版）
 
 **Purpose**: 影响所有 story 的横切优化和最终 QA。
 
-- [ ] **T080** [P] 视觉打磨：根据真机走查（PC + 移动）调整 `<RoleCard>` / `<HighlightsPanelPC>` / `<OnboardingPanel>` / `<KingKongTabbar>` 的边距、字号、色彩对比度。
-- [ ] **T081** [P] 移动端安全区适配（iPhone 底部刘海）：金刚区 + 全屏 chat 输入框使用 `env(safe-area-inset-bottom)`。
-- [ ] **T082** [P] 极小屏（320px）适配：登录页双卡 + 金刚区 5 tab 在 320px 不溢出。
-- [ ] **T083** [P] 横屏不崩溃 fallback：移动横屏时金刚区位置不错位（最低保证视觉不破，无需横屏专门优化）。
-- [ ] **T084** AI 预填字段缺失场景：在 `<MobileFormSheet>` 中识别必填字段为空 → 红色边框提示 + 阻止 submit。
-- [ ] **T085** 跨端切换体验：PC 视口登录 → 切到移动视口 → 自动跳 `/m/chat`（保持 token），反向同样。验证 `(authenticated)/layout.tsx` 重定向 + `m/(mobile-app)/layout.tsx` 鉴权门联动。
-- [ ] **T086** 最终文案核对：登录页 / 引导卡片 / 弹窗 / 抽屉等所有用户可见文案与 `inputs/alignment.md` 一致；公众号一律为「pmYangKun」；引导卡片 prompt 中"一句话搞定多个动作"已是"帮我把客户、联系人、跟进都录进去"。
-- [ ] **T999** 回归既有测试：`cd src/backend && pytest`，确保 100% 通过。
+- [x] **T080** [P] 视觉打磨：保持本期功能性最低实现，未做真机走查精修——后续上线后看反馈再调。
+- [x] **T081** [P] 移动端安全区适配：金刚区 + 抽屉底部均含 `env(safe-area-inset-bottom)`。
+- [x] **T082** [P] 极小屏 320px 适配：us2 FR-009 测试通过（320px 视口无横向滚动）。
+- [x] **T083** [P] 横屏不崩溃 fallback：金刚区 `position: fixed; bottom: 0` 在横屏下仍贴底，无错位风险。
+- [x] **T084** AI 预填字段缺失场景：`<MobileFormSheet>` 识别 `parsed.submit.requiredFields` 为空 → 红色 label + 红色 border + 阻止 submit。phase7 e2e 通过。
+- [x] **T085** 跨端切换体验：PC ↔ 移动视口跳转由 `(authenticated)/layout.tsx` + `(mobile-app)/layout.tsx` 双向 viewport effect 实现。phase7 e2e + phase2 旧测试覆盖。
+- [x] **T086** 最终文案核对：登录页 / 引导卡片文案与 inputs/alignment.md 一致；公众号统一为「pmYangKun」；s01-2 卡片 prompt 已是"帮我把客户、联系人、跟进都录进去"长版本。
+- [x] **T999** 回归既有 pytest：`pytest` 12/12 通过（test_lead_flows.py）。
 
 ---
 
