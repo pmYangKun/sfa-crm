@@ -55,16 +55,14 @@ description: "Task list for 登录页改造 + 移动端 + Onboarding（UX 版）
 
 ### Implementation for User Story 1
 
-- [ ] **T010** [P] [US1] 创建角色卡片组件 `src/frontend/src/components/auth/role-card.tsx`，按 `contracts/ui-contracts.md § 1` 实现，支持 `layout: "pc" | "mobile"` 两种渲染。
-- [ ] **T011** [P] [US1] 创建 PC 项目亮点区 `src/frontend/src/components/auth/highlights-panel-pc.tsx`，按 `contracts/ui-contracts.md § 2`（含三段方法论 + GitHub + 公众号）。
-- [ ] **T012** [P] [US1] 创建 PC 引导区组件 `src/frontend/src/components/onboarding/onboarding-panel.tsx`，按 `contracts/ui-contracts.md § 3` 实现，从 `ONBOARDING_CARDS` 过滤当前角色 + `(platform === "pc" || "both")`。
-- [ ] **T013** [P] [US1] 创建切换角色确认弹窗 `src/frontend/src/components/onboarding/role-switch-confirm.tsx`，按 `contracts/ui-contracts.md § 6`。
-- [ ] **T014** [US1] 改造 PC 登录页 `src/frontend/src/app/login/page.tsx`：删除手动账号密码表单 → 渲染 `<HighlightsPanelPC>` + 双 `<RoleCard layout="pc" onSelect={login}>`。点卡片后调 `login(loginName, password)` → 成功跳 `/dashboard`。（依赖 T010, T011）
-- [ ] **T015** [US1] 改造 PC Dashboard `src/frontend/src/app/(authenticated)/dashboard/page.tsx`：在页面顶部插入 `<OnboardingPanel currentRole={user.loginName} />`，下方保留既有 Dashboard 内容。（依赖 T012, T013）
-- [ ] **T016** [US1] 改造 PC chat 组件 `src/frontend/src/components/chat/chat-sidebar.tsx`：在挂载 useEffect 中读取 `sessionStorage.getItem("pending_prompt")`，存在则自动 send + `removeItem`；同时保证已挂载时若有新 `pending_prompt` 写入也能消费（监听 `storage` 事件或 custom event）。（依赖 T012）
-- [ ] **T017** [US1] 在 `<OnboardingPanel>` 中实现卡片点击逻辑：
-  - `type === "demo"` → `sessionStorage.setItem("pending_prompt", card.fullPrompt)` + 触发 chat 打开（如果 chat-sidebar 默认收起，需要派发自定义事件 `open-chat-sidebar` 让其展开）+ 派发 `pending-prompt-updated` 事件。
-  - `type === "switch-role"` → 弹 `<RoleSwitchConfirm>` → 确认后调 `quickSwitchRole(card.switchTo, defaultPassword)`。
+- [x] **T010** [P] [US1] 创建角色卡片组件 `src/frontend/src/components/auth/role-card.tsx`，按 `contracts/ui-contracts.md § 1` 实现，支持 `layout: "pc" | "mobile"` 两种渲染。
+- [x] **T011** [P] [US1] 创建 PC 项目亮点区 `src/frontend/src/components/auth/highlights-panel-pc.tsx`，按 `contracts/ui-contracts.md § 2`（含三段方法论 + GitHub + 公众号）。
+- [x] **T012** [P] [US1] 创建 PC 引导区组件 `src/frontend/src/components/onboarding/onboarding-panel.tsx`，按 `contracts/ui-contracts.md § 3` 实现，从 `ONBOARDING_CARDS` 过滤当前角色 + `(platform === "pc" || "both")`。
+- [x] **T013** [P] [US1] 创建切换角色确认弹窗 `src/frontend/src/components/onboarding/role-switch-confirm.tsx`，按 `contracts/ui-contracts.md § 6`。
+- [x] **T014** [US1] 改造 PC 登录页 `src/frontend/src/app/login/page.tsx`：删除手动账号密码表单 → 渲染 `<HighlightsPanelPC>` + 双 `<RoleCard layout="pc" onSelect={login}>`。点卡片后调 `login(loginName, password)` → 成功跳 `/dashboard`。（依赖 T010, T011）
+- [x] **T015** [US1] 改造 PC Dashboard `src/frontend/src/app/(authenticated)/dashboard/page.tsx`：在页面顶部插入 `<OnboardingPanel currentLoginName={loginName} />`，下方保留既有 Dashboard 内容。（依赖 T012, T013；prop 名按 auth-context 实际新增的 `loginName` 适配）
+- [x] **T016** [US1] 改造 PC chat 组件 `src/frontend/src/components/chat/chat-sidebar.tsx`：抽出 `sendPrompt`，挂载 useEffect 消费 `sessionStorage.pending_prompt` + 监听 `onboarding:pending-prompt` 自定义事件，存在则自动展开面板并 send。（依赖 T012）
+- [x] **T017** [US1] 在 `<OnboardingPanel>` 中实现卡片点击逻辑：demo 卡片 → 写 sessionStorage + dispatchEvent；switch-role 卡片 → 弹确认 → `quickSwitchRole`。（与 T012 同文件实现）
 
 **Checkpoint US1**: PC 闭环可独立走通，对应 quickstart.md A 节全部 ✅。
 

@@ -3,6 +3,10 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
+import {
+  PENDING_PROMPT_EVENT,
+  PENDING_PROMPT_KEY,
+} from '@/components/onboarding/onboarding-panel';
 
 interface Message {
   id: string;
@@ -10,10 +14,6 @@ interface Message {
   content: string;
 }
 
-/**
- * Parse [[nav:label|url]] markers in AI response and split into
- * text segments and navigation button segments.
- */
 function parseNavMarkers(text: string): Array<{ type: 'text'; value: string } | { type: 'nav'; label: string; url: string }> {
   const parts: Array<{ type: 'text'; value: string } | { type: 'nav'; label: string; url: string }> = [];
   const regex = /\[\[nav:(.+?)\|(.+?)\]\]/g;
@@ -85,13 +85,14 @@ export default function ChatSidebar() {
   const [loading, setLoading] = useState(false);
   const [sessionId] = useState(() => crypto.randomUUID());
   const bottomRef = useRef<HTMLDivElement>(null);
+  const loadingRef = useRef(loading);
+  loadingRef.current = loading;
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
   const handleNavigate = useCallback((url: string) => {
-    // Validate: /leads/{id} URLs must use UUID format IDs (not company names)
     const leadIdMatch = url.match(/^\/leads\/([^/?#]+)/);
     if (leadIdMatch) {
       const id = decodeURIComponent(leadIdMatch[1]);
@@ -102,8 +103,6 @@ export default function ChatSidebar() {
       }
     }
 
-    // Normalize LLM-generated sub-path URLs to hash-anchor format
-    // e.g. /leads/{id}/followup → /leads/{id}#followup
     const subPathMap: Record<string, string> = {
       'followup': 'followup',
       'follow-up': 'followup',
@@ -123,7 +122,6 @@ export default function ChatSidebar() {
       }
     }
 
-    // Write prefill data to sessionStorage, then navigate
     const urlObj = new URL(normalized, window.location.origin);
     const searchStr = urlObj.searchParams.toString();
     if (searchStr) {
@@ -131,8 +129,6 @@ export default function ChatSidebar() {
     }
     const hash = urlObj.hash.slice(1);
 
-    // Add timestamp to force React to re-mount the page component
-    // (router.push to the same path without this won't re-trigger useEffect)
     const navPath = searchStr
       ? `${urlObj.pathname}?${searchStr}&_t=${Date.now()}`
       : `${urlObj.pathname}?_t=${Date.now()}`;
@@ -145,16 +141,16 @@ export default function ChatSidebar() {
     }
   }, [router]);
 
-  if (!user) return null;
+  const sendPrompt = useCallback(async (text: string) => {
+    const trimmed = text.trim();
+    if (!trimmed || loadingRef.current) return;
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!input.trim() || loading) return;
-
-    const userMsg: Message = { id: crypto.randomUUID(), role: 'user', content: input.trim() };
-    const newMessages = [...messages, userMsg];
-    setMessages(newMessages);
-    setInput('');
+    const userMsg: Message = { id: crypto.randomUUID(), role: 'user', content: trimmed };
+    let messagesForApi: Message[] = [];
+    setMessages(prev => {
+      messagesForApi = [...prev, userMsg];
+      return messagesForApi;
+    });
     setLoading(true);
 
     try {
@@ -166,7 +162,7 @@ export default function ChatSidebar() {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          messages: newMessages.map(m => ({ role: m.role, content: m.content })),
+          messages: messagesForApi.map(m => ({ role: m.role, content: m.content })),
           sessionId,
         }),
       });
@@ -181,7 +177,6 @@ export default function ChatSidebar() {
         return;
       }
 
-      // Read streaming response
       const reader = res.body?.getReader();
       if (!reader) return;
 
@@ -210,14 +205,39 @@ export default function ChatSidebar() {
     } finally {
       setLoading(false);
     }
+  }, [sessionId]);
+
+  // 监听 OnboardingPanel 派发的事件 + 挂载时检查 sessionStorage
+  useEffect(() => {
+    if (!user) return;
+    const consume = () => {
+      const prompt = sessionStorage.getItem(PENDING_PROMPT_KEY);
+      if (prompt) {
+        sessionStorage.removeItem(PENDING_PROMPT_KEY);
+        setOpen(true);
+        setTimeout(() => sendPrompt(prompt), 0);
+      }
+    };
+    consume();
+    window.addEventListener(PENDING_PROMPT_EVENT, consume);
+    return () => window.removeEventListener(PENDING_PROMPT_EVENT, consume);
+  }, [user, sendPrompt]);
+
+  if (!user) return null;
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const text = input;
+    setInput('');
+    await sendPrompt(text);
   };
 
   return (
     <>
-      {/* Toggle button — only visible when panel is closed */}
       {!open && (
         <button
           onClick={() => setOpen(true)}
+          data-testid="chat-toggle-btn"
           style={{
             position: 'fixed', bottom: 24, right: 24, zIndex: 1000,
             width: 56, height: 56, borderRadius: '50%',
@@ -231,15 +251,16 @@ export default function ChatSidebar() {
         </button>
       )}
 
-      {/* Chat panel — full-height right sidebar */}
       {open && (
-        <div style={{
-          position: 'fixed', top: 0, right: 0, bottom: 0, zIndex: 999,
-          width: 420, background: '#fff',
-          boxShadow: '-4px 0 24px rgba(0,0,0,0.12)',
-          display: 'flex', flexDirection: 'column', overflow: 'hidden',
-        }}>
-          {/* Header */}
+        <div
+          data-testid="chat-panel"
+          style={{
+            position: 'fixed', top: 0, right: 0, bottom: 0, zIndex: 999,
+            width: 420, background: '#fff',
+            boxShadow: '-4px 0 24px rgba(0,0,0,0.12)',
+            display: 'flex', flexDirection: 'column', overflow: 'hidden',
+          }}
+        >
           <div style={{
             padding: '16px 20px', background: '#1890ff', color: '#fff',
             fontWeight: 600, fontSize: 16,
@@ -262,11 +283,13 @@ export default function ChatSidebar() {
             </button>
           </div>
 
-          {/* Messages */}
-          <div style={{
-            flex: 1, overflowY: 'auto', padding: 20,
-            display: 'flex', flexDirection: 'column', gap: 12,
-          }}>
+          <div
+            data-testid="chat-messages"
+            style={{
+              flex: 1, overflowY: 'auto', padding: 20,
+              display: 'flex', flexDirection: 'column', gap: 12,
+            }}
+          >
             {messages.length === 0 && (
               <div style={{ color: '#999', textAlign: 'center', marginTop: 60, fontSize: 13, lineHeight: 2.2 }}>
                 <p style={{ fontSize: 15, marginBottom: 12, color: '#666' }}>你可以这样问我：</p>
@@ -278,6 +301,7 @@ export default function ChatSidebar() {
             {messages.map(msg => (
               <div
                 key={msg.id}
+                data-testid={`chat-msg-${msg.role}`}
                 style={{
                   alignSelf: msg.role === 'user' ? 'flex-end' : 'flex-start',
                   background: msg.role === 'user' ? '#1890ff' : '#f5f5f5',
@@ -297,7 +321,6 @@ export default function ChatSidebar() {
             <div ref={bottomRef} />
           </div>
 
-          {/* Input */}
           <form onSubmit={handleSubmit} style={{
             padding: '12px 16px', borderTop: '1px solid #e8e8e8',
             display: 'flex', gap: 8,

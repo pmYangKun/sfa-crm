@@ -1,17 +1,17 @@
 ---
-name: spec coding 必须用 Playwright 自我验证
-description: SFA CRM 的 spec coding 任务每个 user story / phase 完成后用 Playwright 自动跑端到端验证，确认通过再向用户报告
+name: spec coding 必须自己跑测试到全绿才回报
+description: SFA CRM 写代码后必须自己用 Playwright 跑 e2e，迭代修到全绿再回来；不要每个 phase 都拉用户确认
 type: feedback
 ---
 
-每个 user story 或 phase 完成后，必须用 Playwright 自动跑一遍端到端验证（含登录模拟、关键路径走查、截图归档），确认通过再向用户报告完成。
+写代码 + 自跑测试是同一件事。每次写完代码必须自己用 Playwright 跑一遍对应用例，发现失败自己迭代修，直到全绿再向用户报告。**不要每个 phase 都拉用户确认。**
 
-**Why:** 用户不希望靠"代码看着像对了"或"手工瞎点"判断 phase 是否真的可交付。前一次 001 spec 中断后留下来的代码就是没自动验证导致大量隐性缺陷。Playwright 自动跑一遍能强制暴露 happy path 上的明显问题。
+**Why:** 用户希望我自主执行多个 phase 连续推进，而不是写完一个 phase 就停下来等"可以继续吗"。"用户随时能打断"是默认权利，不需要每个分叉都问一次。但前提是**我自己保证质量**——跑完测试确认没问题再回来。
 
 **How to apply:**
-- 项目根 `src/frontend/` 已配置 `@playwright/test` + `playwright.config.ts`，跑命令：`cd src/frontend && npm run test:e2e`
-- Playwright config 会自动启动前端 dev server；后端需要本人提前 `cd src/backend && uvicorn app.main:app --port 8000` 起好（测试 helper 会探测后端是否在线，离线则 skip）
-- 测试组织：每个 user story 一个 spec 文件，命名 `tests/e2e/usX-<story>.spec.ts`，用 `data-testid` 选择器，每条断言对应 spec.md 里某条 FR
-- 测试目标视口：`pc-chromium`（1440×900）跑 US1/US4，`mobile-chromium`（iPhone 12 模拟）跑 US2/US3
-- 截图归档到 `tests/screenshots/`，用户随时能看
-- 报告给用户时附上："Playwright N/N 通过 + 截图位置"
+- 跑命令：`cd src/frontend && npx playwright test --project=pc-chromium` 或 `--project=mobile-chromium`
+- 全量回归命令（多 phase 后用）：`npx playwright test`
+- 测试失败的处理顺序：① 先看截图 / trace 判断是代码 bug 还是测试 bug ② 修对应 bug ③ 重跑直到绿 ④ 失败 3 次仍未绿才回来求助
+- 每个 user story / phase 必有对应 spec 文件（usX-xxx 或 mobile-/pc-phase-）+ 截图归档进 `tests/screenshots/`
+- 报告时附"通过 N/N + 截图清单"，不附无关过程
+- 无明显需要用户决策的事不要打断（Yes/No 决策、设计偏离、阻塞点才打断）
