@@ -217,6 +217,14 @@ export default function ChatSidebar() {
     return () => window.removeEventListener(PENDING_PROMPT_EVENT, consume);
   }, [user, sendPrompt]);
 
+  // chat 打开时给主内容腾出 420px 右边距，避免主区域内容（dashboard 卡片等）被 chat 覆盖导致点击被拦截
+  useEffect(() => {
+    document.documentElement.style.setProperty('--chat-panel-width', open ? '420px' : '0px');
+    return () => {
+      document.documentElement.style.setProperty('--chat-panel-width', '0px');
+    };
+  }, [open]);
+
   if (!user) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {

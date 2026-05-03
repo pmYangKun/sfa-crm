@@ -45,7 +45,17 @@ export default function AuthenticatedLayout({
   return (
     <div style={{ display: 'flex' }}>
       <Sidebar />
-      <main style={{ marginLeft: 220, flex: 1, padding: 24, minHeight: '100vh', position: 'relative' }}>
+      <main
+        style={{
+          marginLeft: 220,
+          marginRight: 'var(--chat-panel-width, 0px)',
+          transition: 'margin-right 0.2s ease',
+          flex: 1,
+          padding: 24,
+          minHeight: '100vh',
+          position: 'relative',
+        }}
+      >
         <div style={{ position: 'absolute', top: 16, right: 24 }}>
           <NotificationBell />
         </div>

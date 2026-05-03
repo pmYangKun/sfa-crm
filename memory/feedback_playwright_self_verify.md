@@ -15,3 +15,15 @@ type: feedback
 - 每个 user story / phase 必有对应 spec 文件（usX-xxx 或 mobile-/pc-phase-）+ 截图归档进 `tests/screenshots/`
 - 报告时附"通过 N/N + 截图清单"，不附无关过程
 - 无明显需要用户决策的事不要打断（Yes/No 决策、设计偏离、阻塞点才打断）
+
+**关键补充：mock 测试 ≠ 真实场景验证**
+
+只用 mock route 单点测试会漏掉**布局 / 时序 / 状态叠加 bug**。例：用 mock + 单卡片点击我没发现"chat 面板打开后覆盖右侧 dashboard 区域，第二张卡片被 chat 拦截点击"这个 bug —— 用户点了"以为没反应"，其实是被遮挡。
+
+**所以每个 user story 必须额外跑一个真实 API 串测**：
+- 文件命名 `pc-diag-real-api.spec.ts` / `mobile-diag-real-api.spec.ts`
+- 不 mock `/api/chat`，用真实 DeepSeek 流，更慢但能暴露真实环境 bug
+- 串测剧本：覆盖**多 prompt 顺序**操作（卡片 → 卡片 → 输入框；或卡片 → 输入框 → 重置 → 卡片），不要单点测
+- 抓 `pageerror` + `console`，确保无 JS 异常
+- 在每个 phase 完成回报前都要跑过这个真实串测，全绿才能说完成
+- 单点 + mock 测试是 happy path 单元覆盖；真实串测是布局 / 状态机交叉 / 时序的兜底
