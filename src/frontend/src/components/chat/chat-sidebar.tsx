@@ -67,6 +67,8 @@ export default function ChatSidebar() {
   const bottomRef = useRef<HTMLDivElement>(null);
   const loadingRef = useRef(loading);
   loadingRef.current = loading;
+  /** loading 时入队，本次结束自动消费下一个，避免快速连点丢 prompt */
+  const queueRef = useRef<string[]>([]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -123,7 +125,12 @@ export default function ChatSidebar() {
 
   const sendPrompt = useCallback(async (text: string) => {
     const trimmed = text.trim();
-    if (!trimmed || loadingRef.current) return;
+    if (!trimmed) return;
+    if (loadingRef.current) {
+      queueRef.current.push(trimmed);
+      return;
+    }
+    loadingRef.current = true;
 
     const userMsg: Message = { id: crypto.randomUUID(), role: 'user', content: trimmed };
     let messagesForApi: Message[] = [];
@@ -183,9 +190,16 @@ export default function ChatSidebar() {
         content: '网络错误，请检查连接后重试。',
       }]);
     } finally {
+      loadingRef.current = false;
       setLoading(false);
+      // 消费队列里下一个 prompt
+      const next = queueRef.current.shift();
+      if (next) setTimeout(() => sendPromptRef.current(next), 0);
     }
   }, [sessionId]);
+  // 用 ref 解递归依赖（finally 里调 sendPrompt 自己）
+  const sendPromptRef = useRef(sendPrompt);
+  sendPromptRef.current = sendPrompt;
 
   // 监听 OnboardingPanel 派发的事件 + 挂载时检查 sessionStorage
   useEffect(() => {

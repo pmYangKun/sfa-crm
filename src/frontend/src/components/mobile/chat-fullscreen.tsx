@@ -31,6 +31,8 @@ export default function ChatFullscreen() {
   const bottomRef = useRef<HTMLDivElement>(null);
   const loadingRef = useRef(loading);
   loadingRef.current = loading;
+  /** loading 时入队，本次结束自动消费下一个，避免快速连点丢 prompt */
+  const queueRef = useRef<string[]>([]);
 
   // 每张待确认卡片独立状态，cardKey = `${msgId}-${navIndex}`
   const [cardStates, setCardStates] = useState<Record<string, ChatFormCardState>>({});
@@ -71,7 +73,12 @@ export default function ChatFullscreen() {
 
   const sendPrompt = useCallback(async (text: string) => {
     const trimmed = text.trim();
-    if (!trimmed || loadingRef.current) return;
+    if (!trimmed) return;
+    if (loadingRef.current) {
+      queueRef.current.push(trimmed);
+      return;
+    }
+    loadingRef.current = true;
 
     const userMsg: Message = { id: crypto.randomUUID(), role: 'user', content: trimmed };
     let messagesForApi: Message[] = [];
@@ -129,9 +136,21 @@ export default function ChatFullscreen() {
         content: '网络错误，请检查连接后重试。',
       }]);
     } finally {
+      loadingRef.current = false;
       setLoading(false);
+      const next = queueRef.current.shift();
+      if (next) setTimeout(() => sendPromptRef.current(next), 0);
     }
   }, [sessionId]);
+  const sendPromptRef = useRef(sendPrompt);
+  sendPromptRef.current = sendPrompt;
+
+  const resetChat = useCallback(() => {
+    setMessages([]);
+    setCardStates({});
+    setOpenCardKey(null);
+    queueRef.current = [];
+  }, []);
 
   useEffect(() => {
     if (!user) return;
@@ -233,6 +252,24 @@ export default function ChatFullscreen() {
           <span>🤖</span>
           <span>AI 助手</span>
         </div>
+        {messages.length > 0 && (
+          <button
+            type="button"
+            onClick={resetChat}
+            data-testid="reset-chat-btn"
+            style={{
+              background: 'rgba(255,255,255,0.2)',
+              border: '1px solid rgba(255,255,255,0.4)',
+              color: '#fff',
+              borderRadius: 4,
+              padding: '4px 10px',
+              fontSize: 12,
+              cursor: 'pointer',
+            }}
+          >
+            ↺ 新对话
+          </button>
+        )}
       </div>
 
       <div
