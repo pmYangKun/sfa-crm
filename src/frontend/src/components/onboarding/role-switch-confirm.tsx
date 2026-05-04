@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { getRoleCardByLogin } from '@/lib/onboarding-config';
 
 interface RoleSwitchConfirmProps {
@@ -21,6 +21,13 @@ export default function RoleSwitchConfirm({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  useEffect(() => {
+    if (!open) {
+      setBusy(false);
+      setError(null);
+    }
+  }, [open]);
+
   if (!open) return null;
 
   const fromRole = getRoleCardByLogin(fromLogin);
@@ -31,6 +38,7 @@ export default function RoleSwitchConfirm({
     setError(null);
     try {
       await onConfirm();
+      setBusy(false);
     } catch (e) {
       setError(e instanceof Error ? e.message : '切换失败');
       setBusy(false);
