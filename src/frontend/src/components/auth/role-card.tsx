@@ -47,8 +47,8 @@ export default function RoleCard({ role, layout, onSelect, busyLogin }: RoleCard
         border: '1px solid #e8e8e8',
         borderTop: `4px solid ${role.accentColor}`,
         borderRadius: 8,
-        padding: isPc ? '24px 24px 20px' : '20px',
-        width: isPc ? 320 : '100%',
+        padding: isPc ? '20px 20px 18px' : '14px 14px 12px',
+        width: '100%',
         cursor: disabled ? 'not-allowed' : 'pointer',
         opacity: someoneElseBusy ? 0.5 : 1,
         boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
@@ -56,6 +56,8 @@ export default function RoleCard({ role, layout, onSelect, busyLogin }: RoleCard
         fontFamily: 'inherit',
         fontSize: 'inherit',
         color: 'inherit',
+        display: 'flex',
+        flexDirection: 'column',
       }}
       onMouseEnter={(e) => {
         if (!disabled) {
@@ -74,7 +76,7 @@ export default function RoleCard({ role, layout, onSelect, busyLogin }: RoleCard
       <div style={{ fontSize: 14, color: '#555', lineHeight: 1.6, marginBottom: 16, minHeight: isPc ? 44 : undefined }}>
         {desc}
       </div>
-      <div style={{ display: 'inline-block', padding: '8px 16px', background: role.accentColor, color: '#fff', borderRadius: 4, fontSize: 14, fontWeight: 500 }}>
+      <div style={{ marginTop: 'auto', alignSelf: 'flex-start', padding: '8px 16px', background: role.accentColor, color: '#fff', borderRadius: 4, fontSize: 14, fontWeight: 500 }}>
         {isBusy ? '登录中...' : '一键登录 →'}
       </div>
       {error && (

@@ -14,22 +14,17 @@ export default function LoginPage() {
   const isMobile = useIsMobile();
   const [busyLogin, setBusyLogin] = useState<string | null>(null);
 
-  // 右侧手动登录表单（管理员等其他账号入口；常驻可见）
   const [manualLogin, setManualLogin] = useState('');
   const [manualPwd, setManualPwd] = useState('');
   const [manualError, setManualError] = useState<string | null>(null);
   const [manualBusy, setManualBusy] = useState(false);
 
   useEffect(() => {
-    if (isMobile === true) {
-      router.replace('/m/login');
-    }
+    if (isMobile === true) router.replace('/m/login');
   }, [isMobile, router]);
 
   useEffect(() => {
-    if (!loading && user) {
-      router.replace('/dashboard');
-    }
+    if (!loading && user) router.replace('/dashboard');
   }, [loading, user, router]);
 
   const handleSelect = async (loginName: string, password: string) => {
@@ -58,40 +53,70 @@ export default function LoginPage() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f5f7fa', padding: '48px 24px' }}>
-      <div style={{ maxWidth: 1200, margin: '0 auto' }}>
-        {/* Hero 横跨两列 */}
-        <div style={{ textAlign: 'center', marginBottom: 40 }}>
-          <h1
-            data-testid="hero-title"
-            style={{ fontSize: 28, fontWeight: 700, color: '#262626', margin: '24px 0 12px', lineHeight: 1.4 }}
-          >
-            这是一个用 AI 从零写到上线的 Native AI CRM
-          </h1>
-          <p style={{ fontSize: 14, color: '#8c8c8c', margin: 0 }}>
-            点击左侧角色卡片一键体验，或在右侧用账号密码登录
-          </p>
-        </div>
-
-        {/* 两栏布局 */}
+    <div
+      style={{
+        minHeight: '100vh',
+        background:
+          'radial-gradient(1200px 600px at 50% -200px, #eef2ff 0%, transparent 60%), #fafbfc',
+      }}
+    >
+      <div style={{ maxWidth: 1100, margin: '0 auto', padding: '48px 32px 64px' }}>
         <div
           style={{
-            display: 'flex',
-            gap: 32,
-            alignItems: 'flex-start',
-            flexWrap: 'wrap',
-            justifyContent: 'center',
-            marginBottom: 32,
+            display: 'grid',
+            gridTemplateColumns: 'minmax(0, 1fr) 380px',
+            gap: 48,
+            alignItems: 'stretch',
           }}
         >
-          {/* 左：角色卡片 + 项目亮点（演示入口 + 介绍） */}
-          <div style={{ flex: '1 1 700px', minWidth: 320 }}>
-            <div style={{ fontSize: 13, fontWeight: 600, color: '#8c8c8c', marginBottom: 12, letterSpacing: 0.5 }}>
-              ✨ 体验演示 · 一键登录
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <h1
+              data-testid="hero-title"
+              style={{
+                fontSize: 34,
+                fontWeight: 700,
+                color: '#0f172a',
+                margin: 0,
+                lineHeight: 1.2,
+                letterSpacing: -0.5,
+              }}
+            >
+              Native AI CRM
+            </h1>
+            <p
+              style={{
+                fontSize: 15,
+                color: '#475569',
+                margin: '14px 0 32px',
+                lineHeight: 1.7,
+                maxWidth: 560,
+              }}
+            >
+              一个用 AI 从零写到上线的 CRM 系统。把对话当成一等接入方式，
+              选一个角色一键体验，看 AI 怎么帮你查线索、录跟进、做决策。
+            </p>
+
+            <div
+              style={{
+                fontSize: 11,
+                fontWeight: 600,
+                color: '#64748b',
+                letterSpacing: 1.4,
+                marginBottom: 12,
+                textTransform: 'uppercase',
+              }}
+            >
+              选择角色 · 一键登录
             </div>
             <div
               data-testid="role-cards-container"
-              style={{ display: 'flex', justifyContent: 'flex-start', gap: 16, flexWrap: 'wrap', marginBottom: 32 }}
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+                gap: 14,
+                alignItems: 'stretch',
+                flex: 1,
+              }}
             >
               {ROLE_CARDS.map((role) => (
                 <RoleCard
@@ -103,94 +128,125 @@ export default function LoginPage() {
                 />
               ))}
             </div>
-            <HighlightsPanelPC />
           </div>
 
-          {/* 右：账号密码登录（常驻可见，参考正常系统登录页） */}
-          <div style={{ flex: '0 0 360px', minWidth: 320 }}>
-            <div style={{ fontSize: 13, fontWeight: 600, color: '#8c8c8c', marginBottom: 12, letterSpacing: 0.5 }}>
-              🔐 账号密码登录
-            </div>
-            <form
-              onSubmit={handleManualSubmit}
-              data-testid="manual-login-form"
+          <form
+            onSubmit={handleManualSubmit}
+            data-testid="manual-login-form"
+            style={{
+              background: '#fff',
+              border: '1px solid #e2e8f0',
+              borderRadius: 12,
+              padding: '28px 26px',
+              boxShadow: '0 1px 3px rgba(15,23,42,0.04), 0 8px 24px rgba(15,23,42,0.06)',
+              display: 'flex',
+              flexDirection: 'column',
+              alignSelf: 'stretch',
+            }}
+          >
+            <h2 style={{ fontSize: 18, fontWeight: 600, color: '#0f172a', margin: 0 }}>
+              账号登录
+            </h2>
+            <p style={{ fontSize: 13, color: '#64748b', margin: '6px 0 22px' }}>
+              使用账号密码登录管理后台
+            </p>
+
+            <label style={labelStyle}>账号</label>
+            <input
+              type="text"
+              value={manualLogin}
+              onChange={(e) => setManualLogin(e.target.value)}
+              data-testid="manual-login-input"
+              required
+              placeholder="admin / sales01"
+              style={inputStyle}
+            />
+
+            <label style={{ ...labelStyle, marginTop: 14 }}>密码</label>
+            <input
+              type="password"
+              value={manualPwd}
+              onChange={(e) => setManualPwd(e.target.value)}
+              data-testid="manual-password-input"
+              required
+              placeholder="••••••"
+              style={inputStyle}
+            />
+
+            {manualError && <div style={errorStyle}>{manualError}</div>}
+
+            <button
+              type="submit"
+              disabled={manualBusy}
+              data-testid="manual-login-submit"
               style={{
-                background: '#fff',
-                border: '1px solid #e8e8e8',
-                borderRadius: 12,
-                padding: 28,
-                boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+                width: '100%',
+                marginTop: 20,
+                padding: '11px 0',
+                background: '#0f172a',
+                color: '#fff',
+                border: 'none',
+                borderRadius: 8,
+                fontSize: 14,
+                fontWeight: 500,
+                cursor: manualBusy ? 'not-allowed' : 'pointer',
+                opacity: manualBusy ? 0.7 : 1,
+                transition: 'opacity 0.15s',
               }}
             >
-              <div style={{ marginBottom: 16 }}>
-                <label style={{ display: 'block', fontSize: 13, color: '#262626', marginBottom: 6, fontWeight: 500 }}>
-                  账号
-                </label>
-                <input
-                  type="text"
-                  value={manualLogin}
-                  onChange={(e) => setManualLogin(e.target.value)}
-                  data-testid="manual-login-input"
-                  required
-                  placeholder="如 admin / sales01"
-                  style={{
-                    width: '100%', padding: '10px 12px', border: '1px solid #d9d9d9',
-                    borderRadius: 6, fontSize: 14, boxSizing: 'border-box', outline: 'none',
-                  }}
-                />
+              {manualBusy ? '登录中...' : '登录'}
+            </button>
+
+            <div
+              style={{
+                marginTop: 'auto',
+                paddingTop: 20,
+                borderTop: '1px solid #f1f5f9',
+                fontSize: 12,
+                color: '#94a3b8',
+                lineHeight: 1.7,
+              }}
+            >
+              <div style={{ marginBottom: 2 }}>
+                演示账号：admin / sales01 / sales02 / manager01
               </div>
-              <div style={{ marginBottom: 20 }}>
-                <label style={{ display: 'block', fontSize: 13, color: '#262626', marginBottom: 6, fontWeight: 500 }}>
-                  密码
-                </label>
-                <input
-                  type="password"
-                  value={manualPwd}
-                  onChange={(e) => setManualPwd(e.target.value)}
-                  data-testid="manual-password-input"
-                  required
-                  placeholder="演示密码 12345"
-                  style={{
-                    width: '100%', padding: '10px 12px', border: '1px solid #d9d9d9',
-                    borderRadius: 6, fontSize: 14, boxSizing: 'border-box', outline: 'none',
-                  }}
-                />
-              </div>
-              {manualError && (
-                <div
-                  style={{
-                    color: '#cf1322',
-                    background: '#fff1f0',
-                    border: '1px solid #ffccc7',
-                    padding: '8px 12px',
-                    borderRadius: 4,
-                    fontSize: 13,
-                    marginBottom: 16,
-                  }}
-                >
-                  {manualError}
-                </div>
-              )}
-              <button
-                type="submit"
-                disabled={manualBusy}
-                data-testid="manual-login-submit"
-                style={{
-                  width: '100%', padding: '10px 0', background: '#1890ff', color: '#fff',
-                  border: 'none', borderRadius: 6, fontSize: 15, fontWeight: 500,
-                  cursor: manualBusy ? 'not-allowed' : 'pointer', opacity: manualBusy ? 0.7 : 1,
-                }}
-              >
-                {manualBusy ? '登录中...' : '登录'}
-              </button>
-              <div style={{ fontSize: 12, color: '#8c8c8c', marginTop: 16, lineHeight: 1.6 }}>
-                演示账号：admin / sales01 / sales02 / manager01<br />
-                密码均为：12345
-              </div>
-            </form>
-          </div>
+              <div>密码均为：12345</div>
+            </div>
+          </form>
         </div>
+
+        <HighlightsPanelPC />
       </div>
     </div>
   );
 }
+
+const labelStyle: React.CSSProperties = {
+  display: 'block',
+  fontSize: 12,
+  fontWeight: 500,
+  color: '#334155',
+  marginBottom: 6,
+};
+
+const inputStyle: React.CSSProperties = {
+  width: '100%',
+  padding: '10px 12px',
+  border: '1px solid #e2e8f0',
+  borderRadius: 8,
+  fontSize: 14,
+  boxSizing: 'border-box',
+  outline: 'none',
+  background: '#fafbfc',
+  transition: 'border-color 0.15s, background 0.15s',
+};
+
+const errorStyle: React.CSSProperties = {
+  marginTop: 14,
+  padding: '8px 12px',
+  background: '#fef2f2',
+  border: '1px solid #fecaca',
+  borderRadius: 6,
+  color: '#dc2626',
+  fontSize: 13,
+};
