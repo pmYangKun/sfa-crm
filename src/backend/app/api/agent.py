@@ -100,12 +100,18 @@ def save_llm_config(
         c.is_active = False
         session.add(c)
 
-    # Create new active config
+    # Create new active config（spec 002 T034: api_key 透明加密存储）
     new_config = LLMConfig(
         provider=body.provider,
         model=body.model,
-        api_key=body.api_key or (existing[0].api_key if existing else ""),
+        api_key="placeholder",  # 立即被 set_api_key 或复用旧密文覆盖
     )
+    if body.api_key:
+        new_config.set_api_key(body.api_key)  # 加密新传入的明文
+    elif existing:
+        new_config.api_key = existing[0].api_key  # 复用旧密文不重新加密
+    else:
+        new_config.api_key = ""
     new_config.is_active = True
     session.add(new_config)
 

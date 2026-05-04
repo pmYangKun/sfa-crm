@@ -11,9 +11,12 @@ services:
       - sqlite-data:/app/data
       - ./backend:/app
     environment:
-      - DATABASE_URL=sqlite:///data/sfa_crm.db
-      - JWT_SECRET=change-me-in-production
-      - CORS_ORIGINS=http://localhost:3000
+      # spec 002 T037: 强制密钥从 .env 注入；缺失则 compose 拒绝启动
+      - DATABASE_URL=${DATABASE_URL:-sqlite:///data/sfa_crm.db}
+      - JWT_SECRET=${JWT_SECRET:?JWT_SECRET must be set in .env}
+      - LLM_KEY_FERNET_KEY=${LLM_KEY_FERNET_KEY:?LLM_KEY_FERNET_KEY must be set in .env}
+      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:3000}
+      - ENV=${ENV:-dev}
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
   frontend:

@@ -217,6 +217,20 @@ description: "Task list for 公网部署安全/治理硬化"
 
 **Checkpoint US4**: T030-T032 全测试通过 + 手工跑 quickstart.md A + D + E 节全过。
 
+### Deferred to spec 002 后续 / spec 003
+
+以下任务在 2026-05-04 实施时**未完成**，留给后续迭代：
+
+- **T033** /agent/llm-config/full 删除 api_key 字段：当前前端 chat/route.ts 仍依赖此字段调 Anthropic SDK，删除会破坏前端。必须与 T035 后端代理一起做才不破坏体验。
+- **T035** 后端 LLM 代理 /agent/llm-proxy（流式响应）：research.md Decision 7 标记的"非平凡技术决策"。需要 prototype 验证 Vercel AI SDK 的 chunked transfer 协议，工作量较大且高风险。本次跳过，公网部署先靠 Phase 4 的限流 / 熔断 / audit 防护 + 现有 .api_key Fernet 加密保护（前端虽然能从 /llm-config/full 读到明文 api_key，但请求都走前端 SDK，仍受限流约束）。
+- **T032** test_llm_proxy.py：依赖 T035 实现，一并 deferred。
+- **T036** 前端 chat/route.ts 改走后端代理：依赖 T035。
+
+**已实施替代防护**：
+- API Key 在 DB 中是 Fernet 密文（T009）—— DB 备份泄露不会泄漏明文
+- 限流 + 熔断 + 黑名单 + 输入长度限制 → 滥用脚本无法用 demo 站当免费 LLM 客户端
+- chat_audit 全量记录可回溯
+
 ---
 
 ## Phase 7: Polish & Cross-Cutting
