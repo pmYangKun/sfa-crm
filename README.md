@@ -40,7 +40,7 @@ Windows 用户双击 `start.bat`，等待两个终端窗口启动完成后访问
 3. 填入 API Key（支持 DeepSeek、Anthropic 等 OpenAI 兼容 Provider）
 4. 点击保存并激活
 
-配置完成后，任意用户登录都可以使用右下角的 AI 助手。演示案例见 [`demo/copilot-cases.md`](demo/copilot-cases.md)。
+配置完成后，任意用户登录都可以使用右下角的 AI 助手。演示案例见 [`docs/copilot-cases.md`](docs/copilot-cases.md)。
 
 ---
 
