@@ -15,6 +15,10 @@ from app.services.rate_limiter import limiter
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # ── Startup gate: 生产密钥强校验（spec 002 T011 / FR-025）─────────────
+    from app.core.config import _assert_production_secrets
+    _assert_production_secrets()
+
     # Startup — register scheduled jobs
     from apscheduler.schedulers.background import BackgroundScheduler
     from app.services.release_service import run_auto_release

@@ -15,12 +15,14 @@ from app.models.auth import (
     UserDataScope,
     UserRole,
 )
+from app.models.chat_audit import ChatAudit  # noqa: F401 — spec 002
 from app.models.config import SystemConfig
 from app.models.contact import Contact, ContactRelation  # noqa: F401
 from app.models.customer import Customer  # noqa: F401
 from app.models.followup import FollowUp  # noqa: F401
 from app.models.key_event import KeyEvent  # noqa: F401
 from app.models.lead import Lead  # noqa: F401
+from app.models.llm_call_counter import LLMCallCounter  # noqa: F401 — spec 002
 from app.models.llm_config import ConversationMessage, LLMConfig, Skill  # noqa: F401
 from app.models.notification import Notification  # noqa: F401
 from app.models.org import OrgNode, User
@@ -309,6 +311,10 @@ def init_db():
             "CREATE INDEX IF NOT EXISTS idx_audit_log_entity ON audit_log(entity_type, entity_id)",
             "CREATE INDEX IF NOT EXISTS idx_audit_log_user ON audit_log(user_id, created_at)",
             "CREATE INDEX IF NOT EXISTS idx_conversation_session ON conversation_message(session_id, created_at)",
+            # spec 002 chat_audit indexes
+            "CREATE INDEX IF NOT EXISTS idx_chat_audit_created_at ON chat_audit(created_at)",
+            "CREATE INDEX IF NOT EXISTS idx_chat_audit_user_blocked ON chat_audit(user_id, blocked_by)",
+            "CREATE INDEX IF NOT EXISTS idx_chat_audit_ip ON chat_audit(client_ip)",
         ]
         for stmt in index_statements:
             try:
@@ -342,9 +348,10 @@ def _init_llm_config(session: Session):
         id=str(uuid.uuid4()),
         provider=provider,
         model=model,
-        api_key=api_key,
+        api_key="placeholder",  # 立即被 set_api_key() 覆盖为 Fernet 密文
         is_active=True,
     )
+    config.set_api_key(api_key)  # spec 002 FR-027: api_key 加密存储
     session.add(config)
     session.commit()
 
