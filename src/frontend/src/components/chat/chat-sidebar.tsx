@@ -248,16 +248,40 @@ export default function ChatSidebar() {
         <button
           onClick={() => setOpen(true)}
           data-testid="chat-toggle-btn"
+          aria-label="打开 AI 助手"
           style={{
             position: 'fixed', bottom: 24, right: 24, zIndex: 1000,
-            width: 56, height: 56, borderRadius: '50%',
-            background: '#1890ff', color: '#fff', border: 'none',
-            fontSize: 24, cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+            width: 52, height: 52, borderRadius: '50%',
+            background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
+            color: '#fff', border: 'none', cursor: 'pointer',
+            boxShadow: '0 8px 24px rgba(15, 23, 42, 0.32), 0 0 0 1px rgba(99, 102, 241, 0.35), 0 0 22px rgba(129, 140, 248, 0.28)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
+            transition: 'transform 0.18s ease, box-shadow 0.18s ease',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'translateY(-1px) scale(1.04)';
+            e.currentTarget.style.boxShadow = '0 12px 28px rgba(15, 23, 42, 0.4), 0 0 0 1px rgba(129, 140, 248, 0.55), 0 0 28px rgba(129, 140, 248, 0.45)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'translateY(0) scale(1)';
+            e.currentTarget.style.boxShadow = '0 8px 24px rgba(15, 23, 42, 0.32), 0 0 0 1px rgba(99, 102, 241, 0.35), 0 0 22px rgba(129, 140, 248, 0.28)';
           }}
           title="AI 助手"
         >
-          🤖
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <defs>
+              <linearGradient id="copilot-spark" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stopColor="#a5b4fc" />
+                <stop offset="100%" stopColor="#818cf8" />
+              </linearGradient>
+            </defs>
+            <path
+              d="M12 2.5l1.85 5.18a3.5 3.5 0 0 0 2.12 2.12L21.15 11.65l-5.18 1.85a3.5 3.5 0 0 0-2.12 2.12L12 20.8l-1.85-5.18a3.5 3.5 0 0 0-2.12-2.12L2.85 11.65l5.18-1.85a3.5 3.5 0 0 0 2.12-2.12L12 2.5z"
+              fill="url(#copilot-spark)"
+            />
+            <circle cx="19" cy="5" r="1.4" fill="#c7d2fe" />
+            <circle cx="5" cy="19" r="1" fill="#c7d2fe" opacity="0.85" />
+          </svg>
         </button>
       )}
 
