@@ -7,6 +7,7 @@ Spec ref: specs/002-public-deploy-hardening/spec.md FR-012~019
 from datetime import datetime, timezone, timedelta
 
 import pytest
+from sqlalchemy import event
 from sqlmodel import Session, SQLModel, create_engine, select
 
 # Register tables
@@ -25,6 +26,15 @@ from app.models.org import OrgNode, User
 @pytest.fixture
 def session():
     engine = create_engine("sqlite://", connect_args={"check_same_thread": False})
+
+    # 关键：开 FK pragma，否则测试不会暴露 demo_reset 的删表顺序错误
+    # （生产 DB 走 app/core/database.py 默认 ON，测试 in-memory 必须手动开）
+    @event.listens_for(engine, "connect")
+    def _set_fk(dbapi_conn, _):
+        cursor = dbapi_conn.cursor()
+        cursor.execute("PRAGMA foreign_keys = ON")
+        cursor.close()
+
     SQLModel.metadata.create_all(engine)
     with Session(engine) as s:
         # 保留表种子（user / org_node / system_config）
@@ -39,9 +49,11 @@ def session():
 
 
 def _seed_some_business_data(s: Session) -> None:
-    """种入少量业务数据用于测试 reset 是否清空。"""
+    """种入少量业务数据用于测试 reset 是否清空。FK 拓扑：Customer/Contact/
+    FollowUp/KeyEvent → Lead；所以先 flush Lead 让 SQLAlchemy 不要重排序。"""
     s.add(Lead(id="lead-1", company_name="测试公司A", region="华北", source="referral", owner_id="u-1", pool="private"))
     s.add(Lead(id="lead-2", company_name="测试公司B", region="华南", source="organic", owner_id="u-1", pool="public"))
+    s.flush()  # 让 lead-1 / lead-2 在 FK 引用前先落 DB
     s.add(Customer(id="cust-1", lead_id="lead-1", company_name="测试客户", region="华北", owner_id="u-1", source="referral"))
     s.add(Contact(id="ct-1", lead_id="lead-1", name="张三"))
     s.add(FollowUp(id="fu-1", lead_id="lead-1", owner_id="u-1", type="phone", content="x", followed_at="2026-05-04T00:00:00Z"))

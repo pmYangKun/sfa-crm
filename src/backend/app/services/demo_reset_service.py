@@ -77,13 +77,18 @@ def reset_business_data(
     seed_fn = seed_callable if seed_callable is not None else _default_seed
 
     # ── Phase 1: 清空业务表（按外键依赖反序，叶子表先删）─────────────────
+    # FK 拓扑：FollowUp/KeyEvent → Lead/Customer；Contact → Lead/Customer；
+    #          Customer → Lead（lead_id FK，转化场景）；Notification/ChatAudit/
+    #          LLMCallCounter 无业务对象 FK。
+    # 因此 Lead 必须最后删（前一版把 Lead 在 Customer 前删，dev DB 有转化客户时
+    # FK 冲突 → DELETE FROM lead 报 IntegrityError）。
     try:
         session.exec(delete(FollowUp))
         session.exec(delete(KeyEvent))
         session.exec(delete(Notification))
         session.exec(delete(Contact))
-        session.exec(delete(Lead))
-        session.exec(delete(Customer))
+        session.exec(delete(Customer))     # 先 Customer（FK 指向 Lead）
+        session.exec(delete(Lead))         # 再 Lead
         session.exec(delete(ChatAudit))
         session.exec(delete(LLMCallCounter))
         session.commit()
