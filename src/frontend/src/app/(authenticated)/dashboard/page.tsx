@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { api } from '@/lib/api';
+import OnboardingPanel from '@/components/onboarding/onboarding-panel';
 
 interface DashboardStats {
   total_leads: number;
@@ -23,7 +24,7 @@ interface TeamMember {
 }
 
 export default function DashboardPage() {
-  const { user } = useAuth();
+  const { user, loginName } = useAuth();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [team, setTeam] = useState<TeamMember[]>([]);
   const [loading, setLoading] = useState(true);
@@ -56,10 +57,10 @@ export default function DashboardPage() {
 
   return (
     <div>
+      {loginName && <OnboardingPanel currentLoginName={loginName} />}
       <h1 style={{ fontSize: 24, marginBottom: 24 }}>数据概览</h1>
       <p style={{ marginBottom: 24, color: '#666' }}>欢迎回来，{user?.name}！</p>
 
-      {/* Stats cards */}
       <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', marginBottom: 32 }}>
         <div style={cardStyle('#1890ff')}>
           <div style={{ fontSize: 14, opacity: 0.8 }}>活跃线索</div>
@@ -79,7 +80,6 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Secondary stats */}
       <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', marginBottom: 32 }}>
         <div style={{ ...cardStyle('#13c2c2'), flex: 'none', minWidth: 160 }}>
           <div style={{ fontSize: 14, opacity: 0.8 }}>公共池</div>
@@ -95,7 +95,6 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Team table (manager view) */}
       {isManager && team.length > 0 && (
         <div style={{ background: '#fff', borderRadius: 8, overflow: 'hidden' }}>
           <h2 style={{ fontSize: 18, padding: '16px 24px', margin: 0, borderBottom: '2px solid #f0f0f0' }}>

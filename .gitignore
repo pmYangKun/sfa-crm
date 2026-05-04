@@ -60,3 +60,7 @@ coverage/
 
 # === Mermaid render cache ===
 .mermaid-cache/
+
+# === Playwright test artifacts（每次跑产生的临时文件，截图保留）===
+src/frontend/tests/test-results/
+src/frontend/tests/playwright-report/
