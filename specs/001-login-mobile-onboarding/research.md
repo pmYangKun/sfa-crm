@@ -80,7 +80,7 @@
 **Rationale**:
 - 引导卡片清单（标题 / 完整问题 / 角色 / 平台 / 类型）是**展示层数据**，不是业务规则；放后端会增加无谓的网络往返。
 - 配置数组让"上线后看数据决定裁哪张"的策略可以**改一行常量配置 + 重新部署**完成，无需走 spec-kit 流程（与 input doc 的"卡片话术微调不走 spec-kit"原则一致）。
-- 与 `src/demo/copilot-cases.md` 形成单向引用：配置项里加 `caseRef: "案例 3"` 字段做溯源。
+- 与 `demo/copilot-cases.md` 形成单向引用：配置项里加 `caseRef: "案例 3"` 字段做溯源。
 
 **Alternatives Considered**:
 - 后端 `/api/onboarding/cards` 端点：过度工程，且配置改动比代码部署更频繁，没必要。否决。
