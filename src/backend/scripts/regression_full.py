@@ -310,9 +310,16 @@ check(sec, "GET /agent/llm-config → 200", llm_basic.status_code == 200)
 llm_full = client.get("/api/v1/agent/llm-config/full", headers=auth(sales01_token))
 if llm_full.status_code == 200:
     body = llm_full.json()
-    check(sec, "T033: /llm-config/full 响应不含 api_key", "api_key" not in body)
     if body.get("configured"):
         check(sec, "T033: /llm-config/full 响应含 api_key_present:bool", isinstance(body.get("api_key_present"), bool))
+    # 注：api_key 字段按 ENV 分流：dev 含明文（前端 fallback 用）；production 不含。
+    # 当前 dev 环境跑回归 → 应含 api_key（解密明文）让本地"admin UI 改 Key 立即生效"
+    if os.getenv("ENV", "dev").lower() != "production":
+        check(sec, "dev 模式下 /llm-config/full 含 api_key（前端 fallback）",
+              "api_key" in body and isinstance(body["api_key"], str))
+    else:
+        check(sec, "production 模式下 /llm-config/full 不含 api_key（FR-029）",
+              "api_key" not in body)
 else:
     check(sec, "GET /llm-config/full → 200", False, f"status {llm_full.status_code}")
 
@@ -323,7 +330,22 @@ tools = client.get("/api/v1/agent/tools", headers=auth(sales01_token))
 check(sec, "GET /agent/tools → 200 + ≥10 个 tool", tools.status_code == 200 and len(tools.json()) >= 10)
 
 # 11b. POST /agent/llm-config — T034 set_api_key 加密验证
+# 重要：保留+恢复原 api_key，避免覆盖用户真实 Key
 sec_llm = section("11b. Agent: 写 LLM config（T034 加密）")
+
+from app.models.llm_config import LLMConfig
+
+# 保留原始配置
+original_cfg_state: dict | None = None
+with Session(engine) as s:
+    active = s.exec(select(LLMConfig).where(LLMConfig.is_active == True)).first()  # noqa: E712
+    if active:
+        original_cfg_state = {
+            "provider": active.provider,
+            "model": active.model,
+            "api_key_ciphertext": active.api_key,  # 保留密文，无需解密
+        }
+
 set_cfg = client.post(
     "/api/v1/agent/llm-config",
     headers=auth(admin_token),
@@ -332,7 +354,6 @@ set_cfg = client.post(
 check(sec_llm, f"admin POST /agent/llm-config → {set_cfg.status_code}", set_cfg.status_code in (200, 201))
 
 # 验证 DB 中 api_key 是 Fernet 密文
-from app.models.llm_config import LLMConfig
 with Session(engine) as s:
     active = s.exec(select(LLMConfig).where(LLMConfig.is_active == True)).first()  # noqa: E712
     if active:
@@ -340,6 +361,24 @@ with Session(engine) as s:
               active.api_key.startswith("gAAAAA"))
         check(sec_llm, "T034: api_key_decrypted 解出明文 == 写入值",
               active.api_key_decrypted == "sk-ant-regression-test-key")
+
+# 恢复原 api_key（保护用户的真实 Key）
+if original_cfg_state:
+    with Session(engine) as s:
+        # 删掉测试写入的所有 LLMConfig（POST 端点会先 deactivate 旧的再插新的）
+        for c in s.exec(select(LLMConfig)).all():
+            s.delete(c)
+        s.flush()
+        # 还原一条 active 配置（直接用密文不重加密）
+        restored = LLMConfig(
+            provider=original_cfg_state["provider"],
+            model=original_cfg_state["model"],
+            api_key=original_cfg_state["api_key_ciphertext"],
+        )
+        restored.is_active = True
+        s.add(restored)
+        s.commit()
+    check(sec_llm, "T034 后已恢复原 api_key（保护用户真实 Key）", True)
 
 # 11c. POST /agent/execute-tool — 每个 read tool + 每个 navigate tool
 sec_tool = section("11c. Agent: execute-tool（read + navigate）")

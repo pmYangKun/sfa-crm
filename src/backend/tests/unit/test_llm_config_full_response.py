@@ -34,18 +34,36 @@ def session(monkeypatch):
         yield s
 
 
-def test_response_omits_api_key_field(session):
-    """FR-029: api_key 字段必须从响应中完全剔除，无论是密文还是明文。"""
+def test_response_omits_api_key_in_production(session, monkeypatch):
+    """FR-029 严格态：ENV=production 时，api_key 字段必须从响应中完全剔除。"""
+    # 加密用 dev fallback Fernet（生产 ENV 切换在 set_api_key 之后）
     cfg = LLMConfig(provider="anthropic", model="claude-3-5-sonnet", api_key="placeholder")
     cfg.set_api_key("sk-ant-real-1234567890")
     cfg.is_active = True
     session.add(cfg)
     session.commit()
 
-    # current_user 不被函数体使用，传 None 占位
+    # 现在切换到 production，再验响应行为
+    monkeypatch.setenv("ENV", "production")
+
     resp = get_llm_config_full(session=session, current_user=None)
 
-    assert "api_key" not in resp, "api_key 字段必须从响应中删除（FR-029）"
+    assert "api_key" not in resp, "ENV=production 时 api_key 必须从响应中剔除（FR-029）"
+
+
+def test_response_includes_api_key_in_dev(session, monkeypatch):
+    """dev 逃生通道：ENV != production 时下发 api_key 解密明文，方便本地"admin UI 改 Key 立即生效"。"""
+    monkeypatch.setenv("ENV", "dev")
+    cfg = LLMConfig(provider="anthropic", model="claude-3-5-sonnet", api_key="placeholder")
+    cfg.set_api_key("sk-ant-dev-fallback-key")
+    cfg.is_active = True
+    session.add(cfg)
+    session.commit()
+
+    resp = get_llm_config_full(session=session, current_user=None)
+
+    assert resp.get("api_key") == "sk-ant-dev-fallback-key", \
+        "ENV=dev 时应下发 api_key 明文（前端 fallback 用）"
 
 
 def test_response_has_api_key_present_true_when_configured(session):

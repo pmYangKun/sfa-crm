@@ -71,24 +71,42 @@ def get_llm_config_full(
     session: Session = Depends(get_session),
     current_user: User = Depends(require_permission("agent.chat")),
 ):
-    """Full LLM config 元信息（spec 002 T033 / FR-029）—— api_key 字段已移除。
+    """Full LLM config 元信息。
 
-    前端 Next.js API Route 不再从此端点读 LLM API Key；改从环境变量
-    （ANTHROPIC_API_KEY / OPENAI_API_KEY / DEEPSEEK_API_KEY）读取。
-    DB 中的 Fernet 密文由后端独立持有，留待 spec 003 全 backend proxy 时启用。
+    spec 002 FR-029 行为按 ENV 分流：
+    - ENV=production：响应**不含** api_key 字段（防止认证用户 curl 端点拿到密钥）。
+      前端 Next.js Route 必须从环境变量 ANTHROPIC_API_KEY/OPENAI_API_KEY/...
+      读取（systemd EnvironmentFile 注入，跟 JWT_SECRET 同管控级别）。
+    - ENV=dev/其它：响应含 api_key（解密后的明文），让本地开发"admin UI 改 Key
+      立即生效"的体验保持。dev 没有公网威胁模型，FR-029 在 localhost 不适用。
+
+    前端 chat/route.ts 走"env 变量优先 → DB 下发 fallback"双路径，两环境通用。
     """
+    import os
+
     config = get_active_llm_config(session)
     if not config:
         return {"configured": False}
     prompt_cfg = session.get(SystemConfig, "agent_system_prompt")
     system_prompt = prompt_cfg.value if prompt_cfg else ""
-    return {
+
+    response = {
         "configured": True,
         "provider": config.provider,
         "model": config.model,
         "api_key_present": bool(config.api_key),
         "system_prompt": system_prompt,
     }
+
+    # dev 逃生通道：仅 ENV != production 下发 api_key 明文，方便本地开发
+    if os.getenv("ENV", "dev").lower() != "production":
+        try:
+            response["api_key"] = config.api_key_decrypted
+        except Exception:
+            # 老明文数据 / Fernet 解密失败 → 不抛错，让前端 fallback 到 env var
+            pass
+
+    return response
 
 
 @router.post("/agent/llm-config")

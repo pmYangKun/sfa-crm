@@ -113,7 +113,10 @@ export async function POST(req: Request) {
   }
 
   // 3. Build LLM provider dynamically based on provider config
-  //    spec 002 T036/FR-030: api_key 从 server env 读，不再走 /llm-config/full 响应
+  //    spec 002 T036/FR-030 双路径 fallback：
+  //    - 生产：env 变量是唯一路径（后端 ENV=production 不下发 api_key）
+  //    - 本地 dev：env 变量缺则 fallback 到后端 /llm-config/full 下发的明文
+  //      （后端 ENV != production 时会把解密后的 key 一起返回）
   const provider = (config.provider || 'anthropic').toLowerCase();
 
   const envKeyMap: Record<string, string> = {
@@ -123,12 +126,12 @@ export async function POST(req: Request) {
     minimax: 'MINIMAX_API_KEY',
   };
   const envKeyName = envKeyMap[provider] || 'ANTHROPIC_API_KEY';
-  const apiKey = process.env[envKeyName] || '';
+  const apiKey = process.env[envKeyName] || config.api_key || '';
 
   if (!apiKey) {
     return new Response(
       JSON.stringify({
-        error: `LLM API Key 未配置（缺 ${envKeyName} 环境变量）。请联系管理员。`,
+        error: `LLM API Key 未配置。本地开发：去 admin → LLM 配置 录入 Key；生产部署：systemd EnvironmentFile 配 ${envKeyName}。`,
         code: 'LLM_KEY_NOT_CONFIGURED',
       }),
       { status: 503, headers: { 'Content-Type': 'application/json' } },
