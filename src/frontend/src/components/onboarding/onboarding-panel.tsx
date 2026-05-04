@@ -129,6 +129,12 @@ function OnboardingCardItem({ card, onClick }: { card: OnboardingCardData; onCli
         fontFamily: 'inherit',
         color: 'inherit',
         transition: 'transform 0.15s, box-shadow 0.15s, border-color 0.15s',
+        // <button> UA 默认居中内容，没 fullPrompt 段的卡片标题会浮到中央。
+        // 改成 flex column + flex-start，标题永远顶对齐。
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'stretch',
+        justifyContent: 'flex-start',
       }}
       onMouseEnter={(e) => {
         e.currentTarget.style.transform = 'translateY(-1px)';

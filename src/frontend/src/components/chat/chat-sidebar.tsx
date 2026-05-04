@@ -8,6 +8,7 @@ import {
   PENDING_PROMPT_KEY,
 } from '@/components/onboarding/onboarding-panel';
 import { parseNavMarkers } from '@/lib/parse-nav-markers';
+import { RenderMarkdown } from '@/lib/render-markdown';
 
 interface Message {
   id: string;
@@ -19,19 +20,20 @@ function MessageContent({ content, onNavigate }: { content: string; onNavigate: 
   const parts = parseNavMarkers(content);
 
   if (parts.length === 1 && parts[0].type === 'text') {
-    return <>{content}</>;
+    return <RenderMarkdown content={content} />;
   }
 
   return (
     <>
       {parts.map((part, i) => {
         if (part.type === 'text') {
-          return <span key={i}>{part.value}</span>;
+          return <RenderMarkdown key={i} content={part.value} />;
         }
         return (
           <button
             key={i}
             onClick={() => onNavigate(part.url)}
+            data-nav-url={part.url}
             style={{
               display: 'inline-flex',
               alignItems: 'center',
@@ -389,7 +391,8 @@ export default function ChatSidebar() {
                   color: msg.role === 'user' ? '#fff' : '#333',
                   padding: '8px 12px', borderRadius: 8,
                   maxWidth: '85%', fontSize: 14, lineHeight: 1.6,
-                  whiteSpace: 'pre-wrap', wordBreak: 'break-word',
+                  whiteSpace: msg.role === 'assistant' ? 'normal' : 'pre-wrap',
+                  wordBreak: 'break-word',
                 }}
               >
                 {msg.role === 'assistant' ? (

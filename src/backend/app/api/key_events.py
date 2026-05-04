@@ -9,7 +9,9 @@ from sqlmodel import Session, func, select
 
 from app.core.database import get_session
 from app.core.deps import get_client_ip, require_permission
+from app.models.customer import Customer
 from app.models.key_event import KeyEvent
+from app.models.lead import Lead
 from app.models.org import User
 from app.services.audit_service import write_audit_log
 
@@ -63,6 +65,8 @@ def create_lead_key_event(
     session: Session = Depends(get_session),
     current_user: User = Depends(require_permission("keyevent.create")),
 ):
+    if not session.get(Lead, lead_id):
+        raise HTTPException(status_code=404, detail="线索不存在")
     ke = KeyEvent(
         lead_id=lead_id,
         type=body.type,
@@ -87,6 +91,8 @@ def create_customer_key_event(
     session: Session = Depends(get_session),
     current_user: User = Depends(require_permission("keyevent.create")),
 ):
+    if not session.get(Customer, customer_id):
+        raise HTTPException(status_code=404, detail="客户不存在")
     ke = KeyEvent(
         customer_id=customer_id,
         type=body.type,

@@ -10,6 +10,7 @@ import {
 } from '@/components/onboarding/onboarding-panel';
 import { parseNavMarkers } from '@/lib/parse-nav-markers';
 import { parseNavUrl } from '@/lib/parse-nav-url';
+import { RenderMarkdown } from '@/lib/render-markdown';
 import ChatFormCard, { ChatFormCardState } from './chat-form-card';
 import MobileFormSheet from './mobile-form-sheet';
 import { TABBAR_HEIGHT } from './kingkong-tabbar';
@@ -353,12 +354,11 @@ export default function ChatFullscreen() {
                           maxWidth: '85%',
                           fontSize: 14,
                           lineHeight: 1.6,
-                          whiteSpace: 'pre-wrap',
                           wordBreak: 'break-word',
                           boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
                         }}
                       >
-                        {p.value}
+                        <RenderMarkdown content={p.value} />
                       </div>
                     );
                   }

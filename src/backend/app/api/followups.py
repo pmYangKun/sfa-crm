@@ -2,13 +2,15 @@
 
 from typing import Optional
 
-from fastapi import APIRouter, Depends, Query, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from pydantic import BaseModel
 from sqlmodel import Session, func, select
 
 from app.core.database import get_session
 from app.core.deps import get_client_ip, require_permission
+from app.models.customer import Customer
 from app.models.followup import FollowUp
+from app.models.lead import Lead
 from app.models.org import User
 from app.services.lead_service import log_followup
 
@@ -50,6 +52,9 @@ def create_lead_followup(
     session: Session = Depends(get_session),
     current_user: User = Depends(require_permission("followup.create")),
 ):
+    # 校验 lead 存在，防止 AI 幻觉 / 错填 ID 直接撞 FK 爆 500
+    if not session.get(Lead, lead_id):
+        raise HTTPException(status_code=404, detail="线索不存在")
     fu = log_followup(
         session, current_user.id,
         lead_id=lead_id,
@@ -71,6 +76,8 @@ def create_customer_followup(
     session: Session = Depends(get_session),
     current_user: User = Depends(require_permission("followup.create")),
 ):
+    if not session.get(Customer, customer_id):
+        raise HTTPException(status_code=404, detail="客户不存在")
     fu = log_followup(
         session, current_user.id,
         customer_id=customer_id,
