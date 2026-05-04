@@ -59,7 +59,8 @@ function MessageContent({ content, onNavigate }: { content: string; onNavigate: 
 export default function ChatSidebar() {
   const { user } = useAuth();
   const router = useRouter();
-  const [open, setOpen] = useState(false);
+  // PC 端登录后默认展开 chat 面板（不让用户多点一下；移动端走 /m/chat 全屏路由不受影响）
+  const [open, setOpen] = useState(true);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -325,8 +326,31 @@ export default function ChatSidebar() {
             }}
           >
             {messages.length === 0 && (
-              <div style={{ color: '#999', textAlign: 'center', marginTop: 60, fontSize: 13, lineHeight: 2.2 }}>
-                <p style={{ fontSize: 15, marginBottom: 12, color: '#666' }}>你可以这样问我：</p>
+              <div style={{ color: '#999', textAlign: 'center', marginTop: 40, fontSize: 13, lineHeight: 2.2 }}>
+                <div
+                  data-testid="chat-empty-onboarding-hint"
+                  style={{
+                    background: 'linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%)',
+                    border: '1px solid #c7d2fe',
+                    borderRadius: 10,
+                    padding: '12px 14px',
+                    color: '#3730a3',
+                    fontSize: 13,
+                    lineHeight: 1.6,
+                    marginBottom: 20,
+                    textAlign: 'left',
+                    display: 'flex',
+                    gap: 10,
+                    alignItems: 'flex-start',
+                  }}
+                >
+                  <span style={{ fontSize: 18, lineHeight: 1, marginTop: 1 }}>👈</span>
+                  <span>
+                    <strong style={{ color: '#1e1b4b' }}>新手提示：</strong>
+                    点击页面左侧的<strong>引导卡片</strong>，可一键带入演示场景，快速体验 AI 助手能力。
+                  </span>
+                </div>
+                <p style={{ fontSize: 15, marginBottom: 12, color: '#666' }}>也可以直接这样问我：</p>
                 <p>&ldquo;帮我搜一下华北的线索&rdquo;</p>
                 <p>&ldquo;帮我给数字颗粒录一条拜访记录&rdquo;</p>
                 <p>&ldquo;我想把这条线索转成客户&rdquo;</p>

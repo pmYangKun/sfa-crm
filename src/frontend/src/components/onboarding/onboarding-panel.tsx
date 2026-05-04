@@ -76,8 +76,23 @@ export default function OnboardingPanel({ currentLoginName }: { currentLoginName
             👋 你好，{me?.displayName ?? currentLoginName}！
           </h2>
           <p style={{ margin: '8px 0 0', fontSize: 14, color: '#595959', lineHeight: 1.6 }}>
-            可以直接点击下面的卡片，快速体验这种<strong style={{ color: '#262626' }}>对话式 CRM</strong>的能力——
-            AI 帮你查线索、录跟进、做决策，一句话就能跑完。
+            点击下面的卡片，<strong style={{ color: '#262626' }}>会把示例提问自动带入到右侧 AI 助手</strong>，
+            一键体验对话式 CRM —— AI 帮你查线索、录跟进、做决策。
+          </p>
+          <p
+            data-testid="onboarding-chat-hint"
+            style={{
+              margin: '12px 0 0',
+              fontSize: 13,
+              color: '#7c2d12',
+              background: '#fff7ed',
+              border: '1px dashed #fb923c',
+              borderRadius: 6,
+              padding: '8px 12px',
+              lineHeight: 1.5,
+            }}
+          >
+            👉 不知道从哪开始？直接点卡片，看 AI 在<strong>右侧对话框</strong>实时给你跑结果。
           </p>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 12 }}>
