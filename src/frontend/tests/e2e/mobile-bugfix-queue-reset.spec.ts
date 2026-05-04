@@ -3,7 +3,8 @@ import { ensureBackendUp } from './helpers';
 
 /**
  * 用户反馈 bug 修复回归：
- *  - chat sendPrompt loading 时入队（避免快速连点静默丢 prompt）
+ *  - chat sendPrompt loading 中点卡片直接忽略（用户决策：不再排队后续执行；
+ *    见 chat-sidebar.tsx / chat-fullscreen.tsx 注释）
  *  - 移动 chat-fullscreen 加「↺ 新对话」按钮（避免选了卡片后回不到引导态）
  */
 
@@ -18,8 +19,8 @@ test.beforeEach(async ({ page, context }) => {
   });
 });
 
-test.describe('修复：loading 时连续 prompt 不丢（队列）', () => {
-  test('点卡片后立即在输入框打字发第二条 → 两个 prompt 顺序处理', async ({ page }) => {
+test.describe('修复：loading 结束后立即发第二条 prompt 不丢', () => {
+  test('点卡片 → 等 loading 结束 → 立即发第二条 → 两个 prompt 都被处理', async ({ page }) => {
     let chatCallCount = 0;
     await page.route('**/api/chat', async (route: Route) => {
       chatCallCount++;

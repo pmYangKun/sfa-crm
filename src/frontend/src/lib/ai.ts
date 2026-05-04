@@ -9,12 +9,14 @@ export interface LLMConfigResponse {
   configured: boolean;
   provider?: string;
   model?: string;
-  api_key?: string;
+  // spec 002 T033/FR-029: api_key 字段不再下发，改为 api_key_present 指示位
+  api_key_present?: boolean;
+  system_prompt?: string;
 }
 
 /**
- * Fetch full LLM config (including api_key) from backend.
- * This is called server-side only (from API Route), so the key is never exposed to the browser.
+ * Fetch LLM config metadata (provider/model/api_key_present) from backend.
+ * spec 002: api_key 不再下发；前端 Next.js Route 走 process.env 读 LLM Key。
  */
 export async function getServerLLMConfig(token: string): Promise<LLMConfigResponse> {
   const res = await fetch(`${API_BASE}/agent/llm-config`, {

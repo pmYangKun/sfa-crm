@@ -8,6 +8,7 @@ import {
   PENDING_PROMPT_KEY,
 } from '@/components/onboarding/onboarding-panel';
 import { parseNavMarkers } from '@/lib/parse-nav-markers';
+import { RenderMarkdown } from '@/lib/render-markdown';
 
 interface Message {
   id: string;
@@ -19,19 +20,20 @@ function MessageContent({ content, onNavigate }: { content: string; onNavigate: 
   const parts = parseNavMarkers(content);
 
   if (parts.length === 1 && parts[0].type === 'text') {
-    return <>{content}</>;
+    return <RenderMarkdown content={content} />;
   }
 
   return (
     <>
       {parts.map((part, i) => {
         if (part.type === 'text') {
-          return <span key={i}>{part.value}</span>;
+          return <RenderMarkdown key={i} content={part.value} />;
         }
         return (
           <button
             key={i}
             onClick={() => onNavigate(part.url)}
+            data-nav-url={part.url}
             style={{
               display: 'inline-flex',
               alignItems: 'center',
@@ -59,16 +61,18 @@ function MessageContent({ content, onNavigate }: { content: string; onNavigate: 
 export default function ChatSidebar() {
   const { user } = useAuth();
   const router = useRouter();
-  const [open, setOpen] = useState(false);
+  // PC 端登录后默认展开 chat 面板（不让用户多点一下；移动端走 /m/chat 全屏路由不受影响）
+  const [open, setOpen] = useState(true);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
-  const [sessionId] = useState(() => crypto.randomUUID());
+  // sessionId 用 state，切换角色时换新会话避免上一身份的 conversation_history 串联
+  const [sessionId, setSessionId] = useState<string>(() => crypto.randomUUID());
   const bottomRef = useRef<HTMLDivElement>(null);
   const loadingRef = useRef(loading);
   loadingRef.current = loading;
-  /** loading 时入队，本次结束自动消费下一个，避免快速连点丢 prompt */
-  const queueRef = useRef<string[]>([]);
+  // 当前 fetch 的 AbortController：切换角色时 abort 掉正在进行的流式响应
+  const abortControllerRef = useRef<AbortController | null>(null);
   /** 同步追踪 messages 最新值。useCallback 闭包里读 messages 会 stale；
    *  原代码用 setMessages(prev => { messagesForApi = ...; }) 闭包赋值，但 React 18
    *  自动批处理可能把 updater 推迟到下一个 microtask，导致 fetch 时 messagesForApi 仍为 []。 */
@@ -83,6 +87,21 @@ export default function ChatSidebar() {
   useEffect(() => {
     messagesRef.current = messages;
   }, [messages]);
+
+  // 切换角色 / 登出 → 清空 chat 状态（含 abort 正在进行的流式响应）
+  // 触发时机：user 从 null 变有值（首次登录，不需要清）；从 A 变 B（切换角色，需要清）；从有值变 null（登出，需要清）
+  useEffect(() => {
+    // abort 当前 fetch（如果有）
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+    setMessages([]);
+    setInput('');
+    setLoading(false);
+    loadingRef.current = false;
+    setSessionId(crypto.randomUUID());
+  }, [user?.id]);
 
   const handleNavigate = useCallback((url: string) => {
     const leadIdMatch = url.match(/^\/leads\/([^/?#]+)/);
@@ -136,10 +155,9 @@ export default function ChatSidebar() {
   const sendPrompt = useCallback(async (text: string) => {
     const trimmed = text.trim();
     if (!trimmed) return;
-    if (loadingRef.current) {
-      queueRef.current.push(trimmed);
-      return;
-    }
+    // 用户要求：loading 中点卡片直接忽略，不再排队后续执行
+    // （界面表现：输入框 disabled、卡片点了没反应 → 用户预期就是"被忽略了"）
+    if (loadingRef.current) return;
     loadingRef.current = true;
 
     const userMsg: Message = { id: crypto.randomUUID(), role: 'user', content: trimmed };
@@ -147,6 +165,10 @@ export default function ChatSidebar() {
     const messagesForApi = [...messagesRef.current, userMsg];
     setMessages(messagesForApi);
     setLoading(true);
+
+    // 创建 AbortController 让切换角色时能立即 abort 流式响应
+    const ac = new AbortController();
+    abortControllerRef.current = ac;
 
     try {
       const token = localStorage.getItem('access_token') || '';
@@ -160,6 +182,7 @@ export default function ChatSidebar() {
           messages: messagesForApi.map(m => ({ role: m.role, content: m.content })),
           sessionId,
         }),
+        signal: ac.signal,
       });
 
       if (!res.ok) {
@@ -192,6 +215,11 @@ export default function ChatSidebar() {
         }
       }
     } catch (err) {
+      // AbortError 是切换角色 / 登出主动 abort，不当成"网络错误"展示
+      // （此时 user.id 变化的 useEffect 已经清空了 messages，再插入会留下脏数据）
+      if (err instanceof DOMException && err.name === 'AbortError') {
+        return;
+      }
       setMessages(prev => [...prev, {
         id: crypto.randomUUID(),
         role: 'assistant',
@@ -200,14 +228,12 @@ export default function ChatSidebar() {
     } finally {
       loadingRef.current = false;
       setLoading(false);
-      // 消费队列里下一个 prompt
-      const next = queueRef.current.shift();
-      if (next) setTimeout(() => sendPromptRef.current(next), 0);
+      // 清掉 ref（仅当还是当前的 controller 时；切换角色时 useEffect 已置 null）
+      if (abortControllerRef.current === ac) {
+        abortControllerRef.current = null;
+      }
     }
   }, [sessionId]);
-  // 用 ref 解递归依赖（finally 里调 sendPrompt 自己）
-  const sendPromptRef = useRef(sendPrompt);
-  sendPromptRef.current = sendPrompt;
 
   // 监听 OnboardingPanel 派发的事件 + 挂载时检查 sessionStorage
   useEffect(() => {
@@ -325,8 +351,31 @@ export default function ChatSidebar() {
             }}
           >
             {messages.length === 0 && (
-              <div style={{ color: '#999', textAlign: 'center', marginTop: 60, fontSize: 13, lineHeight: 2.2 }}>
-                <p style={{ fontSize: 15, marginBottom: 12, color: '#666' }}>你可以这样问我：</p>
+              <div style={{ color: '#999', textAlign: 'center', marginTop: 40, fontSize: 13, lineHeight: 2.2 }}>
+                <div
+                  data-testid="chat-empty-onboarding-hint"
+                  style={{
+                    background: 'linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%)',
+                    border: '1px solid #c7d2fe',
+                    borderRadius: 10,
+                    padding: '12px 14px',
+                    color: '#3730a3',
+                    fontSize: 13,
+                    lineHeight: 1.6,
+                    marginBottom: 20,
+                    textAlign: 'left',
+                    display: 'flex',
+                    gap: 10,
+                    alignItems: 'flex-start',
+                  }}
+                >
+                  <span style={{ fontSize: 18, lineHeight: 1, marginTop: 1 }}>👈</span>
+                  <span>
+                    <strong style={{ color: '#1e1b4b' }}>新手提示：</strong>
+                    点击页面左侧的<strong>引导卡片</strong>，可一键带入演示场景，快速体验 AI 助手能力。
+                  </span>
+                </div>
+                <p style={{ fontSize: 15, marginBottom: 12, color: '#666' }}>也可以直接这样问我：</p>
                 <p>&ldquo;帮我搜一下华北的线索&rdquo;</p>
                 <p>&ldquo;帮我给数字颗粒录一条拜访记录&rdquo;</p>
                 <p>&ldquo;我想把这条线索转成客户&rdquo;</p>
@@ -342,7 +391,8 @@ export default function ChatSidebar() {
                   color: msg.role === 'user' ? '#fff' : '#333',
                   padding: '8px 12px', borderRadius: 8,
                   maxWidth: '85%', fontSize: 14, lineHeight: 1.6,
-                  whiteSpace: 'pre-wrap', wordBreak: 'break-word',
+                  whiteSpace: msg.role === 'assistant' ? 'normal' : 'pre-wrap',
+                  wordBreak: 'break-word',
                 }}
               >
                 {msg.role === 'assistant' ? (

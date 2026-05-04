@@ -10,6 +10,7 @@ import {
 } from '@/components/onboarding/onboarding-panel';
 import { parseNavMarkers } from '@/lib/parse-nav-markers';
 import { parseNavUrl } from '@/lib/parse-nav-url';
+import { RenderMarkdown } from '@/lib/render-markdown';
 import ChatFormCard, { ChatFormCardState } from './chat-form-card';
 import MobileFormSheet from './mobile-form-sheet';
 import { TABBAR_HEIGHT } from './kingkong-tabbar';
@@ -27,12 +28,13 @@ export default function ChatFullscreen() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
-  const [sessionId] = useState(() => crypto.randomUUID());
+  // sessionId 用 state，切换角色时换新会话避免上一身份的 conversation_history 串联
+  const [sessionId, setSessionId] = useState<string>(() => crypto.randomUUID());
   const bottomRef = useRef<HTMLDivElement>(null);
   const loadingRef = useRef(loading);
   loadingRef.current = loading;
-  /** loading 时入队，本次结束自动消费下一个，避免快速连点丢 prompt */
-  const queueRef = useRef<string[]>([]);
+  // 切换角色时 abort 正在进行的 fetch
+  const abortControllerRef = useRef<AbortController | null>(null);
   /** 同步追踪 messages 最新值（修 React 18 batching 导致 setMessages updater 异步执行的 bug） */
   const messagesRef = useRef<Message[]>([]);
 
@@ -45,6 +47,20 @@ export default function ChatFullscreen() {
     messagesRef.current = messages;
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  // 切换角色 / 登出 → 清空 chat 状态（含 abort 正在进行的流式响应）
+  useEffect(() => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+    setMessages([]);
+    setCardStates({});
+    setOpenCardKey(null);
+    setLoading(false);
+    loadingRef.current = false;
+    setSessionId(crypto.randomUUID());
+  }, [user?.id]);
 
   // 监听消息流，发现新的 nav 标记时往 cardStates 加；已存在的卡不动（保留用户编辑状态）
   useEffect(() => {
@@ -78,16 +94,17 @@ export default function ChatFullscreen() {
   const sendPrompt = useCallback(async (text: string) => {
     const trimmed = text.trim();
     if (!trimmed) return;
-    if (loadingRef.current) {
-      queueRef.current.push(trimmed);
-      return;
-    }
+    // 用户要求：loading 中点卡片直接忽略，不再排队后续执行
+    if (loadingRef.current) return;
     loadingRef.current = true;
 
     const userMsg: Message = { id: crypto.randomUUID(), role: 'user', content: trimmed };
     const messagesForApi = [...messagesRef.current, userMsg];
     setMessages(messagesForApi);
     setLoading(true);
+
+    const ac = new AbortController();
+    abortControllerRef.current = ac;
 
     try {
       const token = localStorage.getItem('access_token') || '';
@@ -101,6 +118,7 @@ export default function ChatFullscreen() {
           messages: messagesForApi.map((m) => ({ role: m.role, content: m.content })),
           sessionId,
         }),
+        signal: ac.signal,
       });
 
       if (!res.ok) {
@@ -131,6 +149,10 @@ export default function ChatFullscreen() {
         }
       }
     } catch (err) {
+      // AbortError = 切换角色 / 登出主动 abort，user.id useEffect 已清空 messages，不再插脏数据
+      if (err instanceof DOMException && err.name === 'AbortError') {
+        return;
+      }
       setMessages((prev) => [...prev, {
         id: crypto.randomUUID(),
         role: 'assistant',
@@ -139,18 +161,16 @@ export default function ChatFullscreen() {
     } finally {
       loadingRef.current = false;
       setLoading(false);
-      const next = queueRef.current.shift();
-      if (next) setTimeout(() => sendPromptRef.current(next), 0);
+      if (abortControllerRef.current === ac) {
+        abortControllerRef.current = null;
+      }
     }
   }, [sessionId]);
-  const sendPromptRef = useRef(sendPrompt);
-  sendPromptRef.current = sendPrompt;
 
   const resetChat = useCallback(() => {
     setMessages([]);
     setCardStates({});
     setOpenCardKey(null);
-    queueRef.current = [];
   }, []);
 
   useEffect(() => {
@@ -334,12 +354,11 @@ export default function ChatFullscreen() {
                           maxWidth: '85%',
                           fontSize: 14,
                           lineHeight: 1.6,
-                          whiteSpace: 'pre-wrap',
                           wordBreak: 'break-word',
                           boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
                         }}
                       >
-                        {p.value}
+                        <RenderMarkdown content={p.value} />
                       </div>
                     );
                   }

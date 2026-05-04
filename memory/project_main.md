@@ -91,6 +91,26 @@ type: project
 - README 重构：演示信息前置，修正账号密码
 - 新增 `reset-demo.bat` 一键重置演示数据
 
+### 阶段四：spec 002 公网部署安全/治理硬化（2026-05-04）
+
+走完整 spec-kit 流程产物（specify + plan + tasks），单线程 TDD 实施，46 → 72 测试全绿。
+
+| 块 | 内容 | 状态 |
+|---|---|---|
+| Setup (T001-T003) | cryptography 显式声明 / 6 个新 SystemConfig 默认值 / system prompt 边界条款 | ✅ |
+| Foundational (T004-T011) | chat_audit + llm_call_counter 模型 / 限流 key 改 (IP, user) / Fernet 加解密 / 启动密钥校验 | ✅ |
+| US2 防护 (T013-T022) | prompt_guard 软拦截 + 限流 10/分 100/天 + 全站 LLM 200/小时熔断 + chat_audit 全量写入 + 前端 422/429/503 友好气泡 | ✅ |
+| US3 重置 (T023-T029) | reset_business_data 清 8 业务表保留 9 配置表 / scheduler 30min interval / 前端右下角倒计时小气泡（PC bottom:96 / Mobile bottom:80）| ✅ |
+| US4 部署 (T034/T037-T040) | docker-compose 强制密钥注入 / .env.production.example / docs/deploy.md / encrypt_existing_llm_keys.py 迁移脚本 | ✅ |
+| US4 二轮 (T033/T036) | /llm-config/full 删 api_key 字段 + 加 api_key_present:bool；前端 chat/route.ts 改从 process.env.{ANTHROPIC,OPENAI,DEEPSEEK,MINIMAX}_API_KEY 读 LLM Key（不再走后端响应）；docs/deploy.md + .env.production.example 同步更新；frontend systemd 加 EnvironmentFile | ✅ |
+| US4 二轮 init_db 加固 | 发现 spec 001 老 DB 升级到 spec 002 代码时，6 个新 SystemConfig key（限流值/熔断值/重置开关/prompt_guard 词表）会因 short-circuit 永远不被注入；改成幂等"INSERT 缺失 key 不覆盖已存在"；3 个 unit test 覆盖 | ✅ |
+| US4 deferred (T035) | 后端 LLM 全代理 /agent/llm-proxy（流式响应 + tool-use 多轮循环）：~500 行 + 后端引入 anthropic/openai SDK + SSE 协议适配 Vercel AI SDK；env-var 路径已经满足 FR-029/030/031 三条硬安全要求，留待真正需要"在线 rotate 多 provider key 不重启"时再做 | ⏳ |
+
+新分支 `002-public-deploy-hardening`（local，未 push 未 PR），最新 commit 见 `git log`。
+spec-kit 产物：`specs/002-public-deploy-hardening/`（spec.md / plan.md / research.md / data-model.md / contracts/ / quickstart.md / tasks.md / checklists/ / inputs/）
+
+**测试态势**（2026-05-04 二轮收尾）：80 个后端 pytest 全绿（72 一轮 + 5 T033 + 3 init_db 补 key），前端 `npm run build` 25 页全过，TestClient E2E 验证 /llm-config/full 不含 api_key + /demo-reset-status 返回 enabled=true 倒计时 30min 正确。
+
 ---
 
 ## 当前状态
@@ -99,9 +119,12 @@ type: project
 - ✅ Copilot 端到端跑通（DeepSeek Tool Use）
 - ✅ 9 篇公众号文章完成
 - ✅ 演示体验全面优化（全高面板、预填、团队分析、权限过滤）
-- LLM API Key：`src/backend/.env`（在 .gitignore 中）
+- ✅ spec 001（登录页双栏 + 移动端 + Onboarding）已 merge 进 master
+- ✅ spec 002（公网部署安全/治理硬化）实施完成 + 二轮收口（T033 + T036 + init_db 补 key），分支 `002-public-deploy-hardening`（待 PR/merge）；T035 全 backend proxy 仍 deferred 但理由已更新为"非紧急、非阻塞"
+- LLM API Key：`src/backend/.env`（dev）/ DB Fernet 密文（生产，spec 002）
 - 演示案例：`docs/copilot-cases.md`（8 个独立案例）
 - 一键启动：`start.bat` | 一键重置：`reset-demo.bat`
+- 公网部署：`docs/deploy.md` 一键流程（spec 002）
 - 演示账号：admin / sales01（王小明）/ sales02（李思远）/ sales03（张磊）/ manager01（陈队长），密码均为 12345
 
 ---

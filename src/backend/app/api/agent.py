@@ -4,9 +4,9 @@ import json
 import uuid
 from typing import Optional
 
-from fastapi import APIRouter, Depends, Request
-from fastapi.responses import StreamingResponse
-from pydantic import BaseModel
+from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi.responses import JSONResponse, StreamingResponse
+from pydantic import BaseModel, Field
 from sqlmodel import Session, select
 
 from app.core.database import get_session
@@ -14,6 +14,7 @@ from app.core.deps import get_client_ip, require_permission
 from app.models.config import SystemConfig
 from app.models.llm_config import LLMConfig, Skill
 from app.models.org import User
+from app.services import prompt_guard
 from app.services.agent_service import (
     TOOL_DEFINITIONS,
     execute_tool,
@@ -23,13 +24,16 @@ from app.services.agent_service import (
     save_message,
 )
 from app.services.audit_service import write_audit_log
+from app.services.chat_audit_writer import write_audit
+from app.services.llm_circuit_breaker import check_circuit_open, increment_counter
+from app.services.rate_limiter import limiter
 
 router = APIRouter()
 
 
 class ChatRequest(BaseModel):
     session_id: Optional[str] = None
-    message: str
+    message: str = Field(..., max_length=2000)  # spec 002 FR-001
 
 
 class LLMConfigRequest(BaseModel):
@@ -67,20 +71,42 @@ def get_llm_config_full(
     session: Session = Depends(get_session),
     current_user: User = Depends(require_permission("agent.chat")),
 ):
-    """Full LLM config including API key + system prompt — called server-side only by Next.js API Route."""
+    """Full LLM config 元信息。
+
+    spec 002 FR-029 行为按 ENV 分流：
+    - ENV=production：响应**不含** api_key 字段（防止认证用户 curl 端点拿到密钥）。
+      前端 Next.js Route 必须从环境变量 ANTHROPIC_API_KEY/OPENAI_API_KEY/...
+      读取（systemd EnvironmentFile 注入，跟 JWT_SECRET 同管控级别）。
+    - ENV=dev/其它：响应含 api_key（解密后的明文），让本地开发"admin UI 改 Key
+      立即生效"的体验保持。dev 没有公网威胁模型，FR-029 在 localhost 不适用。
+
+    前端 chat/route.ts 走"env 变量优先 → DB 下发 fallback"双路径，两环境通用。
+    """
+    import os
+
     config = get_active_llm_config(session)
     if not config:
         return {"configured": False}
-    # Read system prompt from config
     prompt_cfg = session.get(SystemConfig, "agent_system_prompt")
     system_prompt = prompt_cfg.value if prompt_cfg else ""
-    return {
+
+    response = {
         "configured": True,
         "provider": config.provider,
         "model": config.model,
-        "api_key": config.api_key,
+        "api_key_present": bool(config.api_key),
         "system_prompt": system_prompt,
     }
+
+    # dev 逃生通道：仅 ENV != production 下发 api_key 明文，方便本地开发
+    if os.getenv("ENV", "dev").lower() != "production":
+        try:
+            response["api_key"] = config.api_key_decrypted
+        except Exception:
+            # 老明文数据 / Fernet 解密失败 → 不抛错，让前端 fallback 到 env var
+            pass
+
+    return response
 
 
 @router.post("/agent/llm-config")
@@ -96,12 +122,18 @@ def save_llm_config(
         c.is_active = False
         session.add(c)
 
-    # Create new active config
+    # Create new active config（spec 002 T034: api_key 透明加密存储）
     new_config = LLMConfig(
         provider=body.provider,
         model=body.model,
-        api_key=body.api_key or (existing[0].api_key if existing else ""),
+        api_key="placeholder",  # 立即被 set_api_key 或复用旧密文覆盖
     )
+    if body.api_key:
+        new_config.set_api_key(body.api_key)  # 加密新传入的明文
+    elif existing:
+        new_config.api_key = existing[0].api_key  # 复用旧密文不重新加密
+    else:
+        new_config.api_key = ""
     new_config.is_active = True
     session.add(new_config)
 
@@ -153,6 +185,8 @@ def list_tools(
 
 
 @router.post("/agent/chat")
+@limiter.limit("10/minute")  # spec 002 FR-007
+@limiter.limit("100/day")  # spec 002 FR-007
 def chat(
     body: ChatRequest,
     request: Request,
@@ -160,6 +194,46 @@ def chat(
     current_user: User = Depends(require_permission("agent.chat")),
 ):
     session_id = body.session_id or str(uuid.uuid4())
+    client_ip = get_client_ip(request)
+    user_agent = request.headers.get("user-agent")
+
+    # ── Gate 1: Prompt Guard 黑名单（spec 002 FR-002）─────────────────────
+    guard = prompt_guard.check(session, body.message)
+    if guard.blocked:
+        write_audit(
+            session, user_id=current_user.id, ip=client_ip, user_agent=user_agent,
+            input_text=body.message, output_text=guard.fixed_response,
+            blocked_by="prompt_guard",
+        )
+        save_message(session, session_id, current_user.id, "user", body.message)
+        save_message(session, session_id, current_user.id, "assistant", guard.fixed_response)
+        session.commit()
+        return {
+            "session_id": session_id,
+            "response": guard.fixed_response,
+            "tool_calls": [],
+            "blocked_by": "prompt_guard",
+        }
+
+    # ── Gate 2: 全站 LLM 熔断（spec 002 FR-009）────────────────────────────
+    circuit = check_circuit_open(session)
+    if circuit.open:
+        write_audit(
+            session, user_id=current_user.id, ip=client_ip, user_agent=user_agent,
+            input_text=body.message,
+            output_text="演示站当前调用量较高，请稍后再试",
+            blocked_by="llm_circuit_breaker",
+        )
+        session.commit()
+        return JSONResponse(
+            status_code=503,
+            content={
+                "code": "LLM_CIRCUIT_BREAKER_OPEN",
+                "message": "演示站当前调用量较高，请稍后再试",
+                "retry_after_seconds": circuit.retry_after_seconds,
+            },
+            headers={"Retry-After": str(circuit.retry_after_seconds)},
+        )
 
     # Save user message
     save_message(session, session_id, current_user.id, "user", body.message)
@@ -171,24 +245,35 @@ def chat(
     llm_config = get_active_llm_config(session)
 
     if not llm_config:
-        save_message(session, session_id, current_user.id, "assistant", "AI 助手尚未配置，请联系管理员在系统配置中添加 LLM 配置。")
+        not_configured_msg = "AI 助手尚未配置，请联系管理员在系统配置中添加 LLM 配置。"
+        save_message(session, session_id, current_user.id, "assistant", not_configured_msg)
+        write_audit(
+            session, user_id=current_user.id, ip=client_ip, user_agent=user_agent,
+            input_text=body.message, output_text=not_configured_msg, blocked_by=None,
+        )
         session.commit()
         return {
             "session_id": session_id,
-            "response": "AI 助手尚未配置，请联系管理员在系统配置中添加 LLM 配置。",
+            "response": not_configured_msg,
             "tool_calls": [],
         }
 
-    # For now, return a placeholder response
-    # Real implementation would call LLM API via httpx
+    # Placeholder LLM response（真实 LLM 调用在前端 /api/chat/route.ts 或 spec 002 Phase 6 后端代理）
     response_text = f"收到您的消息：「{body.message}」。AI Agent 功能已就绪，需要在系统配置中配置 LLM API Key 后才能正常工作。"
 
     save_message(session, session_id, current_user.id, "assistant", response_text)
 
+    # spec 002: chat_audit + 全站 LLM 计数器累加（成功路径）
+    write_audit(
+        session, user_id=current_user.id, ip=client_ip, user_agent=user_agent,
+        input_text=body.message, output_text=response_text, blocked_by=None,
+    )
+    increment_counter(session)
+
     write_audit_log(
         session, user_id=current_user.id, action="agent_chat",
         payload={"session_id": session_id, "message_preview": body.message[:100]},
-        ip=get_client_ip(request),
+        ip=client_ip,
     )
     session.commit()
 
@@ -196,6 +281,30 @@ def chat(
         "session_id": session_id,
         "response": response_text,
         "tool_calls": [],
+    }
+
+
+@router.get("/agent/demo-reset-status")
+def get_demo_reset_status(
+    session: Session = Depends(get_session),
+    current_user: User = Depends(require_permission("agent.chat")),
+):
+    """spec 002 T026 / FR-020: 前端倒计时组件读取下次重置时间。"""
+    from datetime import datetime, timezone
+
+    from app.services.demo_reset_service import (
+        _interval_minutes,
+        _is_enabled,
+        get_next_reset_at,
+    )
+
+    enabled = _is_enabled(session)
+    next_at = get_next_reset_at(session)
+    return {
+        "enabled": enabled,
+        "next_reset_at": next_at.isoformat() if next_at else None,
+        "interval_minutes": _interval_minutes(session) if enabled else None,
+        "server_time": datetime.now(timezone.utc).isoformat(),
     }
 
 

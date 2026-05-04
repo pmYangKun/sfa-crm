@@ -34,6 +34,13 @@ test.describe('PC 真实 API 串测', () => {
     await expect(page.getByTestId('chat-msg-assistant').first()).toBeVisible({ timeout: 60_000 });
     expect(await page.getByTestId('chat-msg-user').count()).toBe(1);
 
+    // 关键断言：assistant 气泡内容非空（防"流空但气泡 visible"的 bug，
+    // 比如 text-delta 字段名读错导致流被全丢、错误被静默吞、reader 立即 done 等）
+    await expect.poll(
+      async () => ((await page.getByTestId('chat-msg-assistant').nth(0).textContent()) ?? '').trim().length,
+      { timeout: 60_000, message: 'assistant 回复必须非空' },
+    ).toBeGreaterThan(5);
+
     // 2. 第二张卡片（不同 prompt，等第一个回复完）
     // 等 input 重新可用（loading=false）
     await expect(page.locator('input[placeholder="输入消息..."]')).toBeEnabled({ timeout: 60_000 });
@@ -43,6 +50,10 @@ test.describe('PC 真实 API 串测', () => {
       async () => page.getByTestId('chat-msg-assistant').count(),
       { timeout: 60_000 },
     ).toBeGreaterThanOrEqual(2);
+    await expect.poll(
+      async () => ((await page.getByTestId('chat-msg-assistant').nth(1).textContent()) ?? '').trim().length,
+      { timeout: 60_000, message: '第 2 个 assistant 回复必须非空' },
+    ).toBeGreaterThan(5);
 
     // 3. 输入框打字
     await expect(page.locator('input[placeholder="输入消息..."]')).toBeEnabled({ timeout: 60_000 });
@@ -53,6 +64,10 @@ test.describe('PC 真实 API 串测', () => {
       async () => page.getByTestId('chat-msg-assistant').count(),
       { timeout: 60_000 },
     ).toBeGreaterThanOrEqual(3);
+    await expect.poll(
+      async () => ((await page.getByTestId('chat-msg-assistant').nth(2).textContent()) ?? '').trim().length,
+      { timeout: 60_000, message: '第 3 个 assistant 回复必须非空' },
+    ).toBeGreaterThan(5);
 
     expect(errors, errors.join('\n')).toEqual([]);
     await page.screenshot({ path: 'tests/screenshots/pc-diag-three-prompts.png', fullPage: true });
