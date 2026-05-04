@@ -160,22 +160,55 @@ export default function ConfigPage() {
             <label style={{ display: 'block', marginBottom: 4, fontWeight: 500 }}>Provider</label>
             <select
               value={llmForm.provider}
-              onChange={e => setLlmForm({ ...llmForm, provider: e.target.value })}
+              onChange={e => {
+                const p = e.target.value;
+                // 切 provider 时自动给 model 一个安全默认值
+                const defaultModelMap: Record<string, string> = {
+                  anthropic: 'claude-sonnet-4-20250514',
+                  openai: 'gpt-4o',
+                  deepseek: 'deepseek-chat',
+                };
+                setLlmForm({ ...llmForm, provider: p, model: defaultModelMap[p] || llmForm.model });
+              }}
               style={{ width: '100%', padding: '6px 8px', border: '1px solid #d9d9d9', borderRadius: 4 }}
             >
-              <option value="anthropic">Anthropic (Claude)</option>
-              <option value="openai">OpenAI</option>
-              <option value="deepseek">DeepSeek</option>
+              <option value="anthropic">Anthropic (Claude) — 海外 LLM，国内 IP 多数被风控 403</option>
+              <option value="openai">OpenAI — 海外 LLM，需代理</option>
+              <option value="deepseek">DeepSeek — 国内可达，推荐</option>
             </select>
           </div>
           <div>
             <label style={{ display: 'block', marginBottom: 4, fontWeight: 500 }}>Model</label>
-            <input
+            <select
               value={llmForm.model}
               onChange={e => setLlmForm({ ...llmForm, model: e.target.value })}
-              placeholder="e.g. claude-sonnet-4-20250514"
-              style={{ width: '100%', padding: '6px 8px', border: '1px solid #d9d9d9', borderRadius: 4 }}
-            />
+              style={{ width: '100%', padding: '6px 8px', border: '1px solid #d9d9d9', borderRadius: 4, marginBottom: 4 }}
+            >
+              {llmForm.provider === 'anthropic' && (
+                <>
+                  <option value="claude-sonnet-4-20250514">claude-sonnet-4-20250514（推荐）</option>
+                  <option value="claude-opus-4-20250514">claude-opus-4-20250514</option>
+                  <option value="claude-haiku-4-5-20251001">claude-haiku-4-5-20251001（轻量快速）</option>
+                </>
+              )}
+              {llmForm.provider === 'openai' && (
+                <>
+                  <option value="gpt-4o">gpt-4o（推荐）</option>
+                  <option value="gpt-4o-mini">gpt-4o-mini（轻量）</option>
+                </>
+              )}
+              {llmForm.provider === 'deepseek' && (
+                <>
+                  <option value="deepseek-chat">deepseek-chat（推荐 · 普通对话，便宜）</option>
+                  <option value="deepseek-reasoner">deepseek-reasoner（思考模型，多轮兼容性差，不推荐）</option>
+                </>
+              )}
+            </select>
+            <div style={{ fontSize: 12, color: '#888' }}>
+              {llmForm.provider === 'deepseek'
+                ? '建议选 deepseek-chat。reasoner 是思考模型，多轮对话需回传 reasoning_content，本系统暂不支持。'
+                : 'API Key 对应账号需有该 model 的访问权限。'}
+            </div>
           </div>
           <div>
             <label style={{ display: 'block', marginBottom: 4, fontWeight: 500 }}>API Key</label>

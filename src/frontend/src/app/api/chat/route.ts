@@ -265,8 +265,9 @@ export async function POST(req: Request) {
       try {
         for await (const part of result.fullStream) {
           if (part.type === 'text-delta') {
-            // v6 text-delta 字段叫 delta
-            const delta = (part as { delta?: string }).delta;
+            // v6 实际字段是 text（不是 delta，d.ts 里有多个版本，运行时用的是 text）
+            const p = part as { text?: string; delta?: string };
+            const delta = p.text ?? p.delta ?? '';
             if (delta) controller.enqueue(encoder.encode(delta));
           } else if (part.type === 'error') {
             const err = (part as { error?: unknown }).error;
