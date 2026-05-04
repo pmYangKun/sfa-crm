@@ -106,6 +106,20 @@ Spec 里有业务逻辑、对象定义、行为约束。AI 基于这些生成代
 | 第七集 | Plan 阶段：技术栈选型，AI Agent 方案 | 完成 |
 | 第八集 | Spec Coding 的正确打开方式：spec-kit 定位与协作分工 | 完成 |
 | 编码阶段 | 110 个任务全部实现，14 个 Phase 完成 | 完成 |
+| spec 001 | 登录页双栏 + 移动端 + Onboarding 收口 | 完成（merged） |
+| spec 002 | 公网部署安全/治理硬化（限流 / 熔断 / prompt_guard / 半小时数据自动重置 / Fernet 加密 / 启动密钥校验 / Nginx + certbot 部署文档） | 完成（待 PR/merge） |
+
+---
+
+## 公网部署
+
+跟着 [`docs/deploy.md`](docs/deploy.md) 在干净 Linux VM 上 30 分钟内可上线（含 systemd / Nginx 反向代理 / Let's Encrypt HTTPS）。spec 002 已闭环以下硬化项：
+
+- **滥用拦截**：单 (IP, user) 10 条/分 + 100 条/天 限流；全站 LLM 200 次/小时熔断；prompt-injection 黑名单软拦截 + system prompt 边界条款
+- **数据隔离**：每 30 分钟自动清业务数据保留账号配置（前端右下角实时倒计时小气泡）
+- **密钥硬化**：JWT_SECRET / LLM_KEY_FERNET_KEY / CORS_ORIGINS 启动校验，缺/默认值直接拒绝启动
+- **LLM Key 防泄漏**：DB 中 Fernet 加密；前端永远拿不到 key（Next.js Route 从 server env 读，浏览器只看流式响应）
+- **全量审计**：chat_audit 表记录每次对话的 user/IP/UA/输入长度/拦截原因/输出摘要
 
 ---
 

@@ -191,6 +191,19 @@ def init_db():
     create_db_and_tables()
 
     with Session(engine) as session:
+        # spec 002 二轮：在 short-circuit 之前先幂等补齐 SystemConfig 默认值。
+        # 场景：spec 001 老 DB 升级到 spec 002 代码，init_db 检测到已 seed 直接 return →
+        # 新增的 SystemConfig key（限流值/熔断值/重置开关/prompt_guard 词表）永远不会
+        # 注入到 DB → 业务回退到代码硬编默认。这里 INSERT 缺失的 key（不覆盖已存在），
+        # 保证升级路径也能拿到 spec 002 默认行为。
+        existing_keys = {
+            row.key for row in session.exec(select(SystemConfig)).all()
+        }
+        for key, value, desc in DEFAULT_CONFIGS:
+            if key not in existing_keys:
+                session.add(SystemConfig(key=key, value=value, description=desc))
+        session.commit()
+
         # Skip if already initialized
         existing = session.exec(select(Permission)).first()
         if existing:
