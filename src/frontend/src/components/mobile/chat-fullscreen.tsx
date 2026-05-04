@@ -31,8 +31,6 @@ export default function ChatFullscreen() {
   const bottomRef = useRef<HTMLDivElement>(null);
   const loadingRef = useRef(loading);
   loadingRef.current = loading;
-  /** loading 时入队，本次结束自动消费下一个，避免快速连点丢 prompt */
-  const queueRef = useRef<string[]>([]);
   /** 同步追踪 messages 最新值（修 React 18 batching 导致 setMessages updater 异步执行的 bug） */
   const messagesRef = useRef<Message[]>([]);
 
@@ -78,10 +76,8 @@ export default function ChatFullscreen() {
   const sendPrompt = useCallback(async (text: string) => {
     const trimmed = text.trim();
     if (!trimmed) return;
-    if (loadingRef.current) {
-      queueRef.current.push(trimmed);
-      return;
-    }
+    // 用户要求：loading 中点卡片直接忽略，不再排队后续执行
+    if (loadingRef.current) return;
     loadingRef.current = true;
 
     const userMsg: Message = { id: crypto.randomUUID(), role: 'user', content: trimmed };
@@ -139,18 +135,13 @@ export default function ChatFullscreen() {
     } finally {
       loadingRef.current = false;
       setLoading(false);
-      const next = queueRef.current.shift();
-      if (next) setTimeout(() => sendPromptRef.current(next), 0);
     }
   }, [sessionId]);
-  const sendPromptRef = useRef(sendPrompt);
-  sendPromptRef.current = sendPrompt;
 
   const resetChat = useCallback(() => {
     setMessages([]);
     setCardStates({});
     setOpenCardKey(null);
-    queueRef.current = [];
   }, []);
 
   useEffect(() => {

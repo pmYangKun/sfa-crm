@@ -68,8 +68,6 @@ export default function ChatSidebar() {
   const bottomRef = useRef<HTMLDivElement>(null);
   const loadingRef = useRef(loading);
   loadingRef.current = loading;
-  /** loading 时入队，本次结束自动消费下一个，避免快速连点丢 prompt */
-  const queueRef = useRef<string[]>([]);
   /** 同步追踪 messages 最新值。useCallback 闭包里读 messages 会 stale；
    *  原代码用 setMessages(prev => { messagesForApi = ...; }) 闭包赋值，但 React 18
    *  自动批处理可能把 updater 推迟到下一个 microtask，导致 fetch 时 messagesForApi 仍为 []。 */
@@ -137,10 +135,9 @@ export default function ChatSidebar() {
   const sendPrompt = useCallback(async (text: string) => {
     const trimmed = text.trim();
     if (!trimmed) return;
-    if (loadingRef.current) {
-      queueRef.current.push(trimmed);
-      return;
-    }
+    // 用户要求：loading 中点卡片直接忽略，不再排队后续执行
+    // （界面表现：输入框 disabled、卡片点了没反应 → 用户预期就是"被忽略了"）
+    if (loadingRef.current) return;
     loadingRef.current = true;
 
     const userMsg: Message = { id: crypto.randomUUID(), role: 'user', content: trimmed };
@@ -201,14 +198,8 @@ export default function ChatSidebar() {
     } finally {
       loadingRef.current = false;
       setLoading(false);
-      // 消费队列里下一个 prompt
-      const next = queueRef.current.shift();
-      if (next) setTimeout(() => sendPromptRef.current(next), 0);
     }
   }, [sessionId]);
-  // 用 ref 解递归依赖（finally 里调 sendPrompt 自己）
-  const sendPromptRef = useRef(sendPrompt);
-  sendPromptRef.current = sendPrompt;
 
   // 监听 OnboardingPanel 派发的事件 + 挂载时检查 sessionStorage
   useEffect(() => {
