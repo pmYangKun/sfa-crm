@@ -167,10 +167,15 @@ export async function POST(req: Request) {
   const systemPrompt = config.system_prompt || '你是 SFA CRM 的 AI 助手。请用中文回答。';
 
   // 6. Stream response with tool use
+  // 关键：onError 让 LLM 调用失败（如 Anthropic 401 假 Key）能透出给前端，
+  // 不再走 Vercel AI SDK toTextStreamResponse 默认的"静默吞错误"路径
   const result = streamText({
     model,
     system: systemPrompt,
     messages,
+    onError: ({ error }) => {
+      console.error('[chat/route.ts] streamText error:', error);
+    },
     tools: {
       // ── Read tools ──
       search_leads: defineTool(
@@ -252,5 +257,59 @@ export async function POST(req: Request) {
     stopWhen: stepCountIs(8),
   });
 
-  return result.toTextStreamResponse();
+  // 自己消费 fullStream，手动处理 text-delta + error chunk。
+  // toTextStreamResponse() 在 v6 里只输出 text-delta、忽略 error chunk → 流变成空 → 前端"没任何反应"。
+  const encoder = new TextEncoder();
+  const stream = new ReadableStream({
+    async start(controller) {
+      try {
+        for await (const part of result.fullStream) {
+          if (part.type === 'text-delta') {
+            // v6 text-delta 字段叫 delta
+            const delta = (part as { delta?: string }).delta;
+            if (delta) controller.enqueue(encoder.encode(delta));
+          } else if (part.type === 'error') {
+            const err = (part as { error?: unknown }).error;
+            const raw = err instanceof Error ? err.message : String(err ?? 'unknown error');
+            console.error('[chat/route.ts] fullStream error:', raw);
+
+            const lower = raw.toLowerCase();
+            let friendly: string;
+            // Key 无效场景（覆盖 Anthropic 401 / DeepSeek "Authentication Fails" / OpenAI "Incorrect API key"）
+            if (
+              raw.includes('401') ||
+              lower.includes('invalid api key') ||
+              lower.includes('incorrect api key') ||
+              lower.includes('authentication fail') ||
+              (lower.includes('api key') && (lower.includes('invalid') || lower.includes('incorrect'))) ||
+              lower.includes('unauthorized')
+            ) {
+              friendly = `\n\n[LLM API Key 无效] 请到 admin → LLM 配置 重新输入有效的 ${provider} Key。\n\n原始错误：${raw}`;
+            } else if (raw.includes('403') || lower.includes('forbidden') || lower.includes('not allowed')) {
+              friendly = `\n\n[LLM Provider 拒绝请求（403）] 常见原因：(1) Key 失效或被吊销；(2) 账号所属地区不允许访问该 Provider（如 Anthropic 在中国大陆 IP 禁用）；(3) 账号被风控。\n\n原始错误：${raw}`;
+            } else if (raw.includes('429') || lower.includes('rate') || lower.includes('quota') || lower.includes('insufficient')) {
+              friendly = `\n\n[LLM 限流或配额不足] ${raw}`;
+            } else if (lower.includes('connect') || lower.includes('network') || lower.includes('fetch fail') || lower.includes('etimedout')) {
+              friendly = `\n\n[无法连接 LLM Provider] 检查网络 / 代理。\n\n原始错误：${raw}`;
+            } else {
+              friendly = `\n\n[LLM 调用错误] ${raw}`;
+            }
+            controller.enqueue(encoder.encode(friendly));
+          }
+          // 其它 chunk type（tool-call/tool-result/finish/...）静默吞，不进 text stream
+        }
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : String(e);
+        console.error('[chat/route.ts] stream consume exception:', msg);
+        controller.enqueue(encoder.encode(`\n\n[流处理异常] ${msg}`));
+      } finally {
+        controller.close();
+      }
+    },
+  });
+
+  return new Response(stream, {
+    status: 200,
+    headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+  });
 }
