@@ -64,10 +64,13 @@ export default function ChatSidebar() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
-  const [sessionId] = useState(() => crypto.randomUUID());
+  // sessionId 用 state，切换角色时换新会话避免上一身份的 conversation_history 串联
+  const [sessionId, setSessionId] = useState<string>(() => crypto.randomUUID());
   const bottomRef = useRef<HTMLDivElement>(null);
   const loadingRef = useRef(loading);
   loadingRef.current = loading;
+  // 当前 fetch 的 AbortController：切换角色时 abort 掉正在进行的流式响应
+  const abortControllerRef = useRef<AbortController | null>(null);
   /** 同步追踪 messages 最新值。useCallback 闭包里读 messages 会 stale；
    *  原代码用 setMessages(prev => { messagesForApi = ...; }) 闭包赋值，但 React 18
    *  自动批处理可能把 updater 推迟到下一个 microtask，导致 fetch 时 messagesForApi 仍为 []。 */
@@ -82,6 +85,21 @@ export default function ChatSidebar() {
   useEffect(() => {
     messagesRef.current = messages;
   }, [messages]);
+
+  // 切换角色 / 登出 → 清空 chat 状态（含 abort 正在进行的流式响应）
+  // 触发时机：user 从 null 变有值（首次登录，不需要清）；从 A 变 B（切换角色，需要清）；从有值变 null（登出，需要清）
+  useEffect(() => {
+    // abort 当前 fetch（如果有）
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+    setMessages([]);
+    setInput('');
+    setLoading(false);
+    loadingRef.current = false;
+    setSessionId(crypto.randomUUID());
+  }, [user?.id]);
 
   const handleNavigate = useCallback((url: string) => {
     const leadIdMatch = url.match(/^\/leads\/([^/?#]+)/);
@@ -146,6 +164,10 @@ export default function ChatSidebar() {
     setMessages(messagesForApi);
     setLoading(true);
 
+    // 创建 AbortController 让切换角色时能立即 abort 流式响应
+    const ac = new AbortController();
+    abortControllerRef.current = ac;
+
     try {
       const token = localStorage.getItem('access_token') || '';
       const res = await fetch('/api/chat', {
@@ -158,6 +180,7 @@ export default function ChatSidebar() {
           messages: messagesForApi.map(m => ({ role: m.role, content: m.content })),
           sessionId,
         }),
+        signal: ac.signal,
       });
 
       if (!res.ok) {
@@ -190,6 +213,11 @@ export default function ChatSidebar() {
         }
       }
     } catch (err) {
+      // AbortError 是切换角色 / 登出主动 abort，不当成"网络错误"展示
+      // （此时 user.id 变化的 useEffect 已经清空了 messages，再插入会留下脏数据）
+      if (err instanceof DOMException && err.name === 'AbortError') {
+        return;
+      }
       setMessages(prev => [...prev, {
         id: crypto.randomUUID(),
         role: 'assistant',
@@ -198,6 +226,10 @@ export default function ChatSidebar() {
     } finally {
       loadingRef.current = false;
       setLoading(false);
+      // 清掉 ref（仅当还是当前的 controller 时；切换角色时 useEffect 已置 null）
+      if (abortControllerRef.current === ac) {
+        abortControllerRef.current = null;
+      }
     }
   }, [sessionId]);
 
