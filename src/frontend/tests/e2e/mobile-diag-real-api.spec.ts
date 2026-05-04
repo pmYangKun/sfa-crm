@@ -35,6 +35,11 @@ test.describe('移动端真实 API 串测', () => {
     await page.getByTestId('onboarding-card-mobile-s01-1').click();
     await expect(page.getByTestId('chat-msg-user').first()).toBeVisible({ timeout: 10_000 });
     await expect(page.getByTestId('chat-msg-assistant').first()).toBeVisible({ timeout: 60_000 });
+    // 关键断言：assistant 气泡内容非空（防"流空但气泡 visible"的 bug）
+    await expect.poll(
+      async () => ((await page.getByTestId('chat-msg-assistant').nth(0).textContent()) ?? '').trim().length,
+      { timeout: 60_000, message: 'assistant 回复必须非空' },
+    ).toBeGreaterThan(5);
 
     // 2. 输入框打字
     await expect(page.locator('input[placeholder="向 AI 提问..."]')).toBeEnabled({ timeout: 60_000 });
@@ -45,6 +50,10 @@ test.describe('移动端真实 API 串测', () => {
       async () => page.getByTestId('chat-msg-assistant').count(),
       { timeout: 60_000 },
     ).toBeGreaterThanOrEqual(2);
+    await expect.poll(
+      async () => ((await page.getByTestId('chat-msg-assistant').nth(1).textContent()) ?? '').trim().length,
+      { timeout: 60_000, message: '第 2 个 assistant 回复必须非空' },
+    ).toBeGreaterThan(5);
 
     // 3. 「新对话」重置
     await expect(page.getByTestId('reset-chat-btn')).toBeVisible();
@@ -57,6 +66,10 @@ test.describe('移动端真实 API 串测', () => {
     await page.getByTestId('onboarding-card-mobile-s01-3').click();
     await expect(page.getByTestId('chat-msg-user').first()).toBeVisible({ timeout: 10_000 });
     await expect(page.getByTestId('chat-msg-assistant').first()).toBeVisible({ timeout: 60_000 });
+    await expect.poll(
+      async () => ((await page.getByTestId('chat-msg-assistant').nth(0).textContent()) ?? '').trim().length,
+      { timeout: 60_000, message: '重置后第 1 个 assistant 回复必须非空' },
+    ).toBeGreaterThan(5);
 
     expect(errors, errors.join('\n')).toEqual([]);
     await page.screenshot({ path: 'tests/screenshots/mobile-diag-full-flow.png', fullPage: true });
