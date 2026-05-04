@@ -256,6 +256,30 @@ def chat(
     }
 
 
+@router.get("/agent/demo-reset-status")
+def get_demo_reset_status(
+    session: Session = Depends(get_session),
+    current_user: User = Depends(require_permission("agent.chat")),
+):
+    """spec 002 T026 / FR-020: 前端倒计时组件读取下次重置时间。"""
+    from datetime import datetime, timezone
+
+    from app.services.demo_reset_service import (
+        _interval_minutes,
+        _is_enabled,
+        get_next_reset_at,
+    )
+
+    enabled = _is_enabled(session)
+    next_at = get_next_reset_at(session)
+    return {
+        "enabled": enabled,
+        "next_reset_at": next_at.isoformat() if next_at else None,
+        "interval_minutes": _interval_minutes(session) if enabled else None,
+        "server_time": datetime.now(timezone.utc).isoformat(),
+    }
+
+
 @router.post("/agent/execute-tool")
 def execute_tool_endpoint(
     request: Request,

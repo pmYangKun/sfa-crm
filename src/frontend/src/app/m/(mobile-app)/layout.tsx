@@ -6,6 +6,7 @@ import { useAuth } from '@/lib/auth-context';
 import { useIsMobile } from '@/lib/viewport';
 import { mobileToPcPath } from '@/lib/route-map';
 import KingKongTabbar, { TABBAR_HEIGHT } from '@/components/mobile/kingkong-tabbar';
+import ResetCountdownBadge from '@/components/demo/ResetCountdownBadge';
 
 export default function MobileAppLayout({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -49,6 +50,7 @@ export default function MobileAppLayout({ children }: { children: React.ReactNod
         {children}
       </main>
       <KingKongTabbar />
+      <ResetCountdownBadge />
     </>
   );
 }

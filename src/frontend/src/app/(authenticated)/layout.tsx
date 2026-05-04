@@ -6,6 +6,7 @@ import { useEffect } from 'react';
 import Sidebar from '@/components/nav/sidebar';
 import ChatSidebar from '@/components/chat/chat-sidebar';
 import NotificationBell from '@/components/notifications/notification-bell';
+import ResetCountdownBadge from '@/components/demo/ResetCountdownBadge';
 import { useIsMobile } from '@/lib/viewport';
 import { pcToMobilePath } from '@/lib/route-map';
 
@@ -62,6 +63,7 @@ export default function AuthenticatedLayout({
         {children}
       </main>
       <ChatSidebar />
+      <ResetCountdownBadge />
     </div>
   );
 }
