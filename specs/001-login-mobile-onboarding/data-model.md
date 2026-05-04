@@ -80,7 +80,7 @@ export interface OnboardingCard {
   fullPrompt?: string;
   /** 切换目标账号（type === "switch-role" 时必填） */
   switchTo?: "sales01" | "manager01";
-  /** 对应 demo case 编号（type === "demo" 时填，溯源 demo/copilot-cases.md） */
+  /** 对应 demo case 编号（type === "demo" 时填，溯源 docs/copilot-cases.md） */
   caseRef?: string;
 }
 

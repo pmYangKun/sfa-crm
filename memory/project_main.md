@@ -100,7 +100,7 @@ type: project
 - ✅ 9 篇公众号文章完成
 - ✅ 演示体验全面优化（全高面板、预填、团队分析、权限过滤）
 - LLM API Key：`src/backend/.env`（在 .gitignore 中）
-- 演示案例：`demo/copilot-cases.md`（8 个独立案例）
+- 演示案例：`docs/copilot-cases.md`（8 个独立案例）
 - 一键启动：`start.bat` | 一键重置：`reset-demo.bat`
 - 演示账号：admin / sales01（王小明）/ sales02（李思远）/ sales03（张磊）/ manager01（陈队长），密码均为 12345
 

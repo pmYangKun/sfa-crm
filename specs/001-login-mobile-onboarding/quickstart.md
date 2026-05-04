@@ -174,7 +174,7 @@ npm run dev    # 端口 3000
 
 - ✅ Lighthouse Mobile 性能分数 ≥ 70（仅参考，不强制）
 - ✅ 既有 pytest 套件全部通过：`cd src\backend && pytest`
-- ✅ PC 端既有 demo case 1-8（详见 `demo/copilot-cases.md`）100% 仍按改造前行为工作
+- ✅ PC 端既有 demo case 1-8（详见 `docs/copilot-cases.md`）100% 仍按改造前行为工作
 
 ---
 
