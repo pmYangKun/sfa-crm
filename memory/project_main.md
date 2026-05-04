@@ -91,6 +91,22 @@ type: project
 - README 重构：演示信息前置，修正账号密码
 - 新增 `reset-demo.bat` 一键重置演示数据
 
+### 阶段四：spec 002 公网部署安全/治理硬化（2026-05-04）
+
+走完整 spec-kit 流程产物（specify + plan + tasks），单线程 TDD 实施，46 → 72 测试全绿。
+
+| 块 | 内容 | 状态 |
+|---|---|---|
+| Setup (T001-T003) | cryptography 显式声明 / 6 个新 SystemConfig 默认值 / system prompt 边界条款 | ✅ |
+| Foundational (T004-T011) | chat_audit + llm_call_counter 模型 / 限流 key 改 (IP, user) / Fernet 加解密 / 启动密钥校验 | ✅ |
+| US2 防护 (T013-T022) | prompt_guard 软拦截 + 限流 10/分 100/天 + 全站 LLM 200/小时熔断 + chat_audit 全量写入 + 前端 422/429/503 友好气泡 | ✅ |
+| US3 重置 (T023-T029) | reset_business_data 清 8 业务表保留 9 配置表 / scheduler 30min interval / 前端右下角倒计时小气泡（PC bottom:96 / Mobile bottom:80）| ✅ |
+| US4 部署 (T034/T037-T040) | docker-compose 强制密钥注入 / .env.production.example / docs/deploy.md / encrypt_existing_llm_keys.py 迁移脚本 | ✅ |
+| US4 deferred (T033/T035/T036) | /llm-config/full 删 api_key 字段 + 后端 LLM 代理 /agent/llm-proxy（流式响应）+ 前端走代理 — 高风险任务留 spec 002 后续；当前用 Fernet 加密 + 限流熔断 + audit 替代防护 | ⏳ |
+
+新分支 `002-public-deploy-hardening`（local，未 push 未 PR），最新 commit 见 `git log`。
+spec-kit 产物：`specs/002-public-deploy-hardening/`（spec.md / plan.md / research.md / data-model.md / contracts/ / quickstart.md / tasks.md / checklists/ / inputs/）
+
 ---
 
 ## 当前状态
@@ -99,9 +115,12 @@ type: project
 - ✅ Copilot 端到端跑通（DeepSeek Tool Use）
 - ✅ 9 篇公众号文章完成
 - ✅ 演示体验全面优化（全高面板、预填、团队分析、权限过滤）
-- LLM API Key：`src/backend/.env`（在 .gitignore 中）
+- ✅ spec 001（登录页双栏 + 移动端 + Onboarding）已 merge 进 master
+- ✅ spec 002（公网部署安全/治理硬化）实施完成，分支 `002-public-deploy-hardening`（待 PR/merge）；T033/T035/T036 后端 LLM 代理 deferred
+- LLM API Key：`src/backend/.env`（dev）/ DB Fernet 密文（生产，spec 002）
 - 演示案例：`docs/copilot-cases.md`（8 个独立案例）
 - 一键启动：`start.bat` | 一键重置：`reset-demo.bat`
+- 公网部署：`docs/deploy.md` 一键流程（spec 002）
 - 演示账号：admin / sales01（王小明）/ sales02（李思远）/ sales03（张磊）/ manager01（陈队长），密码均为 12345
 
 ---
