@@ -1,9 +1,22 @@
 /**
  * Next.js API Route for AI Chat (Copilot mode).
  *
- * Flow: browser → this route → read LLM config + system prompt from FastAPI
- * → call LLM via Vercel AI SDK → on tool_call → execute via FastAPI
+ * Flow: browser → this route → read LLM provider/model/system_prompt from FastAPI
+ * (NOT api_key — spec 002 T033/FR-029) → read provider-specific api_key from
+ * process.env → call LLM via Vercel AI SDK → on tool_call → execute via FastAPI
  * → return result to LLM → stream response back.
+ *
+ * spec 002 T036/FR-030: api_key 不再走 /agent/llm-config/full 响应；
+ * 浏览器从来拿不到 key（这条 Route 是 Next.js server-side），但 server-to-server
+ * 拉 api_key 依然形成横向暴露面（任何带 agent.chat 权限的认证用户都能直接 curl
+ * /llm-config/full）。改为从 server env 读 → 收口在 systemd EnvironmentFile，
+ * 跟 JWT_SECRET / LLM_KEY_FERNET_KEY 同一管控级别。
+ *
+ * Provider → env var 映射（与 docs/deploy.md 一致）：
+ *   anthropic → ANTHROPIC_API_KEY
+ *   openai    → OPENAI_API_KEY
+ *   deepseek  → DEEPSEEK_API_KEY
+ *   minimax   → MINIMAX_API_KEY
  *
  * Tools are split into two categories:
  * - Read tools: execute directly and return data
@@ -100,12 +113,31 @@ export async function POST(req: Request) {
   }
 
   // 3. Build LLM provider dynamically based on provider config
-  const apiKey = config.api_key || '';
+  //    spec 002 T036/FR-030: api_key 从 server env 读，不再走 /llm-config/full 响应
   const provider = (config.provider || 'anthropic').toLowerCase();
+
+  const envKeyMap: Record<string, string> = {
+    anthropic: 'ANTHROPIC_API_KEY',
+    openai: 'OPENAI_API_KEY',
+    deepseek: 'DEEPSEEK_API_KEY',
+    minimax: 'MINIMAX_API_KEY',
+  };
+  const envKeyName = envKeyMap[provider] || 'ANTHROPIC_API_KEY';
+  const apiKey = process.env[envKeyName] || '';
+
+  if (!apiKey) {
+    return new Response(
+      JSON.stringify({
+        error: `LLM API Key 未配置（缺 ${envKeyName} 环境变量）。请联系管理员。`,
+        code: 'LLM_KEY_NOT_CONFIGURED',
+      }),
+      { status: 503, headers: { 'Content-Type': 'application/json' } },
+    );
+  }
 
   let model;
   if (provider === 'anthropic') {
-    const anthropic = createAnthropic({ apiKey: apiKey || process.env.ANTHROPIC_API_KEY || '' });
+    const anthropic = createAnthropic({ apiKey });
     model = anthropic(config.model || 'claude-sonnet-4-20250514');
   } else {
     const baseURLMap: Record<string, string> = {

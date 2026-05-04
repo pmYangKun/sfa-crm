@@ -183,13 +183,11 @@ description: "Task list for 公网部署安全/治理硬化"
 - [ ] **T031** [P] [US4] 创建 [`src/backend/tests/integration/test_llm_key_encryption.py`](src/backend/tests/integration/test_llm_key_encryption.py)：
   - 写入明文 → DB 中是密文（`gAAAAAB...` 开头）→ 读取自动解密回明文
   - Fernet key 错误 → 解密 raise InvalidToken
-- [ ] **T032** [P] [US4] 创建 [`src/backend/tests/integration/test_llm_proxy.py`](src/backend/tests/integration/test_llm_proxy.py)：
-  - mock LLM provider → 验证后端代理流式转发正确
-  - 响应中**不含** api_key 字段（GET /llm-config/full 抓响应验证）
+- [x] **T032 (partial)** [P] [US4] 创建 [`src/backend/tests/unit/test_llm_config_full_response.py`](src/backend/tests/unit/test_llm_config_full_response.py)：5 个用例验证响应**不含** api_key 字段、含 api_key_present 字段、不影响 provider/model/system_prompt（spec 002 二轮 2026-05-04 落地，T033 那部分覆盖）。`test_llm_proxy.py` 部分跟 T035 一起仍 deferred。
 
 ### Implementation for User Story 4
 
-- [ ] **T033** [US4] 改造 [`src/backend/app/api/agent.py`](src/backend/app/api/agent.py) 的 `GET /llm-config/full` 端点：响应 schema 删除 `api_key` 字段，新增 `api_key_present: bool` 字段（按 [`contracts/api-contracts.md § 3`](specs/002-public-deploy-hardening/contracts/api-contracts.md)）。
+- [x] **T033** [US4] 改造 [`src/backend/app/api/agent.py`](src/backend/app/api/agent.py) 的 `GET /llm-config/full` 端点：响应 schema 删除 `api_key` 字段，新增 `api_key_present: bool` 字段（按 [`contracts/api-contracts.md § 3`](specs/002-public-deploy-hardening/contracts/api-contracts.md)）—— 2026-05-04 二轮落地。
 - [ ] **T034** [US4] 改造 [`src/backend/app/api/agent.py`](src/backend/app/api/agent.py) 的 `POST /llm-config` 写入端点：调用 `LlmConfig.set_api_key(plaintext)`（透明加密）。
 - [ ] **T035** [US4] 实现后端 LLM 代理端点 `POST /api/v1/agent/llm-proxy` 在 [`src/backend/app/api/agent.py`](src/backend/app/api/agent.py)：
   - 入参按 [`contracts/api-contracts.md § 1`](specs/002-public-deploy-hardening/contracts/api-contracts.md)
@@ -197,7 +195,7 @@ description: "Task list for 公网部署安全/治理硬化"
   - 用 `StreamingResponse(generator, media_type="text/event-stream")` 流式转发
   - generator 中 `async for chunk in provider_stream: yield f"data: {json.dumps(chunk)}\n\n"`
   - 端点本身也走 prompt_guard / 限流 / 熔断 4 个 gate（与 /chat 共享 service 层逻辑）
-- [ ] **T036** [US4] 改造前端 [`src/frontend/src/app/api/chat/route.ts`](src/frontend/src/app/api/chat/route.ts)：从"前端拿 LLM Key 调 Anthropic SDK"改为"fetch('/api/v1/agent/llm-proxy', {body: JSON.stringify({messages, tools, options})})"，把响应 ReadableStream 转回 Vercel AI SDK 协议格式给客户端。
+- [x] **T036** [US4] 改造前端 [`src/frontend/src/app/api/chat/route.ts`](src/frontend/src/app/api/chat/route.ts)：spec 002 二轮（2026-05-04）落地——**改用 env-var 路径而非完整 backend proxy**。Next.js Route 不再从 `/agent/llm-config/full` 响应拿 api_key（FR-029 满足），改从 `process.env.{ANTHROPIC,OPENAI,DEEPSEEK,MINIMAX}_API_KEY` 读 → 浏览器永远拿不到 key（FR-030 满足）。Provider→env-var 映射表硬编在 route 里。原计划的 backend proxy 路径（FR-031 全 SDK 代理）留给 T035。
 - [ ] **T037** [US4] 改造 [`src/docker-compose.yml`](src/docker-compose.yml)：
   - 删除 `JWT_SECRET=change-me-in-production` 硬编
   - 新增 `JWT_SECRET=${JWT_SECRET:?JWT_SECRET must be set}`
@@ -219,15 +217,22 @@ description: "Task list for 公网部署安全/治理硬化"
 
 ### Deferred to spec 002 后续 / spec 003
 
-以下任务在 2026-05-04 实施时**未完成**，留给后续迭代：
+**2026-05-04 二轮收口后状态更新**：
 
-- **T033** /agent/llm-config/full 删除 api_key 字段：当前前端 chat/route.ts 仍依赖此字段调 Anthropic SDK，删除会破坏前端。必须与 T035 后端代理一起做才不破坏体验。
-- **T035** 后端 LLM 代理 /agent/llm-proxy（流式响应）：research.md Decision 7 标记的"非平凡技术决策"。需要 prototype 验证 Vercel AI SDK 的 chunked transfer 协议，工作量较大且高风险。本次跳过，公网部署先靠 Phase 4 的限流 / 熔断 / audit 防护 + 现有 .api_key Fernet 加密保护（前端虽然能从 /llm-config/full 读到明文 api_key，但请求都走前端 SDK，仍受限流约束）。
-- **T032** test_llm_proxy.py：依赖 T035 实现，一并 deferred。
-- **T036** 前端 chat/route.ts 改走后端代理：依赖 T035。
+T033/T036 已落地（env-var 路径），下面 T035 跟它的副产物 T032 流式部分继续 deferred：
+
+- **T035** 后端 LLM 代理 /agent/llm-proxy（流式响应 + tool-use 循环）：research.md Decision 7 标记的"非平凡技术决策"。需要：(1) 后端引入 anthropic + openai Python SDK（或自己用 httpx 直撸 HTTP）；(2) 实现 tool-use 多轮循环（stop_reason=tool_use → execute_tool → 拼 tool_result message → 继续 stream）；(3) 把 SSE 流以 Vercel AI SDK 协议格式转发给前端。工作量 ~500 行 + 大量 mock 测试，单独成一个 phase 做更稳妥。
+- **T032 (剩余)** test_llm_proxy.py（流式 + tool-use mock）：依赖 T035 实现，一并 deferred。
+
+**当前安全态势**（FR-029/030/031 满足度）：
+- ✅ FR-029 `/llm-config/full` 响应不含 api_key（T033 ✅）
+- ✅ FR-030 浏览器永远拿不到 key（Next.js Route 是 server-side，从 env 读 → 浏览器只看到流式响应内容，T036 ✅）
+- ✅ FR-031 DB 中 api_key 为 Fernet 密文（T009 ✅，set_api_key 写入 + api_key_decrypted 读取）
+- ⚠️ 横向暴露面：admin POST /llm-config 设置 api_key 仍是必要管理路径；env-var 跟 DB 密文双轨并存（密文留给 spec 003 的 backend proxy 用）
 
 **已实施替代防护**：
 - API Key 在 DB 中是 Fernet 密文（T009）—— DB 备份泄露不会泄漏明文
+- 前端 LLM Key 从 env-var 读，跟 systemd EnvironmentFile 同管控级别
 - 限流 + 熔断 + 黑名单 + 输入长度限制 → 滥用脚本无法用 demo 站当免费 LLM 客户端
 - chat_audit 全量记录可回溯
 

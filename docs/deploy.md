@@ -56,6 +56,9 @@ chmod 600 /opt/sfa-crm/.env.production  # 仅 owner 可读
 # 2. LLM_KEY_FERNET_KEY — python3 -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
 # 3. CORS_ORIGINS=https://sfacrm.pmyangkun.com
 # 4. ENV=production
+# 5. ANTHROPIC_API_KEY / OPENAI_API_KEY / DEEPSEEK_API_KEY / MINIMAX_API_KEY
+#    （至少配 admin UI 选定的当前 active provider 对应那一项；spec 002 T036 起这是
+#     前端 Next.js Route 读 LLM Key 的唯一路径，不再走 /llm-config/full 响应）
 nano /opt/sfa-crm/.env.production
 ```
 
@@ -162,6 +165,7 @@ After=network.target sfa-crm-backend.service
 Type=simple
 User=YOUR_USER
 WorkingDirectory=/opt/sfa-crm/src/frontend
+EnvironmentFile=/opt/sfa-crm/.env.production
 ExecStart=/usr/bin/npm run start
 Restart=on-failure
 RestartSec=5

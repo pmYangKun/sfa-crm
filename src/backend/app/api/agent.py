@@ -71,18 +71,22 @@ def get_llm_config_full(
     session: Session = Depends(get_session),
     current_user: User = Depends(require_permission("agent.chat")),
 ):
-    """Full LLM config including API key + system prompt — called server-side only by Next.js API Route."""
+    """Full LLM config 元信息（spec 002 T033 / FR-029）—— api_key 字段已移除。
+
+    前端 Next.js API Route 不再从此端点读 LLM API Key；改从环境变量
+    （ANTHROPIC_API_KEY / OPENAI_API_KEY / DEEPSEEK_API_KEY）读取。
+    DB 中的 Fernet 密文由后端独立持有，留待 spec 003 全 backend proxy 时启用。
+    """
     config = get_active_llm_config(session)
     if not config:
         return {"configured": False}
-    # Read system prompt from config
     prompt_cfg = session.get(SystemConfig, "agent_system_prompt")
     system_prompt = prompt_cfg.value if prompt_cfg else ""
     return {
         "configured": True,
         "provider": config.provider,
         "model": config.model,
-        "api_key": config.api_key,
+        "api_key_present": bool(config.api_key),
         "system_prompt": system_prompt,
     }
 
