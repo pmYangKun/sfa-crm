@@ -168,7 +168,7 @@ export default function MobileLoginPage() {
             onChange={(e) => setManualLogin(e.target.value)}
             data-testid="manual-login-input-mobile"
             required
-            placeholder="admin / sales01"
+            placeholder="请输入账号"
             style={inputStyle}
           />
 
@@ -216,8 +216,8 @@ export default function MobileLoginPage() {
               lineHeight: 1.6,
             }}
           >
-            演示账号：admin / sales01 / sales02 / manager01<br />
-            密码均为：12345
+            Demo 演示环境<br />
+            业务数据每 30 分钟自动重置
           </div>
         </form>
 

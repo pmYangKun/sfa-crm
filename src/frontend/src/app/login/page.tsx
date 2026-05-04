@@ -158,7 +158,7 @@ export default function LoginPage() {
               onChange={(e) => setManualLogin(e.target.value)}
               data-testid="manual-login-input"
               required
-              placeholder="admin / sales01"
+              placeholder="请输入账号"
               style={inputStyle}
             />
 
@@ -197,6 +197,8 @@ export default function LoginPage() {
               {manualBusy ? '登录中...' : '登录'}
             </button>
 
+            {/* 底部占位块：保持 marginTop:auto 撑住表单总高，让右侧登录卡跟左侧角色卡下端对齐；
+                内容换成中性产品说明，不再暴露 admin / sales01 等具体账号 */}
             <div
               style={{
                 marginTop: 'auto',
@@ -207,10 +209,8 @@ export default function LoginPage() {
                 lineHeight: 1.7,
               }}
             >
-              <div style={{ marginBottom: 2 }}>
-                演示账号：admin / sales01 / sales02 / manager01
-              </div>
-              <div>密码均为：12345</div>
+              <div style={{ marginBottom: 2 }}>Demo 演示环境</div>
+              <div>业务数据每 30 分钟自动重置</div>
             </div>
           </form>
         </div>
