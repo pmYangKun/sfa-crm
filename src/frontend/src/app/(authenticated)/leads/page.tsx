@@ -2,10 +2,16 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { api } from '@/lib/api';
 import { Lead, PaginatedResponse } from '@/types';
 
 export default function LeadsPage() {
+  const pathname = usePathname();
+  // 在 /m/leads 路由下，详情链接走 /m/leads/{id}（移动端布局）；PC /leads 走 /leads/{id}
+  const isMobile = pathname?.startsWith('/m/');
+  const detailPrefix = isMobile ? '/m/leads' : '/leads';
+  const newLeadHref = isMobile ? '/m/leads/new' : '/leads/new';
   const [leads, setLeads] = useState<Lead[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -35,7 +41,7 @@ export default function LeadsPage() {
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
         <h1 style={{ fontSize: 24 }}>我的线索</h1>
-        <Link href="/leads/new">
+        <Link href={newLeadHref}>
           <button style={{
             padding: '8px 16px', background: '#1890ff', color: '#fff',
             border: 'none', borderRadius: 4, cursor: 'pointer', fontSize: 14,
@@ -63,6 +69,66 @@ export default function LeadsPage() {
 
       {loading ? (
         <p>加载中...</p>
+      ) : isMobile ? (
+        <>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {leads.map((lead) => {
+              const stageBg = lead.stage === 'active' ? '#e6f7ff' : lead.stage === 'converted' ? '#f6ffed' : '#fff1f0';
+              const stageColor = lead.stage === 'active' ? '#1890ff' : lead.stage === 'converted' ? '#52c41a' : '#ff4d4f';
+              const stageLabel = lead.stage === 'active' ? '活跃' : lead.stage === 'converted' ? '已转化' : '已流失';
+              return (
+                <Link
+                  key={lead.id}
+                  href={`${detailPrefix}/${lead.id}`}
+                  style={{
+                    display: 'block',
+                    background: '#fff',
+                    border: '1px solid #f0f0f0',
+                    borderRadius: 10,
+                    padding: '14px 14px 12px',
+                    textDecoration: 'none',
+                    color: 'inherit',
+                    boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
+                    <div style={{ fontSize: 15, fontWeight: 600, color: '#1890ff', flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {lead.company_name}
+                    </div>
+                    <span style={{ padding: '2px 8px', borderRadius: 4, fontSize: 11, background: stageBg, color: stageColor, flexShrink: 0 }}>
+                      {stageLabel}
+                    </span>
+                  </div>
+                  <div style={{ marginTop: 8, display: 'flex', flexWrap: 'wrap', gap: '4px 12px', fontSize: 12, color: '#595959' }}>
+                    <span>📍 {lead.region}</span>
+                    <span>🏷️ {lead.source}</span>
+                    <span>👤 {lead.owner?.name || '公共池'}</span>
+                  </div>
+                  <div style={{ marginTop: 6, fontSize: 11, color: '#999' }}>
+                    最后跟进：{lead.last_followup_at ? new Date(lead.last_followup_at).toLocaleDateString() : '-'}
+                  </div>
+                </Link>
+              );
+            })}
+            {leads.length === 0 && (
+              <div style={{ padding: 32, textAlign: 'center', color: '#999', background: '#fff', borderRadius: 8 }}>暂无线索</div>
+            )}
+          </div>
+          <div style={{ marginTop: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ color: '#999' }}>共 {total} 条</span>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button disabled={page <= 1} onClick={() => setPage(p => p - 1)}
+                style={{ padding: '4px 12px', border: '1px solid #d9d9d9', borderRadius: 4, cursor: page > 1 ? 'pointer' : 'not-allowed' }}>
+                上一页
+              </button>
+              <span style={{ padding: '4px 8px' }}>第 {page} 页</span>
+              <button disabled={page * 20 >= total} onClick={() => setPage(p => p + 1)}
+                style={{ padding: '4px 12px', border: '1px solid #d9d9d9', borderRadius: 4, cursor: page * 20 < total ? 'pointer' : 'not-allowed' }}>
+                下一页
+              </button>
+            </div>
+          </div>
+        </>
       ) : (
         <>
           <table style={{ width: '100%', borderCollapse: 'collapse', background: '#fff', borderRadius: 8 }}>
@@ -80,7 +146,7 @@ export default function LeadsPage() {
               {leads.map((lead) => (
                 <tr key={lead.id} style={{ borderBottom: '1px solid #f0f0f0' }}>
                   <td style={{ padding: '12px 16px' }}>
-                    <Link href={`/leads/${lead.id}`} style={{ color: '#1890ff' }}>
+                    <Link href={`${detailPrefix}/${lead.id}`} style={{ color: '#1890ff' }}>
                       {lead.company_name}
                     </Link>
                   </td>

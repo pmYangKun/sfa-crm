@@ -120,10 +120,10 @@ test.describe('PC 端 MEDDICC 全量回归（真实 LLM）', () => {
     // 等到 toast 出现并消失
     await expect(page.getByTestId('meddicc-status-msg')).toContainText(/分析|完成/, { timeout: 15_000 });
 
-    // 等到卡片状态变成 applied=true（最长 30s 含 LLM 调用）
+    // 等到卡片状态变成 applied=true（最长 90s 含 LLM 调用 + spec 002 限流冷却 60s）
     await expect.poll(
       async () => await page.locator(`[data-testid="scenario-card-${cardId}"][data-applied="true"]`).count(),
-      { timeout: 30_000, message: '卡片应用后应变为已应用 ✓' },
+      { timeout: 90_000, message: '卡片应用后应变为已应用 ✓' },
     ).toBeGreaterThanOrEqual(1);
 
     // 对话列表至少多了 1 条（场景卡可能注入 1-3 条）
@@ -154,8 +154,8 @@ test.describe('PC 端 MEDDICC 全量回归（真实 LLM）', () => {
     // 等 toast 出现 "分析中" 然后变为 "完成"
     await expect(page.getByTestId('meddicc-status-msg')).toContainText(/分析中/, { timeout: 5_000 });
 
-    // 等分析按钮重新可点击（说明 LLM 调用完成）
-    await expect(reanalyzeBtn).toBeEnabled({ timeout: 30_000 });
+    // 等分析按钮重新可点击（说明 LLM 调用完成；含 spec 002 限流冷却最长 60s）
+    await expect(reanalyzeBtn).toBeEnabled({ timeout: 90_000 });
 
     // 仪表盘 score 仍非零（重新分析后维度大概率不变）
     const scoreText = await page.getByTestId('meddicc-score').textContent();
@@ -260,5 +260,42 @@ test.describe('PC 端 MEDDICC 全量回归（真实 LLM）', () => {
     const scoreText = await page.getByTestId('meddicc-score').textContent();
     const scoreNum = parseInt((scoreText || '0').match(/\d+/)?.[0] || '0', 10);
     expect(scoreNum).toBeGreaterThan(0);
+  });
+
+  test('Case M6 — Onboarding 新增 MEDDICC 卡 + AI 回复带详情页跳转按钮（Fix 1+2）', async ({ page }) => {
+    await loginAsSales01(page);
+
+    // Fix 2 验证：新卡存在并展示
+    const meddiccCard = page.getByTestId('onboarding-card-s01-meddicc');
+    await expect(meddiccCard).toBeVisible({ timeout: 10_000 });
+    await expect(meddiccCard).toContainText('MEDDICC');
+
+    // 点击卡片 → 自动把 prompt 发到 chat
+    await meddiccCard.click();
+
+    // chat 面板应该已开（PC 默认展开）+ 用户消息上屏
+    const chatPanel = page.getByTestId('chat-panel');
+    await expect(chatPanel).toBeVisible();
+    await expect(page.getByTestId('chat-msg-user')).toContainText('前海微链', { timeout: 5_000 });
+
+    // 等 AI 回复出现（含真实 LLM 调用 + 流式输出，最多 60s）
+    const assistantMsg = page.getByTestId('chat-msg-assistant').last();
+    await expect(assistantMsg).toBeVisible({ timeout: 60_000 });
+
+    // 等流式结束的硬信号：输入框从 disabled → enabled（loading=false）
+    const sendInput = page.locator('input[placeholder="输入消息..."]');
+    await expect(sendInput).toBeEnabled({ timeout: 90_000 });
+
+    // Fix 1 验证：AI 回复里有 [[nav:|/leads/{uuid}]] 按钮
+    const navBtn = assistantMsg.locator('button[data-nav-url^="/leads/"]').first();
+    await expect(navBtn).toBeVisible({ timeout: 5_000 });
+    const navUrl = await navBtn.getAttribute('data-nav-url');
+    expect(navUrl).toMatch(/^\/leads\/[a-f0-9-]{36}/);
+    expect(navUrl).not.toMatch(/\/leads\/new/); // 不能是新建表单
+
+    // 进一步：点这个按钮应跳到该 lead 详情页
+    await navBtn.click();
+    await expect(page).toHaveURL(/\/leads\/[a-f0-9-]{36}/, { timeout: 10_000 });
+    await expect(page.getByTestId('meddicc-dashboard')).toBeVisible({ timeout: 10_000 });
   });
 });

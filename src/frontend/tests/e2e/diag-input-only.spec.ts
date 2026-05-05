@@ -66,8 +66,8 @@ test('PC: 输入框直接打字 → 真实非空回复', async ({ page, context 
     'role-card-sales01',
     async () => {
       await expect(page).toHaveURL(/\/dashboard/, { timeout: 10_000 });
-      await page.getByTestId('chat-toggle-btn').click();
-      await expect(page.getByTestId('chat-panel')).toBeVisible();
+      // PC chat 登录后默认展开（commit 27033b9 后行为），不再需要点 toggle-btn
+      await expect(page.getByTestId('chat-panel')).toBeVisible({ timeout: 10_000 });
     },
     '输入消息...',
   );

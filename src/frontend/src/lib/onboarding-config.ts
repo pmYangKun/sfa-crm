@@ -90,6 +90,15 @@ export const ONBOARDING_CARDS: OnboardingCard[] = [
     caseRef: '案例 4',
   },
   {
+    id: 's01-meddicc',
+    role: 'sales01',
+    platform: 'both',
+    type: 'demo',
+    shortTitle: '🎯 MEDDICC 销售分析（场景卡演示）',
+    fullPrompt: '深圳前海微链科技最近 MEDDICC 销售情况怎么样？',
+    caseRef: 'spec 003',
+  },
+  {
     id: 's01-4',
     role: 'sales01',
     platform: 'both',
@@ -116,6 +125,15 @@ export const ONBOARDING_CARDS: OnboardingCard[] = [
     shortTitle: '🔬 评估具体线索跟进情况',
     fullPrompt: '北京华信恒通最近跟得怎么样？',
     caseRef: '案例 8',
+  },
+  {
+    id: 'm01-meddicc',
+    role: 'manager01',
+    platform: 'both',
+    type: 'demo',
+    shortTitle: '📊 看团队哪条线索 MEDDICC 最完整',
+    fullPrompt: '团队里 MEDDICC 完成度最高的线索是哪一条？',
+    caseRef: 'spec 003',
   },
   {
     id: 'm01-3',

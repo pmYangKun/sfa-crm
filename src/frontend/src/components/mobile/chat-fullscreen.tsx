@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
 import { api } from '@/lib/api';
 import OnboardingCardsMobile from '@/components/onboarding/onboarding-cards-mobile';
@@ -25,6 +26,7 @@ const HEADER_HEIGHT = 48;
 
 export default function ChatFullscreen() {
   const { user, loginName } = useAuth();
+  const router = useRouter();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -211,8 +213,14 @@ export default function ChatFullscreen() {
 
     try {
       const body = card.parsed.submit.buildBody(values);
-      const res = await api.post<{ id: string }>(card.parsed.submit.path, body);
-      const id = res.id ?? 'unknown';
+      // 不同 endpoint 响应格式不统一（key-event 返回 { id }，convert 返回 { lead, customer_id }，
+      // release/mark-lost 返回 lead 对象 { id, ... }）。容错抽 id：res.id || res.customer_id || lead.id || 'ok'
+      const res = await api.post<Record<string, unknown>>(card.parsed.submit.path, body);
+      const id =
+        (res?.id as string) ||
+        (res?.customer_id as string) ||
+        ((res?.lead as Record<string, string> | undefined)?.id) ||
+        (card.parsed.leadId ?? 'ok');
       setCardStates((prev) => ({
         ...prev,
         [key]: { ...prev[key], status: 'submitted', createdId: id, values },
@@ -365,11 +373,19 @@ export default function ChatFullscreen() {
                   const cardKey = `${msg.id}-${navIdx++}`;
                   const card = cardStates[cardKey];
                   if (!card) return null;
+                  // "查看详情"类纯导航卡（type=lead-action 且无 submit）→ 直接跳 /m/leads/{id}
+                  const isViewDetail = card.parsed.type === 'lead-action' && !card.parsed.submit && card.parsed.leadId;
                   return (
                     <ChatFormCard
                       key={i}
                       state={card}
-                      onClick={() => setOpenCardKey(cardKey)}
+                      onClick={() => {
+                        if (isViewDetail) {
+                          router.push(`/m/leads/${card.parsed.leadId}`);
+                          return;
+                        }
+                        setOpenCardKey(cardKey);
+                      }}
                     />
                   );
                 })}
