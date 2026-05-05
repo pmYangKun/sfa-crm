@@ -20,10 +20,12 @@ from sqlmodel import Session, delete
 from app.models.chat_audit import ChatAudit
 from app.models.config import SystemConfig
 from app.models.contact import Contact
+from app.models.conversation import Conversation  # spec 003
 from app.models.customer import Customer
 from app.models.followup import FollowUp
 from app.models.key_event import KeyEvent
 from app.models.lead import Lead
+from app.models.lead_meddicc_evidence import LeadMeddiccEvidence  # spec 003
 from app.models.llm_call_counter import LLMCallCounter
 from app.models.notification import Notification
 
@@ -83,6 +85,9 @@ def reset_business_data(
     # 因此 Lead 必须最后删（前一版把 Lead 在 Customer 前删，dev DB 有转化客户时
     # FK 冲突 → DELETE FROM lead 报 IntegrityError）。
     try:
+        # spec 003: 先清 evidence + conversation（指向 Lead 的 FK）
+        session.exec(delete(LeadMeddiccEvidence))
+        session.exec(delete(Conversation))
         session.exec(delete(FollowUp))
         session.exec(delete(KeyEvent))
         session.exec(delete(Notification))

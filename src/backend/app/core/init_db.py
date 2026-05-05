@@ -18,7 +18,9 @@ from app.models.auth import (
 from app.models.chat_audit import ChatAudit  # noqa: F401 — spec 002
 from app.models.config import SystemConfig
 from app.models.contact import Contact, ContactRelation  # noqa: F401
+from app.models.conversation import Conversation  # noqa: F401 — spec 003
 from app.models.customer import Customer  # noqa: F401
+from app.models.lead_meddicc_evidence import LeadMeddiccEvidence  # noqa: F401 — spec 003
 from app.models.followup import FollowUp  # noqa: F401
 from app.models.key_event import KeyEvent  # noqa: F401
 from app.models.lead import Lead  # noqa: F401
@@ -218,6 +220,18 @@ def init_db():
         os.makedirs(os.path.dirname(db_file) or ".", exist_ok=True)
 
     create_db_and_tables()
+
+    # ── spec 003 schema migration: Lead 表加 3 列（idempotent，已存在则跳过） ──
+    from sqlmodel import text
+    with Session(engine) as s:
+        existing_cols = {r[1] for r in s.exec(text("PRAGMA table_info(lead)"))}
+        if "meddicc_score" not in existing_cols:
+            s.exec(text("ALTER TABLE lead ADD COLUMN meddicc_score FLOAT"))
+        if "meddicc_completion" not in existing_cols:
+            s.exec(text("ALTER TABLE lead ADD COLUMN meddicc_completion INTEGER DEFAULT 0"))
+        if "meddicc_last_analyzed_at" not in existing_cols:
+            s.exec(text("ALTER TABLE lead ADD COLUMN meddicc_last_analyzed_at TEXT"))
+        s.commit()
 
     with Session(engine) as session:
         # spec 002 二轮：在 short-circuit 之前先幂等补齐 SystemConfig 默认值。

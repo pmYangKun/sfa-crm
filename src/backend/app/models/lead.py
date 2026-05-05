@@ -24,3 +24,8 @@ class Lead(SQLModel, table=True):
     last_followup_at: Optional[str] = None
     converted_at: Optional[str] = None
     lost_at: Optional[str] = None
+
+    # ── spec 003 MEDDICC 衍生缓存字段（每次 evidence 变更后由 score_calculator 重算）──
+    meddicc_score: Optional[float] = Field(default=None)
+    meddicc_completion: int = Field(default=0)
+    meddicc_last_analyzed_at: Optional[str] = Field(default=None)

@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { Lead, Contact, FollowUp, KeyEvent, PaginatedResponse } from '@/types';
 import KeyEventForm from '@/components/leads/key-event-form';
+import MeddiccPanel from '@/components/lead/MeddiccPanel';
 
 interface LeadDetail extends Lead {
   contacts: Contact[];
@@ -242,6 +243,9 @@ export default function LeadDetailPage() {
           </div>
         )}
       </div>
+
+      {/* MEDDICC Panel — spec 003: 仪表盘 + 场景卡 + 对话记录 */}
+      <MeddiccPanel leadId={id} />
 
       {/* Key Events */}
       <div id="keyevent" style={{ background: '#fff', padding: 24, borderRadius: 8 }}>
