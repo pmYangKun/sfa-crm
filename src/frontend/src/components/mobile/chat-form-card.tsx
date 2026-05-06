@@ -29,13 +29,20 @@ interface ChatFormCardProps {
 
 export default function ChatFormCard({ state, onClick }: ChatFormCardProps) {
   const { parsed, values, status, createdId, errorMsg } = state;
-  const badge = STATUS_BADGE[status];
+
+  // 纯导航卡（如"查看详情"，type=lead-action 且无 submit）走查看语义，
+  // 不是"待审核 / 提交"那套——这种卡片点了直接跳详情页，没有任何"审核"动作。
+  const isViewOnly = parsed.type === 'lead-action' && !parsed.submit;
+
+  const badge = isViewOnly && status === 'pending'
+    ? { text: '可查看', bg: '#e6f7ff', color: '#1890ff' }
+    : STATUS_BADGE[status];
 
   const previewKeys = Object.keys(values).filter((k) => values[k]).slice(0, 3);
   const clickable = status === 'pending' || status === 'failed' || status === 'editing';
 
   const cta = (() => {
-    if (status === 'pending') return '点击审核 →';
+    if (status === 'pending') return isViewOnly ? '点击查看详情 →' : '点击审核 →';
     if (status === 'editing') return '继续编辑 →';
     if (status === 'submitting') return '提交中...';
     if (status === 'submitted') return createdId ? `ID: ${createdId.slice(0, 8)}...` : '已创建';

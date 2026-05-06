@@ -79,8 +79,30 @@ export default function LoginPage() {
                 margin: 0,
                 lineHeight: 1.2,
                 letterSpacing: -0.5,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 14,
               }}
             >
+              <span
+                aria-hidden="true"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: 44,
+                  height: 44,
+                  borderRadius: 10,
+                  background: 'linear-gradient(135deg, #1890ff 0%, #722ed1 100%)',
+                  color: '#fff',
+                  fontWeight: 700,
+                  fontSize: 22,
+                  boxShadow: '0 4px 12px rgba(114,46,209,0.25)',
+                  flexShrink: 0,
+                }}
+              >
+                N
+              </span>
               Native AI CRM
             </h1>
             <p

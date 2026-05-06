@@ -315,7 +315,7 @@ export default function MeddiccPanel({ leadId, readOnly = false }: Props) {
                   transition: 'all 0.3s',
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: 4 }}>
                   <span
                     data-testid={`meddicc-dot-${dim}`}
                     data-lit={animatedLit ? 'true' : 'false'}
@@ -326,14 +326,24 @@ export default function MeddiccPanel({ leadId, readOnly = false }: Props) {
                       borderRadius: '50%',
                       background: dotColor,
                       transition: 'background 0.3s',
+                      flexShrink: 0,
+                      marginTop: 4,
                     }}
                   />
-                  <strong style={{ fontSize: 13 }}>{DIMENSION_LABELS[dim]}</strong>
-                  <span style={{ marginLeft: 'auto', fontSize: 12, color: '#999' }}>
+                  <strong style={{ fontSize: 13, flex: 1, lineHeight: 1.4, wordBreak: 'break-word' }}>
+                    {DIMENSION_LABELS[dim]}
+                  </strong>
+                  <span style={{
+                    fontSize: 12,
+                    color: '#999',
+                    flexShrink: 0,
+                    whiteSpace: 'nowrap',
+                    marginTop: 2,
+                  }}>
                     {status?.count ?? 0} 条
                   </span>
                 </div>
-                <div style={{ fontSize: 11, color: '#999', marginBottom: 6 }}>
+                <div style={{ fontSize: 11, color: '#999', marginBottom: 8, lineHeight: 1.4 }}>
                   {DIMENSION_SHORT[dim]}
                 </div>
                 {status && status.evidences.length > 0 && !isExpanded && (

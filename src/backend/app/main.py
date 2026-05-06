@@ -52,7 +52,11 @@ async def lifespan(app: FastAPI):
     scheduler.start()
 
     # spec 002: startup 时立即跑一次确保干净起步（如果 demo_reset_enabled=true）
-    _run_demo_reset()
+    # 异步触发——之前同步跑会阻塞 lifespan，期间 /auth/login 502 / 失败 / 等 5-15s 才能登。
+    # demo_reset 只 truncate 业务表 + analyze LLM 调用，不动 user/role/auth_token，所以
+    # 后台跑期间登录不受影响。fire-and-forget daemon thread。
+    import threading as _threading
+    _threading.Thread(target=_run_demo_reset, daemon=True, name="startup-demo-reset").start()
 
     app.state.scheduler = scheduler
 

@@ -196,6 +196,12 @@ export async function POST(req: Request) {
         ['lead_id'],
         (args) => exec('get_followup_history', args),
       ),
+      get_lead_meddicc: defineTool(
+        '读指定线索已持久化的 MEDDICC 仪表盘评估（score + 7 维度状态 + 每维度证据条目）。回答 MEDDICC / 销售进展 / 评分类问题时必须用这个，不要自己根据跟进记录现推',
+        { lead_id: { type: 'string', description: '线索ID' } },
+        ['lead_id'],
+        (args) => exec('get_lead_meddicc', args),
+      ),
       list_customers: defineTool(
         '查看客户列表',
         { search: { type: 'string', description: '公司名关键词' } },

@@ -62,36 +62,35 @@ export default function MobileLoginPage() {
       }}
     >
       <div style={{ maxWidth: 420, margin: '0 auto' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 18 }}>
-          <div
+        {/* logo 单独一行居中（不和标题挤一行），视觉重心在垂直中线上 */}
+        <div style={{ display: 'flex', justifyContent: 'center', marginTop: 4, marginBottom: 12 }}>
+          <span
+            aria-hidden="true"
             style={{
-              width: 26,
-              height: 26,
-              borderRadius: 6,
-              background: 'linear-gradient(135deg, #1890ff 0%, #722ed1 100%)',
-              display: 'flex',
+              display: 'inline-flex',
               alignItems: 'center',
               justifyContent: 'center',
+              width: 44,
+              height: 44,
+              borderRadius: 10,
+              background: 'linear-gradient(135deg, #1890ff 0%, #722ed1 100%)',
               color: '#fff',
               fontWeight: 700,
-              fontSize: 13,
+              fontSize: 22,
+              boxShadow: '0 4px 14px rgba(114,46,209,0.3)',
             }}
           >
-            S
-          </div>
-          <div style={{ fontSize: 13, fontWeight: 600, color: '#0f172a', letterSpacing: 0.3 }}>
-            SFA CRM
-          </div>
+            N
+          </span>
         </div>
-
         <h1
           data-testid="hero-title-mobile"
           style={{
-            fontSize: 22,
+            fontSize: 24,
             fontWeight: 700,
             color: '#0f172a',
-            margin: '4px 0 8px',
-            lineHeight: 1.3,
+            margin: '0 0 8px',
+            lineHeight: 1.25,
             textAlign: 'center',
             letterSpacing: -0.3,
           }}
@@ -222,6 +221,32 @@ export default function MobileLoginPage() {
         </form>
 
         <HighlightsPanelMobile />
+
+        {/* Footer：移动登录页底部回个人主页入口（仅登录页有，登录后是纯 CRM 演示环境） */}
+        <div
+          data-testid="login-footer"
+          style={{
+            marginTop: 28,
+            paddingTop: 20,
+            borderTop: '1px solid #e2e8f0',
+            textAlign: 'center',
+            fontSize: 12,
+            color: '#94a3b8',
+          }}
+        >
+          <a
+            href="https://www.pmyangkun.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            data-testid="login-back-to-homepage"
+            style={{
+              color: '#475569',
+              textDecoration: 'none',
+            }}
+          >
+            ← 返回杨堃个人主页 (pmyangkun.com) ↗
+          </a>
+        </div>
       </div>
     </div>
   );
