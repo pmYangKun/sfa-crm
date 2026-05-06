@@ -77,11 +77,34 @@ export default function HighlightsPanelPC() {
           fontSize: 12,
           color: '#94a3b8',
           lineHeight: 1.8,
+          display: 'flex',
+          flexWrap: 'wrap',
+          alignItems: 'center',
+          gap: 12,
         }}
       >
-        GitHub 源码：github.com/pmYangKun/sfa-crm
-        <span style={{ margin: '0 10px', color: '#cbd5e1' }}>·</span>
-        系列文章：公众号「pmYangKun」搜 &quot;VibeCoding&quot;
+        <div style={{ flex: '1 1 auto', minWidth: 0 }}>
+          GitHub 源码：github.com/pmYangKun/sfa-crm
+          <span style={{ margin: '0 10px', color: '#cbd5e1' }}>·</span>
+          系列文章：公众号「pmYangKun」搜 &quot;VibeCoding&quot;
+        </div>
+        <a
+          href="https://www.pmyangkun.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          data-testid="login-back-to-homepage"
+          style={{
+            color: '#475569',
+            textDecoration: 'none',
+            fontWeight: 500,
+            transition: 'color 0.15s',
+            flexShrink: 0,
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.color = '#0f172a')}
+          onMouseLeave={(e) => (e.currentTarget.style.color = '#475569')}
+        >
+          ← 返回杨堃个人主页 (pmyangkun.com) ↗
+        </a>
       </div>
     </section>
   );

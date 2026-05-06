@@ -14,6 +14,7 @@ from sqlmodel import Session, select
 
 from app.core.database import engine
 from app.models.contact import Contact
+from app.models.conversation import Conversation  # spec 003
 from app.models.customer import Customer
 from app.models.followup import FollowUp
 from app.models.key_event import KeyEvent
@@ -336,6 +337,43 @@ def seed():
                                title=title, content=content, is_read=False,
                                created_at=_ts(days_ago, hour=9)))
 
+        # ═══════════════════════════════════════════════════════════════
+        # SPEC 003 — 给 demo lead 种入对话记录（Conversation）
+        # ═══════════════════════════════════════════════════════════════
+        # 给 3 条核心 demo lead 各种 3-5 条对话，作为 AI 抽 MEDDICC 的燃料
+        SEED_CONVERSATIONS = {
+            "深圳前海微链科技有限公司": [
+                (-10, "销售：赵总您好，我是培训公司小王，老李推荐过来的。\n客户：嗯，老李去年上过你们大课，说还行。\n销售：能聊聊您公司现在的情况吗？\n客户：业绩压力大，团队也不稳定。"),
+                (-7, "销售：上周聊到您团队问题，具体什么情况？\n客户：去年走了 3 个核心，今年又走了 2 个。我们行业人难招。\n销售：核心走的原因主要是什么？\n客户：薪资倒不是主要问题，主要是看不到成长。"),
+                (-5, "客户：王老师课程主要讲啥？\n销售：王老师本身带过 3 家上市公司，重点讲老板成长 + 团队建设。\n客户：那挺对路。我跟我太太说了，她也觉得我该上这种课。"),
+            ],
+            "北京数字颗粒科技有限公司": [
+                (-8, "销售：张总，最近聊一下你们业务现状？\n客户：今年挺难，月营收从 200 万掉到 130 万。我合伙人小李天天念叨。\n销售：有没有想过通过培训改善？\n客户：考虑过。我看了樊登的，行动派的，都在比。"),
+                (-4, "客户：你们大课多少钱？\n销售：20 万。\n客户：20 万对我来说不小。我要跟我合伙人小李商量。他比我更看重 ROI。\n销售：理解，我可以发学员业绩对比报告给您们看。"),
+            ],
+            "天津智联云数据服务公司": [
+                (-6, "销售：王总好，您之前对我们大课表示有兴趣？\n客户：嗯，我先看看资料。说实话我自己每天看公众号文章不少。\n销售：自学到什么程度了？\n客户：理论懂了不少，落不下来。"),
+                (-3, "客户：还在犹豫。20 万压力还是有。我想再扛扛自己想想。\n销售：能理解。但您的业绩瓶颈一直在。"),
+            ],
+        }
+
+        for company_name, convs in SEED_CONVERSATIONS.items():
+            lead = s.exec(select(Lead).where(Lead.company_name == company_name)).first()
+            if not lead:
+                continue
+            owner_id = lead.owner_id or admin.id
+            for offset_days, content in convs:
+                # offset_days 是负数表示"过去 N 天"（如 -10 = 10 天前）
+                s.add(Conversation(
+                    id=_id(),
+                    lead_id=lead.id,
+                    recorded_at=_ts(abs(offset_days), hour=14),
+                    content=content,
+                    source="mock_seed",
+                    scenario_card_id=None,
+                    created_by=owner_id,
+                ))
+
         s.commit()
 
         # Stats
@@ -343,12 +381,36 @@ def seed():
         customer_count = len(s.exec(select(Customer)).all())
         contact_count = len(s.exec(select(Contact)).all())
         followup_count = len(s.exec(select(FollowUp)).all())
+        conversation_count = len(s.exec(select(Conversation)).all())
 
         print(f"Seed data created successfully!")
-        print(f"  Leads:     {lead_count}")
-        print(f"  Customers: {customer_count}")
-        print(f"  Contacts:  {contact_count}")
-        print(f"  Follow-ups: {followup_count}")
+        print(f"  Leads:        {lead_count}")
+        print(f"  Customers:    {customer_count}")
+        print(f"  Contacts:     {contact_count}")
+        print(f"  Follow-ups:   {followup_count}")
+        print(f"  Conversations:{conversation_count}")
+
+    # ── spec 003: 对每个 demo lead 跑一次 analyze 让仪表盘开箱即亮 ──────
+    # 在外层 with 之外（重新开 session 给 analyze 用）
+    try:
+        from app.services.meddicc_extractor import analyze
+        with Session(engine) as s2:
+            demo_companies = [
+                "深圳前海微链科技有限公司",
+                "北京数字颗粒科技有限公司",
+                "天津智联云数据服务公司",
+            ]
+            for company_name in demo_companies:
+                lead = s2.exec(select(Lead).where(Lead.company_name == company_name)).first()
+                if not lead:
+                    continue
+                try:
+                    result = analyze(lead.id, s2, current_user_id=lead.owner_id)
+                    print(f"  Analyzed {company_name}: score={result.score}, completion={result.completion}/7")
+                except Exception as e:
+                    print(f"  WARN analyze {company_name} failed: {e} (LLM 未配置或失败，仪表盘将为空，demo 可点重新分析按钮)")
+    except Exception as e:
+        print(f"  WARN spec 003 analyze 阶段失败: {e}")
 
 
 if __name__ == "__main__":

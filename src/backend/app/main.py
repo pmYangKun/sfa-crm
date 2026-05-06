@@ -52,7 +52,11 @@ async def lifespan(app: FastAPI):
     scheduler.start()
 
     # spec 002: startup 时立即跑一次确保干净起步（如果 demo_reset_enabled=true）
-    _run_demo_reset()
+    # 异步触发——之前同步跑会阻塞 lifespan，期间 /auth/login 502 / 失败 / 等 5-15s 才能登。
+    # demo_reset 只 truncate 业务表 + analyze LLM 调用，不动 user/role/auth_token，所以
+    # 后台跑期间登录不受影响。fire-and-forget daemon thread。
+    import threading as _threading
+    _threading.Thread(target=_run_demo_reset, daemon=True, name="startup-demo-reset").start()
 
     app.state.scheduler = scheduler
 
@@ -107,6 +111,9 @@ from app.api.webhooks import router as webhooks_router  # noqa: E402
 from app.api.dashboard import router as dashboard_router  # noqa: E402
 from app.api.notifications import router as notifications_router  # noqa: E402
 from app.api.agent import router as agent_router  # noqa: E402
+from app.api.conversations import router as conversations_router  # noqa: E402 — spec 003
+from app.api.meddicc import router as meddicc_router  # noqa: E402 — spec 003
+from app.api.scenario_cards_router import router as scenario_cards_router  # noqa: E402 — spec 003
 
 app.include_router(auth_router, prefix="/api/v1", tags=["auth"])
 app.include_router(leads_router, prefix="/api/v1", tags=["leads"])
@@ -124,6 +131,9 @@ app.include_router(webhooks_router, prefix="/api/v1", tags=["webhooks"])
 app.include_router(dashboard_router, prefix="/api/v1", tags=["dashboard"])
 app.include_router(notifications_router, prefix="/api/v1", tags=["notifications"])
 app.include_router(agent_router, prefix="/api/v1", tags=["agent"])
+app.include_router(conversations_router, prefix="/api/v1", tags=["conversations"])
+app.include_router(meddicc_router, prefix="/api/v1", tags=["meddicc"])
+app.include_router(scenario_cards_router, prefix="/api/v1", tags=["scenario-cards"])
 
 
 @app.get("/")

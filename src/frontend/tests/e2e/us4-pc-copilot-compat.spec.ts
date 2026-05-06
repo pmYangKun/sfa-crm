@@ -34,9 +34,8 @@ test.describe('US4: PC Copilot 兼容性（FR-028）', () => {
     await page.getByTestId('role-card-sales01').click();
     await expect(page).toHaveURL(/\/dashboard/, { timeout: 10_000 });
 
-    // 打开 PC chat 面板（点右下角 toggle 按钮）
-    await page.getByTestId('chat-toggle-btn').click();
-    await expect(page.getByTestId('chat-panel')).toBeVisible();
+    // PC chat panel 登录后默认展开（commit 27033b9 后行为），无需点 toggle-btn
+    await expect(page.getByTestId('chat-panel')).toBeVisible({ timeout: 10_000 });
 
     // 发消息
     await page.fill('input[placeholder="输入消息..."]', '帮我建一条深圳前海微链');
@@ -62,7 +61,8 @@ test.describe('US4: PC Copilot 兼容性（FR-028）', () => {
     await page.goto('/login');
     await page.getByTestId('role-card-sales01').click();
     await expect(page).toHaveURL(/\/dashboard/, { timeout: 10_000 });
-    await page.getByTestId('chat-toggle-btn').click();
+    // PC chat panel 登录后默认展开
+    await expect(page.getByTestId('chat-panel')).toBeVisible({ timeout: 10_000 });
     await page.fill('input[placeholder="输入消息..."]', 'test');
     await page.locator('button[type="submit"]').click();
 

@@ -18,7 +18,9 @@ from app.models.auth import (
 from app.models.chat_audit import ChatAudit  # noqa: F401 — spec 002
 from app.models.config import SystemConfig
 from app.models.contact import Contact, ContactRelation  # noqa: F401
+from app.models.conversation import Conversation  # noqa: F401 — spec 003
 from app.models.customer import Customer  # noqa: F401
+from app.models.lead_meddicc_evidence import LeadMeddiccEvidence  # noqa: F401 — spec 003
 from app.models.followup import FollowUp  # noqa: F401
 from app.models.key_event import KeyEvent  # noqa: F401
 from app.models.lead import Lead  # noqa: F401
@@ -183,6 +185,31 @@ DEFAULT_CONFIGS = [
 
 你完全有能力做这个分析，不需要额外的报表工具。
 
+## MEDDICC 评估必须读已持久化数据（spec 003）
+
+凡是用户问"MEDDICC / 评分 / 销售进展 / 7 个维度 / 各维度状态"等类问询，且锁定到某条具体线索：
+1. 用 search_leads 拿到 lead_id
+2. **必须**调 `get_lead_meddicc(lead_id)` 拿仪表盘已持久化的 7 维数据
+3. 回复直接引用工具返回的 `score / completion / dimensions[].is_lit / evidence_count / evidences`，**不要**根据跟进记录自己重推 MEDDICC
+
+**Why：** 仪表盘的数据是后端 `meddicc_extractor.analyze()` 跑过的权威结果。Chat 自己根据 followups 现推会跟仪表盘对不上，用户对照详情页会发现"两个数字不一样"，演示翻车。如果 `last_analyzed_at` 显示数据旧了，建议用户去详情页点"重新分析"按钮。
+
+## 详情页跳转规则（spec 003 — MEDDICC 销售视角）
+
+当用户的问题指向**某条具体线索**（用 search_leads / get_lead_detail 命中了一条 lead），且属于"分析/打分/跟进情况/MEDDICC/销售进展"类问询（而不是写动作），你**必须**在文字回复结尾追加一个查看详情按钮：
+
+格式：`[[nav:查看 XX 详情|/leads/{lead_id}]]`（XX = 公司简称，不是动作词）
+
+例：
+- 用户问"前海微链最近怎么样" → 你查询完汇总分析 → 末尾加 `[[nav:查看 前海微链 详情|/leads/abc-def-...]]`
+- 用户问"北京数字颗粒科技最近 MEDDICC 情况" → 末尾加 `[[nav:查看 数字颗粒 详情|/leads/...]]`
+
+**为什么必须加：** 详情页有 MEDDICC 仪表盘（7 维亮灯 + Score）、对话录入、场景卡演示，用户口头问询其实最终需要去那里看证据细节。不主动给跳转按钮 = AI 偷懒，把寻找成本甩给用户。
+
+**例外：** 列表型问询（用户问"华南有哪些线索"）不要给单条跳转按钮，列出公司名即可；但如果用户后续锁定到一条，再加按钮。
+
+不要把这个规则跟"写动作 navigate_*"搞混——这里是读分析场景**自己拼**详情页 URL（已经从工具返回拿到了 lead_id），不调 navigate_* 工具。
+
 ## 其他规则
 - 用中文回答，语气专业简洁
 - 不要暴露技术细节（如 ID、API 等）
@@ -219,18 +246,35 @@ def init_db():
 
     create_db_and_tables()
 
+    # ── spec 003 schema migration: Lead 表加 3 列（idempotent，已存在则跳过） ──
+    from sqlmodel import text
+    with Session(engine) as s:
+        existing_cols = {r[1] for r in s.exec(text("PRAGMA table_info(lead)"))}
+        if "meddicc_score" not in existing_cols:
+            s.exec(text("ALTER TABLE lead ADD COLUMN meddicc_score FLOAT"))
+        if "meddicc_completion" not in existing_cols:
+            s.exec(text("ALTER TABLE lead ADD COLUMN meddicc_completion INTEGER DEFAULT 0"))
+        if "meddicc_last_analyzed_at" not in existing_cols:
+            s.exec(text("ALTER TABLE lead ADD COLUMN meddicc_last_analyzed_at TEXT"))
+        s.commit()
+
     with Session(engine) as session:
         # spec 002 二轮：在 short-circuit 之前先幂等补齐 SystemConfig 默认值。
         # 场景：spec 001 老 DB 升级到 spec 002 代码，init_db 检测到已 seed 直接 return →
         # 新增的 SystemConfig key（限流值/熔断值/重置开关/prompt_guard 词表）永远不会
         # 注入到 DB → 业务回退到代码硬编默认。这里 INSERT 缺失的 key（不覆盖已存在），
         # 保证升级路径也能拿到 spec 002 默认行为。
-        existing_keys = {
-            row.key for row in session.exec(select(SystemConfig)).all()
-        }
+        #
+        # 用 SQLite INSERT OR IGNORE 直接走数据库幂等，不依赖应用层先 SELECT 再 add 的
+        # check-then-act（前者在 backend 跑着 reset-demo / 多进程同时 init 的场景里会
+        # race —— 已观察到 UNIQUE constraint failed: system_config.key 崩 init_db）。
+        from sqlmodel import text as _sql_text
+        _ins = _sql_text(
+            "INSERT OR IGNORE INTO system_config (key, value, description, updated_at) "
+            "VALUES (:k, :v, :d, CURRENT_TIMESTAMP)"
+        )
         for key, value, desc in DEFAULT_CONFIGS:
-            if key not in existing_keys:
-                session.add(SystemConfig(key=key, value=value, description=desc))
+            session.connection().execute(_ins, {"k": key, "v": value, "d": desc})
         session.commit()
 
         # Skip if already initialized
@@ -333,9 +377,8 @@ def init_db():
         session.flush()
 
         # ── System config ─────────────────────────────────────────────────
-        for key, value, desc in DEFAULT_CONFIGS:
-            session.add(SystemConfig(key=key, value=value, description=desc))
-
+        # 注：DEFAULT_CONFIGS 已在文件顶部 spec 002 二轮 backfill 段（INSERT OR IGNORE）
+        # 写入，无需再 session.add 一遍 —— 否则在 fresh init 路径会触发 UNIQUE 冲突。
         session.commit()
 
         # ── Indexes (T014) ────────────────────────────────────────────────

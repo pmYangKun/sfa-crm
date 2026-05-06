@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { fieldLabel, displayValue } from '@/lib/parse-nav-url';
+import { fieldLabel, displayValue, fieldKind, fieldOptions } from '@/lib/parse-nav-url';
 import { ChatFormCardState } from './chat-form-card';
 
 interface MobileFormSheetProps {
@@ -106,7 +106,17 @@ export default function MobileFormSheet({ open, card, onClose, onSubmit }: Mobil
             </div>
           )}
           {fields.length === 0 ? (
-            <p style={{ color: '#999', fontSize: 14 }}>AI 没有提供预填字段，请直接用 PC 端操作。</p>
+            supported ? (
+              <div style={{
+                padding: 16, background: '#f6ffed', border: '1px solid #b7eb8f',
+                borderRadius: 6, color: '#389e0d', fontSize: 14, lineHeight: 1.6,
+              }}>
+                <div style={{ marginBottom: 6, fontWeight: 600 }}>{card.parsed.typeLabel}</div>
+                确认提交后将立即执行。点击下方"确认提交"。
+              </div>
+            ) : (
+              <p style={{ color: '#999', fontSize: 14 }}>AI 没有提供预填字段，请直接用 PC 端操作。</p>
+            )
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: supported ? 0 : 12 }}>
               {fields.map((key) => {
@@ -117,29 +127,55 @@ export default function MobileFormSheet({ open, card, onClose, onSubmit }: Mobil
                     <label style={{ display: 'block', fontSize: 12, color: missing ? '#cf1322' : '#595959', marginBottom: 4 }}>
                       {fieldLabel(key)}{required.includes(key) && <span style={{ color: '#cf1322' }}>*</span>}
                     </label>
-                    {key === 'fu_content' || key === 'ke_content' ? (
-                      <textarea
-                        value={values[key] ?? ''}
-                        onChange={(e) => setValues({ ...values, [key]: e.target.value })}
-                        data-testid={`sheet-field-${key}`}
-                        rows={3}
-                        style={{
-                          width: '100%', padding: 10, border: `1px solid ${borderColor}`,
-                          borderRadius: 6, fontSize: 14, outline: 'none',
-                          boxSizing: 'border-box', fontFamily: 'inherit', resize: 'vertical',
-                        }}
-                      />
-                    ) : (
-                      <input
-                        value={values[key] ?? ''}
-                        onChange={(e) => setValues({ ...values, [key]: e.target.value })}
-                        data-testid={`sheet-field-${key}`}
-                        style={{
-                          width: '100%', padding: '10px 12px', border: `1px solid ${borderColor}`,
-                          borderRadius: 6, fontSize: 14, outline: 'none', boxSizing: 'border-box',
-                        }}
-                      />
-                    )}
+                    {(() => {
+                      const kind = fieldKind(key);
+                      if (kind === 'textarea') {
+                        return (
+                          <textarea
+                            value={values[key] ?? ''}
+                            onChange={(e) => setValues({ ...values, [key]: e.target.value })}
+                            data-testid={`sheet-field-${key}`}
+                            rows={3}
+                            style={{
+                              width: '100%', padding: 10, border: `1px solid ${borderColor}`,
+                              borderRadius: 6, fontSize: 14, outline: 'none',
+                              boxSizing: 'border-box', fontFamily: 'inherit', resize: 'vertical',
+                            }}
+                          />
+                        );
+                      }
+                      if (kind === 'select') {
+                        const opts = fieldOptions(key);
+                        return (
+                          <select
+                            value={values[key] ?? ''}
+                            onChange={(e) => setValues({ ...values, [key]: e.target.value })}
+                            data-testid={`sheet-field-${key}`}
+                            style={{
+                              width: '100%', padding: '10px 12px', border: `1px solid ${borderColor}`,
+                              borderRadius: 6, fontSize: 14, outline: 'none', boxSizing: 'border-box',
+                              background: '#fff',
+                            }}
+                          >
+                            <option value="">请选择...</option>
+                            {opts.map((o) => (
+                              <option key={o.value} value={o.value}>{o.label}</option>
+                            ))}
+                          </select>
+                        );
+                      }
+                      return (
+                        <input
+                          value={values[key] ?? ''}
+                          onChange={(e) => setValues({ ...values, [key]: e.target.value })}
+                          data-testid={`sheet-field-${key}`}
+                          style={{
+                            width: '100%', padding: '10px 12px', border: `1px solid ${borderColor}`,
+                            borderRadius: 6, fontSize: 14, outline: 'none', boxSizing: 'border-box',
+                          }}
+                        />
+                      );
+                    })()}
                     {missing && (
                       <div style={{ fontSize: 11, color: '#cf1322', marginTop: 2 }}>
                         必填字段，AI 没能从消息里提取，请手动补充

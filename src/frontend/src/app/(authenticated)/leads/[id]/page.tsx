@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { Lead, Contact, FollowUp, KeyEvent, PaginatedResponse } from '@/types';
 import KeyEventForm from '@/components/leads/key-event-form';
+import MeddiccPanel from '@/components/lead/MeddiccPanel';
 
 interface LeadDetail extends Lead {
   contacts: Contact[];
@@ -145,7 +146,7 @@ export default function LeadDetailPage() {
 
       <div style={{ background: '#fff', padding: 24, borderRadius: 8, marginBottom: 24 }}>
         <h1 style={{ fontSize: 24, marginBottom: 16 }}>{lead.company_name}</h1>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 16 }}>
           <div><div style={{ color: '#999', fontSize: 13 }}>状态</div><div>{stageLabel}</div></div>
           <div><div style={{ color: '#999', fontSize: 13 }}>大区</div><div>{lead.region}</div></div>
           <div><div style={{ color: '#999', fontSize: 13 }}>来源</div><div>{sourceLabel}</div></div>
@@ -154,7 +155,7 @@ export default function LeadDetailPage() {
           <div><div style={{ color: '#999', fontSize: 13 }}>创建时间</div><div>{new Date(lead.created_at).toLocaleString()}</div></div>
         </div>
         {lead.stage === 'active' && (
-          <div id="actions" style={{ display: 'flex', gap: 8, marginTop: 20, paddingTop: 16, borderTop: '1px solid #f0f0f0' }}>
+          <div id="actions" style={{ display: 'flex', gap: 8, marginTop: 20, paddingTop: 16, borderTop: '1px solid #f0f0f0', flexWrap: 'wrap' }}>
             <button onClick={handleConvert} disabled={!!actionLoading} style={{
               padding: '6px 16px', background: '#52c41a', color: '#fff',
               border: 'none', borderRadius: 4, cursor: actionLoading ? 'not-allowed' : 'pointer',
@@ -181,35 +182,40 @@ export default function LeadDetailPage() {
       <div style={{ background: '#fff', padding: 24, borderRadius: 8, marginBottom: 24 }}>
         <h2 style={{ fontSize: 18, marginBottom: 16 }}>联系人</h2>
         {lead.contacts.length === 0 ? <p style={{ color: '#999' }}>暂无联系人</p> : (
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead>
-              <tr style={{ borderBottom: '2px solid #f0f0f0' }}>
-                <th style={{ padding: '8px 12px', textAlign: 'left' }}>姓名</th>
-                <th style={{ padding: '8px 12px', textAlign: 'left' }}>职务</th>
-                <th style={{ padding: '8px 12px', textAlign: 'left' }}>手机</th>
-                <th style={{ padding: '8px 12px', textAlign: 'left' }}>微信</th>
-                <th style={{ padding: '8px 12px', textAlign: 'left' }}>KP</th>
-              </tr>
-            </thead>
-            <tbody>
-              {lead.contacts.map(c => (
-                <tr key={c.id} style={{ borderBottom: '1px solid #f0f0f0' }}>
-                  <td style={{ padding: '8px 12px' }}>{c.name}</td>
-                  <td style={{ padding: '8px 12px' }}>{c.role || '-'}</td>
-                  <td style={{ padding: '8px 12px' }}>{c.phone || '-'}</td>
-                  <td style={{ padding: '8px 12px' }}>{c.wechat_id || '-'}</td>
-                  <td style={{ padding: '8px 12px' }}>{c.is_key_decision_maker ? '是' : '否'}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <div style={{ display: 'grid', gap: 12 }}>
+            {lead.contacts.map(c => (
+              <div key={c.id} style={{
+                padding: 12, border: '1px solid #f0f0f0', borderRadius: 6,
+                display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: 8,
+              }}>
+                <div>
+                  <div style={{ fontSize: 12, color: '#999' }}>姓名</div>
+                  <div style={{ fontWeight: 500 }}>
+                    {c.name}{c.is_key_decision_maker && <span style={{ marginLeft: 6, padding: '1px 6px', background: '#fff7e6', color: '#fa8c16', borderRadius: 3, fontSize: 11 }}>KP</span>}
+                  </div>
+                </div>
+                <div>
+                  <div style={{ fontSize: 12, color: '#999' }}>职务</div>
+                  <div>{c.role || '-'}</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: 12, color: '#999' }}>手机</div>
+                  <div>{c.phone || '-'}</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: 12, color: '#999' }}>微信</div>
+                  <div>{c.wechat_id || '-'}</div>
+                </div>
+              </div>
+            ))}
+          </div>
         )}
       </div>
 
       {/* Follow-ups */}
       <div id="followup" style={{ background: '#fff', padding: 24, borderRadius: 8, marginBottom: 24 }}>
         <h2 style={{ fontSize: 18, marginBottom: 16 }}>跟进记录</h2>
-        <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+        <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
           <select value={fuType} onChange={e => setFuType(e.target.value)}
             style={{ padding: '6px 12px', border: '1px solid #d9d9d9', borderRadius: 4 }}>
             <option value="phone">电话</option>
@@ -218,7 +224,7 @@ export default function LeadDetailPage() {
             <option value="other">其他</option>
           </select>
           <input placeholder="跟进内容..." value={fuContent} onChange={e => setFuContent(e.target.value)}
-            style={{ flex: 1, padding: '6px 12px', border: '1px solid #d9d9d9', borderRadius: 4 }} />
+            style={{ flex: '1 1 200px', minWidth: 0, padding: '6px 12px', border: '1px solid #d9d9d9', borderRadius: 4 }} />
           <button onClick={handleAddFollowup} disabled={submitting} style={{
             padding: '6px 16px', background: '#1890ff', color: '#fff',
             border: 'none', borderRadius: 4, cursor: 'pointer',
@@ -242,6 +248,9 @@ export default function LeadDetailPage() {
           </div>
         )}
       </div>
+
+      {/* MEDDICC Panel — spec 003: 仪表盘 + 场景卡 + 对话记录 */}
+      <MeddiccPanel leadId={id} />
 
       {/* Key Events */}
       <div id="keyevent" style={{ background: '#fff', padding: 24, borderRadius: 8 }}>

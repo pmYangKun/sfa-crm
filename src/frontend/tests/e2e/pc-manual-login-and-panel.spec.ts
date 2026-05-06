@@ -65,10 +65,11 @@ test.describe('PC Dashboard OnboardingPanel：文案 + 视觉', () => {
     await expect(page).toHaveURL(/\/dashboard/, { timeout: 10_000 });
   });
 
-  test('引导区文案改成"可以直接点击下面的卡片，快速体验这种对话式 CRM 的能力"', async ({ page }) => {
+  test('引导区文案：点击卡片 → 自动带入示例提问到 AI 助手', async ({ page }) => {
     const panel = page.getByTestId('onboarding-panel');
     await expect(panel).toBeVisible();
-    await expect(panel).toContainText('可以直接点击下面的卡片');
+    await expect(panel).toContainText('点击下面的卡片');
+    await expect(panel).toContainText('自动带入');
     await expect(panel).toContainText('对话式 CRM');
   });
 

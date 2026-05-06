@@ -35,7 +35,7 @@ const FIELD_LABELS: Record<string, string> = {
   fu_type: '跟进类型',
   fu_content: '跟进内容',
   ke_type: '事件类型',
-  ke_content: '事件内容',
+  ke_content: '事件备注',
   unified_code: '统一社会信用代码',
 };
 
@@ -57,10 +57,40 @@ const FU_TYPE_LABELS: Record<string, string> = {
   other: '其他',
 };
 
+const KE_TYPE_LABELS: Record<string, string> = {
+  visited_kp: '拜访 KP',
+  book_sent: '送书',
+  attended_small_course: '参加小课',
+  purchased_big_course: '购买大课',
+  contact_relation_discovered: '发现人脉关系',
+};
+
+const REGION_LABELS: Record<string, string> = {
+  华南: '华南', 华东: '华东', 华北: '华北', 华中: '华中', 西南: '西南', 西北: '西北', 东北: '东北',
+};
+
 export function displayValue(key: string, value: string): string {
   if (key === 'source') return SOURCE_LABELS[value] ?? value;
   if (key === 'fu_type') return FU_TYPE_LABELS[value] ?? value;
+  if (key === 'ke_type') return KE_TYPE_LABELS[value] ?? value;
   return value;
+}
+
+/** 字段渲染 hint：text / textarea / select。mobile-form-sheet 据此选输入控件。 */
+export type FieldKind = 'text' | 'textarea' | 'select';
+
+export function fieldKind(key: string): FieldKind {
+  if (key === 'fu_content' || key === 'ke_content') return 'textarea';
+  if (key === 'source' || key === 'fu_type' || key === 'ke_type' || key === 'region') return 'select';
+  return 'text';
+}
+
+export function fieldOptions(key: string): { value: string; label: string }[] {
+  if (key === 'source') return Object.entries(SOURCE_LABELS).map(([v, l]) => ({ value: v, label: l }));
+  if (key === 'fu_type') return Object.entries(FU_TYPE_LABELS).map(([v, l]) => ({ value: v, label: l }));
+  if (key === 'ke_type') return Object.entries(KE_TYPE_LABELS).map(([v, l]) => ({ value: v, label: l }));
+  if (key === 'region') return Object.entries(REGION_LABELS).map(([v, l]) => ({ value: v, label: l }));
+  return [];
 }
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -136,15 +166,53 @@ export function parseNavUrl(url: string, label: string): ParsedNav {
         rawLabel: label,
         leadId,
         prefill,
+        submit: {
+          method: 'POST',
+          path: `/leads/${leadId}/key-events`,
+          requiredFields: ['ke_type'],
+          buildBody: (p) => ({
+            type: p.ke_type ?? 'visited_kp',
+            occurred_at: NOW_ISO(),
+            payload: p.ke_content ? { note: p.ke_content } : {},
+          }),
+        },
       };
     }
     if (hash === 'actions') {
+      // 从 label 推断动作（"转化客户" / "释放线索" / "标记流失"）
+      let action: 'convert' | 'release' | 'mark-lost' = 'convert';
+      let actionLabel = '转化客户';
+      if (label.includes('释放')) {
+        action = 'release';
+        actionLabel = '释放线索';
+      } else if (label.includes('流失') || label.includes('标记')) {
+        action = 'mark-lost';
+        actionLabel = '标记流失';
+      }
       return {
         type: 'lead-action',
-        typeLabel: '线索状态变更',
+        typeLabel: actionLabel,
         rawLabel: label,
         leadId,
         prefill,
+        submit: {
+          method: 'POST',
+          path: `/leads/${leadId}/${action}`,
+          requiredFields: [],
+          buildBody: () => ({}),
+        },
+      };
+    }
+
+    // /leads/{id} (no hash) → mobile 直接跳转详情页（不显示 sheet）
+    if (!hash) {
+      return {
+        type: 'lead-action',
+        typeLabel: '查看详情',
+        rawLabel: label,
+        leadId,
+        prefill,
+        // 无 submit 块；mobile 端走纯导航路径在 chat-fullscreen 里处理
       };
     }
   }

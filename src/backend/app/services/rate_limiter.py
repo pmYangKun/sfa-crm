@@ -8,6 +8,8 @@ Spec ref: specs/002-public-deploy-hardening/research.md Decision 1
 - get_ip_only_key: 仅 IP，未登录端点或对 IP 单独限流时使用
 """
 
+import os
+
 from fastapi import Request
 from slowapi import Limiter
 from slowapi.util import get_remote_address
@@ -46,4 +48,7 @@ def get_ip_only_key(request: Request) -> str:
 # 向后兼容别名（spec 001 既有代码用 get_user_id_key）
 get_user_id_key = get_ip_user_key
 
-limiter = Limiter(key_func=get_ip_user_key)
+_RATE_LIMIT_DISABLED = os.environ.get("DISABLE_RATE_LIMIT") == "1"
+# 默认开启限流（生产 / dev 都开）；e2e 套件压测时可设 DISABLE_RATE_LIMIT=1 跳过，
+# 不影响单元测试和生产路径。
+limiter = Limiter(key_func=get_ip_user_key, enabled=not _RATE_LIMIT_DISABLED)
