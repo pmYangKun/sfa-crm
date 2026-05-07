@@ -312,6 +312,12 @@ def analyze(lead_id: str, db: Session, current_user_id: Optional[str] = None) ->
         score, completion = recompute(lead_id, db, mark_analyzed=True)
         db.commit()
         last_at = lead.meddicc_last_analyzed_at or datetime.now(timezone.utc).isoformat()
+        # spec 004: 即便空上下文也写 snapshot，趋势图能显示 baseline=0
+        try:
+            from app.services.meddicc_history_service import write_snapshot
+            write_snapshot(lead_id, "analyze", db, commit=True)
+        except Exception as e:  # pragma: no cover
+            logger.warning("write_snapshot(analyze, empty) failed: %s", e)
         return AnalyzeResult(
             lead_id=lead_id,
             score=score,
@@ -375,6 +381,13 @@ def analyze(lead_id: str, db: Session, current_user_id: Optional[str] = None) ->
     db.commit()
 
     last_at = db.get(Lead, lead_id).meddicc_last_analyzed_at  # type: ignore
+
+    # 8. spec 004: 写一行 MEDDICC history snapshot（trigger='analyze'）
+    try:
+        from app.services.meddicc_history_service import write_snapshot
+        write_snapshot(lead_id, "analyze", db, commit=True)
+    except Exception as e:  # pragma: no cover — 防御式，不让 snapshot 失败影响主流程
+        logger.warning("write_snapshot(analyze) failed for lead %s: %s", lead_id, e)
 
     return AnalyzeResult(
         lead_id=lead_id,
