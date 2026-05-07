@@ -29,6 +29,7 @@ const ADMIN_ITEMS: NavItem[] = [
 const MANAGER_ITEMS: NavItem[] = [
   { label: '团队线索', href: '/leads/team' },
   { label: '团队日报', href: '/reports/team' },
+  { label: '经理 Pipeline', href: '/manager-pipeline' },
 ];
 
 export default function Sidebar() {

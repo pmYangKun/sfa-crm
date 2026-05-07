@@ -112,7 +112,7 @@ export default function MobileFormSheet({ open, card, onClose, onSubmit }: Mobil
                 borderRadius: 6, color: '#389e0d', fontSize: 14, lineHeight: 1.6,
               }}>
                 <div style={{ marginBottom: 6, fontWeight: 600 }}>{card.parsed.typeLabel}</div>
-                确认提交后将立即执行。点击下方"确认提交"。
+                确认提交后将立即执行。点击下方&quot;确认提交&quot;。
               </div>
             ) : (
               <p style={{ color: '#999', fontSize: 14 }}>AI 没有提供预填字段，请直接用 PC 端操作。</p>

@@ -18,9 +18,11 @@ export function pcToMobilePath(pathname: string): string {
     '/public-pool': '/m/leads',
     '/reports': '/m/chat',
     '/reports/team': '/m/chat',
+    '/manager-pipeline': '/m/manager-pipeline',
   };
   if (exact[pathname]) return exact[pathname];
 
+  if (pathname.startsWith('/manager-pipeline')) return '/m/manager-pipeline';
   if (pathname.startsWith('/leads/')) return '/m/chat';
   if (pathname.startsWith('/customers/')) return '/m/customers';
   if (pathname.startsWith('/admin')) return '/m/me';
@@ -37,7 +39,9 @@ export function mobileToPcPath(pathname: string): string {
     '/m/customers': '/customers',
     '/m/followups': '/dashboard',
     '/m/me': '/dashboard',
+    '/m/manager-pipeline': '/manager-pipeline',
   };
   if (exact[pathname]) return exact[pathname];
+  if (pathname.startsWith('/m/manager-pipeline')) return '/manager-pipeline';
   return '/dashboard';
 }

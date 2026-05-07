@@ -114,6 +114,8 @@ from app.api.agent import router as agent_router  # noqa: E402
 from app.api.conversations import router as conversations_router  # noqa: E402 — spec 003
 from app.api.meddicc import router as meddicc_router  # noqa: E402 — spec 003
 from app.api.scenario_cards_router import router as scenario_cards_router  # noqa: E402 — spec 003
+from app.api.manager_pipeline import router as manager_pipeline_router  # noqa: E402 — spec 004
+from app.api.forecast_validation import router as forecast_validation_router  # noqa: E402 — spec 004
 
 app.include_router(auth_router, prefix="/api/v1", tags=["auth"])
 app.include_router(leads_router, prefix="/api/v1", tags=["leads"])
@@ -134,6 +136,8 @@ app.include_router(agent_router, prefix="/api/v1", tags=["agent"])
 app.include_router(conversations_router, prefix="/api/v1", tags=["conversations"])
 app.include_router(meddicc_router, prefix="/api/v1", tags=["meddicc"])
 app.include_router(scenario_cards_router, prefix="/api/v1", tags=["scenario-cards"])
+app.include_router(manager_pipeline_router, prefix="/api/v1", tags=["manager-pipeline"])
+app.include_router(forecast_validation_router, prefix="/api/v1", tags=["forecast-validation"])
 
 
 @app.get("/")

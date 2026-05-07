@@ -189,6 +189,36 @@ TOOL_DEFINITIONS = [
             "required": ["lead_id"],
         },
     },
+    # ── spec 004：经理视角团队级 4 个新 tool ──
+    {
+        "name": "scan_team_warnings",
+        "mode": "read",
+        "description": "扫描当前 user 数据范围内（DataScope）所有 active lead，返回触发了 warning 的 lead 列表 + 每条命中的 warning code 列表。回答\"团队哪几单存在风险\"\"我有哪些 lead 出问题\"等问题时调用。",
+        "parameters": {"type": "object", "properties": {}},
+    },
+    {
+        "name": "team_meddicc_summary",
+        "mode": "read",
+        "description": "返回团队 MEDDICC 概览：avg score / 7 维亮灯密度 / Top 3 + Bottom 3 sales。回答\"团队 MEDDICC 完成度\"\"团队整体销售健康度\"类问题。",
+        "parameters": {"type": "object", "properties": {}},
+    },
+    {
+        "name": "top_attention_deals",
+        "mode": "read",
+        "description": "返回当前最值得关注的 N 条 lead（按 warning 数 + score 反向 + amount 加权排序）。回答\"今天我该重点看哪几单\"\"哪些 lead 最危险\"等问题。",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "limit": {"type": "integer", "description": "返回多少条，默认 5"},
+            },
+        },
+    },
+    {
+        "name": "forecast_category_distribution",
+        "mode": "read",
+        "description": "返回 6 个 forecast bucket 各自的 lead 数 + warnings 数 + 总金额。回答\"团队 pipeline 分布情况\"\"必赢有几单\"等问题。注意：默认仅播报 count + warnings_count，金额仅在用户明确问时才说。",
+        "parameters": {"type": "object", "properties": {}},
+    },
 ]
 
 
@@ -435,6 +465,44 @@ def execute_tool(
                 "label": f"标记流失{': ' + name if name else ''}",
                 "url": f"/leads/{lead_id}#actions",
             }
+
+        # ── spec 004 团队级 chat tool ──────────────────────────────────────
+        elif tool_name == "scan_team_warnings":
+            from app.services import manager_pipeline_service as mps
+            if current_user is None:
+                return {"success": False, "message": "未登录"}
+            result = mps.scan_team_warnings(current_user, session)
+            result["success"] = True
+            result["pipeline_url"] = "/manager-pipeline"
+            return result
+
+        elif tool_name == "team_meddicc_summary":
+            from app.services import manager_pipeline_service as mps
+            if current_user is None:
+                return {"success": False, "message": "未登录"}
+            result = mps.team_meddicc_summary(current_user, session)
+            result["success"] = True
+            result["pipeline_url"] = "/manager-pipeline"
+            return result
+
+        elif tool_name == "top_attention_deals":
+            from app.services import manager_pipeline_service as mps
+            if current_user is None:
+                return {"success": False, "message": "未登录"}
+            limit = int(args.get("limit") or 5)
+            result = mps.top_attention_deals(current_user, session, limit=limit)
+            result["success"] = True
+            result["pipeline_url"] = "/manager-pipeline"
+            return result
+
+        elif tool_name == "forecast_category_distribution":
+            from app.services import manager_pipeline_service as mps
+            if current_user is None:
+                return {"success": False, "message": "未登录"}
+            result = mps.forecast_category_distribution(current_user, session)
+            result["success"] = True
+            result["pipeline_url"] = "/manager-pipeline"
+            return result
 
         else:
             return {"success": False, "message": f"Unknown tool: {tool_name}"}

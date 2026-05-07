@@ -37,7 +37,7 @@ export const ROLE_CARDS: RoleCard[] = [
   },
 ];
 
-export type OnboardingCardType = 'demo' | 'switch-role';
+export type OnboardingCardType = 'demo' | 'switch-role' | 'navigate';
 export type Platform = 'pc' | 'mobile' | 'both';
 
 export interface OnboardingCard {
@@ -55,6 +55,8 @@ export interface OnboardingCard {
   fullPrompt?: string;
   /** 切换目标账号（type === "switch-role" 时必填） */
   switchTo?: 'sales01' | 'manager01';
+  /** 跳转目标 URL（type === "navigate" 时必填）—— PC + Mobile 各自走自己的 path */
+  navigateTo?: { pc: string; mobile: string };
   /** 对应 demo case 编号（溯源 docs/copilot-cases.md） */
   caseRef?: string;
 }
@@ -130,10 +132,19 @@ export const ONBOARDING_CARDS: OnboardingCard[] = [
     id: 'm01-meddicc',
     role: 'manager01',
     platform: 'both',
+    type: 'navigate',
+    shortTitle: '📊 团队 MEDDICC 完成度（进入经理 Pipeline）',
+    navigateTo: { pc: '/manager-pipeline', mobile: '/m/manager-pipeline' },
+    caseRef: 'spec 004',
+  },
+  {
+    id: 'm01-pipeline-warnings',
+    role: 'manager01',
+    platform: 'both',
     type: 'demo',
-    shortTitle: '📊 看团队哪条线索 MEDDICC 最完整',
-    fullPrompt: '团队里 MEDDICC 完成度最高的线索是哪一条？',
-    caseRef: 'spec 003',
+    shortTitle: '🚨 团队哪几单存在风险',
+    fullPrompt: '团队哪几单存在风险？',
+    caseRef: 'spec 004 案例 1',
   },
   {
     id: 'm01-3',

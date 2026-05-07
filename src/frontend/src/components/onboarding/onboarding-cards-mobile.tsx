@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   OnboardingCard as OnboardingCardData,
   getOnboardingCardsForRole,
@@ -18,6 +19,7 @@ interface OnboardingCardsMobileProps {
 
 export default function OnboardingCardsMobile({ currentLoginName, collapsed }: OnboardingCardsMobileProps) {
   const { quickSwitchRole } = useAuth();
+  const router = useRouter();
   const [confirmTarget, setConfirmTarget] = useState<string | null>(null);
 
   if (collapsed) return null;
@@ -31,6 +33,8 @@ export default function OnboardingCardsMobile({ currentLoginName, collapsed }: O
       window.dispatchEvent(new CustomEvent(PENDING_PROMPT_EVENT, { detail: card.fullPrompt }));
     } else if (card.type === 'switch-role' && card.switchTo) {
       setConfirmTarget(card.switchTo);
+    } else if (card.type === 'navigate' && card.navigateTo) {
+      router.push(card.navigateTo.mobile);
     }
   };
 
@@ -109,6 +113,9 @@ export default function OnboardingCardsMobile({ currentLoginName, collapsed }: O
               <div style={{ fontSize: 13, color: '#595959', lineHeight: 1.6, background: '#fafafa', padding: 8, borderRadius: 4 }}>
                 &quot;{card.fullPrompt}&quot;
               </div>
+            )}
+            {card.type === 'navigate' && (
+              <div style={{ fontSize: 12, color: '#1890ff', fontWeight: 500 }}>前往页面 →</div>
             )}
           </button>
         ))}

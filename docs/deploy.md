@@ -1,8 +1,10 @@
 # SFA CRM 公网部署手册
 
-**适用范围**：spec 002 公网部署安全/治理硬化版本之后
+**适用范围**：spec 002 公网部署安全/治理硬化之后的所有版本
 
 **目标**：把 demo 站从干净的腾讯云 Linux VM 一次性部署到 `https://sfacrm.pmyangkun.com`，30 分钟内完成上线。
+
+**部署原则**：**公网永远跟 master HEAD**。每个 spec 完整 PR + merge 进 master 后立即部署最新代码，不切 tag、不留过渡版本。这样演示站永远代表项目最新形态，回滚只在线上崩溃时才用（见 §十二）。
 
 ---
 
@@ -43,7 +45,7 @@ sudo git clone https://github.com/pmYangKun/sfa-crm /opt/sfa-crm
 sudo chown -R $USER:$USER /opt/sfa-crm
 cd /opt/sfa-crm
 
-# 切到 master 分支（spec 002 已合并的版本）
+# 公网永远跟 master HEAD（spec 002 起原则）
 git checkout master
 git pull origin master
 
