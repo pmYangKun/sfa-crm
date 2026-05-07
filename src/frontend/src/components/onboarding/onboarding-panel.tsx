@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   OnboardingCard as OnboardingCardData,
   getOnboardingCardsForRole,
@@ -15,6 +16,7 @@ export const PENDING_PROMPT_KEY = 'pending_prompt';
 
 export default function OnboardingPanel({ currentLoginName }: { currentLoginName: string }) {
   const { quickSwitchRole } = useAuth();
+  const router = useRouter();
   const [confirmTarget, setConfirmTarget] = useState<string | null>(null);
 
   const cards = getOnboardingCardsForRole(currentLoginName, 'pc');
@@ -28,6 +30,8 @@ export default function OnboardingPanel({ currentLoginName }: { currentLoginName
       window.dispatchEvent(new CustomEvent(PENDING_PROMPT_EVENT, { detail: card.fullPrompt }));
     } else if (card.type === 'switch-role' && card.switchTo) {
       setConfirmTarget(card.switchTo);
+    } else if (card.type === 'navigate' && card.navigateTo) {
+      router.push(card.navigateTo.pc);
     }
   };
 
@@ -156,7 +160,7 @@ function OnboardingCardItem({ card, onClick }: { card: OnboardingCardData; onCli
         </div>
       )}
       <div style={{ fontSize: 12, color: '#1890ff', fontWeight: 500 }}>
-        {isDemo ? '试试看 →' : '切换 →'}
+        {isDemo ? '试试看 →' : card.type === 'navigate' ? '前往页面 →' : '切换 →'}
       </div>
     </button>
   );

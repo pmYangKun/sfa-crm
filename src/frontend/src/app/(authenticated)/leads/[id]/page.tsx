@@ -6,6 +6,7 @@ import { api } from '@/lib/api';
 import { Lead, Contact, FollowUp, KeyEvent, PaginatedResponse } from '@/types';
 import KeyEventForm from '@/components/leads/key-event-form';
 import MeddiccPanel from '@/components/lead/MeddiccPanel';
+import MeddiccTrendChart from '@/components/leads/meddicc-trend-chart';
 
 interface LeadDetail extends Lead {
   contacts: Contact[];
@@ -251,6 +252,15 @@ export default function LeadDetailPage() {
 
       {/* MEDDICC Panel — spec 003: 仪表盘 + 场景卡 + 对话记录 */}
       <MeddiccPanel leadId={id} />
+
+      {/* MEDDICC Score 趋势图 — spec 004 T040 / T041 */}
+      <div
+        id="meddicc-trend"
+        style={{ background: '#fff', padding: 24, borderRadius: 8, marginBottom: 24 }}
+      >
+        <h2 style={{ fontSize: 18, marginBottom: 16 }}>📈 MEDDICC 趋势</h2>
+        <MeddiccTrendChart leadId={id} width={'100%' as unknown as number} height={160} />
+      </div>
 
       {/* Key Events */}
       <div id="keyevent" style={{ background: '#fff', padding: 24, borderRadius: 8 }}>
