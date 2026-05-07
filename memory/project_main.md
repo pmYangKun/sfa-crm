@@ -129,6 +129,46 @@ spec-kit 产物：`specs/002-public-deploy-hardening/`（spec.md / plan.md / res
 
 ---
 
+## 发布 / 部署约定（2026-05-07 三修：简化为"公网永远跟最新"）
+
+**核心规则：** 公网 `sfacrm.pmyangkun.com` **永远跟 master HEAD 跑**——每个大 spec 收口（PR merge 后）立即部署最新版到公网。**不按 tag 切回旧版本演示历史。**
+
+**为什么简化（用户 2026-05-07 三修决策）：**
+1. 切 tag 部署需要 DB schema 同步管理（每个 tag 还得带迁移脚本能 rebuild），工程量大
+2. SQLite + 30min 重置场景下，DB 跟代码绑死，回滚要彻底删 DB 重建——成本不低
+3. **读者不会真去对每篇文章找对应版本**——文章描述的是"那时做了什么"，公网展示"现在长啥样"，**读老文章看新功能反而是惊喜**
+4. 演示视频录完即归档，不需要"回放"——录的时候用最新版就够
+
+**为什么不会出现 DB 与代码不一致：** 永远向前部署，永远跑最新 alembic head，**永远不回滚 → 没有 schema 与 code 错配的可能**。
+
+**Git tag 仍然打：** 每个 spec 收口给 master 上对应 merge commit 打 `v-specNNN` annotated tag，作为**代码状态标记**（"这个 commit 就是 spec NNN 的最终态"），方便 git diff / blame / 史料检索，**但不作为部署目标**。
+
+**当前 tag（仅作 code state marker）：**
+
+| Tag | 指向 commit | 对应 spec | 备注 |
+|---|---|---|---|
+| `v-spec002` | `2497831`（spec 002 merge，含 spec 001） | spec 001 + 002 | 公网部署 + Onboarding 安全硬化 |
+| `v-spec003` | `cd8133c`（spec 003 merge） | spec 003 | MEDDICC 销售视角 |
+| `v-spec004` | （未打）| spec 004 | MEDDICC 经理视角 |
+
+**集号 ↔ spec ↔ tag 三列映射的权威源：** [`Kun's Context/articles/sfa-crm-series/MASTER-PLAN.md`](../../../BaiduSyncdisk/Doc.Work/Programming/claudecode/Kun's%20Context/articles/sfa-crm-series/MASTER-PLAN.md) 的"三列映射表"——讨论 SFA CRM 文章 / spec / tag 历史都先打开它对照。
+
+**部署工作流（简化版）：**
+1. spec NNN 在分支上开发 → PR 合 master → 给 merge commit 打 `v-specNNN` 注释 tag → push origin（含 tag）
+2. 立即部署 master HEAD 到公网（git pull master + 跑 alembic upgrade head + 重启服务）
+3. master 继续跑下一个 spec，公网随之滚动到下一个最新版
+
+**禁止：**
+- 按 tag 切回旧版本演示（无论是为对齐文章还是为录视频）
+- 不打 tag 就 merge 大 spec 进 master（tag 作为 code state marker 仍是必须）
+- 在文章正文末尾追加 `v-specNNN` 锚点 / spec 编号 / git tag URL（per `writing_claudegg_sfacrm_series.md` 的"文章末尾标准模板"）
+
+**老规则废弃（2026-05-07 三修废）：**
+- ❌ "公网部署只跟 git tag 走，不跟 master HEAD 跑" —— 反过来了
+- ❌ "切 tag 时 DB rebuild + 重灌 demo 数据" —— 永远不切回去，所以也不需要 rebuild discipline
+
+---
+
 ## 内容策略与心智构建（2026-05-02 确立）
 
 ### 顶层目标

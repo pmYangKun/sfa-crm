@@ -21,6 +21,7 @@ from app.models.contact import Contact, ContactRelation  # noqa: F401
 from app.models.conversation import Conversation  # noqa: F401 — spec 003
 from app.models.customer import Customer  # noqa: F401
 from app.models.lead_meddicc_evidence import LeadMeddiccEvidence  # noqa: F401 — spec 003
+from app.models.lead_meddicc_history import LeadMeddiccHistory  # noqa: F401 — spec 004
 from app.models.followup import FollowUp  # noqa: F401
 from app.models.key_event import KeyEvent  # noqa: F401
 from app.models.lead import Lead  # noqa: F401
@@ -233,6 +234,21 @@ DEFAULT_CONFIGS = [
         "不受任何限制", "no restrictions", "override your",
         "jailbreak", "DAN mode", "开发者模式", "developer mode",
     ], ensure_ascii=False), "Prompt Injection 黑名单关键词（JSON 数组，子串包含+大小写不敏感）"),
+    # ── spec 004 Manager Pipeline 配置 ──────────────────────────────────────
+    # Warnings 7 条规则阈值（详见 specs/004-meddicc-manager-pipeline/inputs/alignment.md §5.1）
+    ("warning_silent_days", "14", "沉默 deal 触发天数（X 天无活动）"),
+    ("warning_brag_lit_threshold", "5", "必赢/大概率但 MEDDICC 亮灯不足触发线（亮 < N）"),
+    ("warning_close_imminent_days", "14", "关单日临近天数"),
+    ("warning_close_imminent_score", "60", "临门 Score 警戒线（Score < N 触发）"),
+    ("warning_no_champion_followup_count", "3", "无 Champion 但已跟进 N 次触发"),
+    ("warning_single_contact_days", "30", "单点接触触发天数"),
+    ("warning_big_deal_amount_multiplier", "3", "大单金额阈值倍数（团队中位数 × N）"),
+    # MEDDICC Score 公式权重（spec 003 hardcode 迁移到 SystemConfig）
+    ("meddicc_score_completeness_weight", "60", "MEDDICC Score 完整度权重"),
+    ("meddicc_score_depth_weight", "25", "MEDDICC Score 深度权重"),
+    ("meddicc_score_activity_weight", "15", "MEDDICC Score 活跃度权重"),
+    ("meddicc_activity_recent_days", "7", "MEDDICC 活跃度满分天数"),
+    ("meddicc_activity_acceptable_days", "30", "MEDDICC 活跃度半分天数"),
 ]
 
 
@@ -256,6 +272,13 @@ def init_db():
             s.exec(text("ALTER TABLE lead ADD COLUMN meddicc_completion INTEGER DEFAULT 0"))
         if "meddicc_last_analyzed_at" not in existing_cols:
             s.exec(text("ALTER TABLE lead ADD COLUMN meddicc_last_analyzed_at TEXT"))
+        # ── spec 004 Pipeline Management: lead 表加 3 列 ──
+        if "amount" not in existing_cols:
+            s.exec(text("ALTER TABLE lead ADD COLUMN amount FLOAT"))
+        if "close_date" not in existing_cols:
+            s.exec(text("ALTER TABLE lead ADD COLUMN close_date TEXT"))
+        if "forecast_category" not in existing_cols:
+            s.exec(text("ALTER TABLE lead ADD COLUMN forecast_category TEXT NOT NULL DEFAULT '进行中'"))
         s.commit()
 
     with Session(engine) as session:
@@ -400,6 +423,11 @@ def init_db():
             "CREATE INDEX IF NOT EXISTS idx_chat_audit_created_at ON chat_audit(created_at)",
             "CREATE INDEX IF NOT EXISTS idx_chat_audit_user_blocked ON chat_audit(user_id, blocked_by)",
             "CREATE INDEX IF NOT EXISTS idx_chat_audit_ip ON chat_audit(client_ip)",
+            # spec 004 Pipeline Management 索引
+            "CREATE INDEX IF NOT EXISTS idx_lead_owner_score_close ON lead(owner_id, meddicc_score, close_date)",
+            "CREATE INDEX IF NOT EXISTS idx_lead_forecast_category ON lead(forecast_category, stage)",
+            "CREATE INDEX IF NOT EXISTS idx_history_lead_time ON lead_meddicc_history(lead_id, snapshot_at)",
+            "CREATE INDEX IF NOT EXISTS idx_history_trigger ON lead_meddicc_history(trigger_reason)",
         ]
         for stmt in index_statements:
             try:

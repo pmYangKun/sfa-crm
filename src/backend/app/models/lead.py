@@ -29,3 +29,8 @@ class Lead(SQLModel, table=True):
     meddicc_score: Optional[float] = Field(default=None)
     meddicc_completion: int = Field(default=0)
     meddicc_last_analyzed_at: Optional[str] = Field(default=None)
+
+    # ── spec 004 Pipeline Management 字段 ──
+    amount: Optional[float] = Field(default=None)  # 预计成交金额
+    close_date: Optional[str] = Field(default=None)  # 预计关单日期（ISO date）
+    forecast_category: str = Field(default="进行中")  # 6 选 1：进行中/必赢/大概率/乐观估算/已赢单/已丢单
