@@ -1,16 +1,17 @@
 'use client';
 
 import { useRouter, usePathname } from 'next/navigation';
+import { useAuth } from '@/lib/auth-context';
 
 interface Tab {
-  id: 'leads' | 'customers' | 'chat' | 'followups' | 'me';
+  id: 'leads' | 'customers' | 'chat' | 'followups' | 'me' | 'pipeline';
   icon: string;
   label: string;
   href: string;
   raised: boolean;
 }
 
-const TABS: Tab[] = [
+const BASE_TABS: Tab[] = [
   { id: 'leads',     icon: '📋', label: '线索', href: '/m/leads',     raised: false },
   { id: 'customers', icon: '🏢', label: '客户', href: '/m/customers', raised: false },
   { id: 'chat',      icon: '💬', label: 'AI',   href: '/m/chat',      raised: true  },
@@ -18,11 +19,27 @@ const TABS: Tab[] = [
   { id: 'me',        icon: '👤', label: '我的', href: '/m/me',        raised: false },
 ];
 
+// spec 004: manager / admin 看到 "经理 Pipeline" 第 6 个 tab（插在 followups 前面）
+const MANAGER_TAB: Tab = {
+  id: 'pipeline',
+  icon: '🎯',
+  label: 'Pipeline',
+  href: '/m/manager-pipeline',
+  raised: false,
+};
+
 export const TABBAR_HEIGHT = 64;
+
+const MANAGER_ROLES = ['战队队长', '大区总', '销售VP', '督导', '系统管理员'];
 
 export default function KingKongTabbar() {
   const router = useRouter();
   const pathname = usePathname();
+  const { user } = useAuth();
+  const isManager = user?.roles?.some((r) => MANAGER_ROLES.includes(r)) ?? false;
+  const TABS = isManager
+    ? [BASE_TABS[0], BASE_TABS[1], BASE_TABS[2], MANAGER_TAB, BASE_TABS[3], BASE_TABS[4]]
+    : BASE_TABS;
 
   return (
     <nav
@@ -44,7 +61,10 @@ export default function KingKongTabbar() {
       }}
     >
       {TABS.map((t) => {
-        const active = pathname === t.href || (t.id === 'chat' && pathname.startsWith('/m/chat'));
+        const active =
+          pathname === t.href ||
+          (t.id === 'chat' && pathname.startsWith('/m/chat')) ||
+          (t.id === 'pipeline' && pathname.startsWith('/m/manager-pipeline'));
         return (
           <button
             key={t.id}
