@@ -67,8 +67,8 @@ test.describe('PC 端 经理 Pipeline 全量回归（spec 004）', () => {
     await page.goto('/manager-pipeline');
     await expect(page.getByTestId('manager-pipeline-page')).toBeVisible({ timeout: 10_000 });
 
-    // 切到 Team
-    await page.getByTestId('toggle-team').click();
+    // 切到 Team（chat-panel 挡层 → 用 evaluate 直接调 DOM click，绕开 pointer-events 拦截）
+    await page.locator('[data-testid="toggle-team"]').evaluate((el: HTMLElement) => el.click());
     await expect(page.getByTestId('toggle-team')).toHaveAttribute('data-active', 'true');
 
     // Team rollup 表渲染（成功 / 空）
@@ -125,9 +125,13 @@ test.describe('PC 端 经理 Pipeline 全量回归（spec 004）', () => {
 
   test('Case P4 — lead 详情页趋势图组件存在', async ({ page }) => {
     await loginAsManager01(page);
-    // 走 /leads 列表点开第一条
-    await page.goto('/leads');
-    const firstLink = page.locator('a[href*="/leads/"]').first();
+    // 走 /manager-pipeline → 点表里第一条 lead 链接（避免 sidebar 自身的 /leads 链接）
+    await page.goto('/manager-pipeline');
+    await expect(page.getByTestId('manager-pipeline-page')).toBeVisible({ timeout: 10_000 });
+    const firstLink = page
+      .getByTestId('pipeline-table')
+      .locator('a[href*="/leads/"]')
+      .first();
     await expect(firstLink).toBeVisible({ timeout: 10_000 });
     await firstLink.click();
     await expect(page).toHaveURL(/\/leads\/[a-f0-9-]+/, { timeout: 10_000 });

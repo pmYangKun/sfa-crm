@@ -393,6 +393,7 @@ def seed():
             last_followup_at=_ts(35),
             lost_at=_ts(30),
         ))
+        s.flush()  # spec 004 fix: flush lead before contact to satisfy FK
         s.add(Contact(id=_id(), lead_id=lost_lead_id, name="刘总", role="总经理",
                       is_key_decision_maker=True, phone="13800999001"))
         s.flush()

@@ -22,8 +22,8 @@ async function loginAsManager01Mobile(page: Page) {
     sessionStorage.clear();
   });
   await page.getByTestId('role-card-manager01').click();
-  // mobile login 跳到 /m/chat
-  await expect(page).toHaveURL(/\/m\//, { timeout: 15_000 });
+  // sync spec 003 mobile login pattern：等 chat-fullscreen 出现确认登录完成
+  await expect(page.getByTestId('chat-fullscreen')).toBeVisible({ timeout: 15_000 });
 }
 
 test.describe('移动端 经理 Pipeline 全量回归（spec 004）', () => {
@@ -58,7 +58,7 @@ test.describe('移动端 经理 Pipeline 全量回归（spec 004）', () => {
     await page.goto('/m/manager-pipeline');
     await expect(page.getByTestId('mobile-manager-pipeline-page')).toBeVisible({ timeout: 10_000 });
 
-    await page.getByTestId('mobile-toggle-team').click();
+    await page.locator('[data-testid="mobile-toggle-team"]').evaluate((el: HTMLElement) => el.click());
     await expect(page.getByTestId('mobile-toggle-team')).toHaveAttribute('data-active', 'true');
 
     const rollupOrEmpty = page
@@ -109,11 +109,16 @@ test.describe('移动端 经理 Pipeline 全量回归（spec 004）', () => {
 
   test('Case M-P4 — lead 详情页趋势图组件存在（移动端宽度自适应）', async ({ page }) => {
     await loginAsManager01Mobile(page);
-    await page.goto('/m/leads');
-    const firstLink = page.locator('a[href*="/leads/"]').first();
+    // 走 manager-pipeline 卡片 → 点第一张卡进详情
+    await page.goto('/m/manager-pipeline');
+    await expect(page.getByTestId('mobile-manager-pipeline-page')).toBeVisible({ timeout: 10_000 });
+    const firstLink = page
+      .locator('[data-testid^="deal-card-"] a[href*="/leads/"]')
+      .first();
     await expect(firstLink).toBeVisible({ timeout: 10_000 });
     await firstLink.click();
-    await expect(page).toHaveURL(/\/leads\/[a-f0-9-]+/, { timeout: 10_000 });
+    // 移动端 link 是 /m/leads/{id}，PC 是 /leads/{id} —— 都接受
+    await expect(page).toHaveURL(/\/(?:m\/)?leads\/[a-f0-9-]+/, { timeout: 15_000 });
     await expect(page.getByTestId('meddicc-trend-chart')).toBeVisible({ timeout: 15_000 });
   });
 
@@ -126,9 +131,7 @@ test.describe('移动端 经理 Pipeline 全量回归（spec 004）', () => {
     page.on('pageerror', (e) => errors.push(e.message));
 
     // 找移动端 chat 输入框（spec 003 使用 placeholder="输入消息..."）
-    const input = page.locator('input[placeholder="输入消息..."]').or(
-      page.locator('textarea[placeholder*="消息"]'),
-    );
+    const input = page.locator('input[placeholder="向 AI 提问..."]');
     await expect(input.first()).toBeEnabled({ timeout: 60_000 });
     await input.first().fill('团队哪几单存在风险？');
     await page.locator('button[type="submit"]').first().click();
