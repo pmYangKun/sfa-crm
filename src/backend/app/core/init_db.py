@@ -443,6 +443,14 @@ def init_db():
     from app.core.seed_data import seed
     seed()
 
+    # ── spec 004 T020: backfill MEDDICC history baseline（仅当表空时异步跑）
+    try:
+        from app.core import backfill_task
+        backfill_task.run_async_if_empty()
+    except Exception as e:
+        # 不阻塞 init_db 主流程
+        print(f"  WARN backfill_task 启动失败: {e}")
+
 
 def _init_llm_config(session: Session):
     """Read LLM_PROVIDER / LLM_MODEL / LLM_API_KEY from .env and seed LLMConfig."""
