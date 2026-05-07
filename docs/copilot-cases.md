@@ -151,6 +151,46 @@
 
 ---
 
+## 第五幕：经理 Pipeline 过程管理（spec 004，登录 manager01）
+
+### 案例 9：团队风险扫描 — Warnings 一句话识别
+
+```
+团队哪几单存在风险？
+```
+
+> **要点：** AI 调 `scan_team_warnings`，扫描全队 active lead 命中 7 条 warning 规则任一条的 deal，列出 warning code + lead 简介 + 跳转链接。
+>
+> **底层规则：** sleep > 14d / forecast 必赢但 MEDDICC 亮灯 < 5 / 关单临近 Score < 60 / 逾期未关 / 跟了 3 次仍无 Champion / 单点接触 > 30d / 大单证据薄。阈值全部进 SystemConfig。
+>
+> **讲解：** 经理不必逐条 lead 翻查，AI 在数据层扫一遍就给答案。配合 [[nav:|/manager-pipeline]] 跳转可直接深入查看。
+
+---
+
+### 案例 10：团队 MEDDICC 完成度 — 概览 + Top/Bottom
+
+```
+团队 MEDDICC 完成度怎么样？
+```
+
+> **要点：** AI 调 `team_meddicc_summary`，返回团队平均 Score、7 维亮灯密度热力、Top 3 / Bottom 3 销售。
+>
+> **讲解：** 比起翻 Pipeline 全表逐行看，一句话拉出团队"流程位置感"——哪几个销售在 Champion / Decision Process 这种深维上掉队。
+
+---
+
+### 案例 11：今天重点关注哪几单 — Top N 加权
+
+```
+今天我该重点看哪几单？
+```
+
+> **要点：** AI 调 `top_attention_deals`（默认 limit=5），按"warning 数 + score 反向 + amount 正向"加权排序，返回 Top N + 每条原因（X 个 warning / Score 仅 Y / 金额高于团队中位数 N×）。
+>
+> **讲解：** 经理早上 5 分钟决定今天的 review 重点。AI 把多维信号合成一个"attention_score"，告诉你"先看这 3 单"。
+
+---
+
 ## 演示路线（约 15 分钟）
 
 | 幕 | 时长 | 案例 | 主题 |
