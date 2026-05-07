@@ -59,14 +59,31 @@ def seed():
             {"name": "成都天府软件园科技公司", "region": "西南", "source": "organic", "days": 4},
             {"name": "广州番禺智慧物流有限公司", "region": "华南", "source": "outbound", "days": 2},
         ]
+        # spec 004: 给每条 lead 赋予 forecast_category / amount / close_date 演示分布
+        # 索引对应 s01_leads_data 顺序
+        s01_extras = [
+            {"forecast": "必赢", "amount": 280000, "close_in_days": 10},     # idx 0 数字颗粒 - hot deal
+            {"forecast": "大概率", "amount": 150000, "close_in_days": 25},    # idx 1 智联云
+            {"forecast": "大概率", "amount": 120000, "close_in_days": 18},    # idx 2 前海微链
+            {"forecast": "乐观估算", "amount": 80000, "close_in_days": 45},   # idx 3 湖畔云
+            {"forecast": "进行中", "amount": 60000, "close_in_days": None},   # idx 4 天府软件
+            {"forecast": "进行中", "amount": None, "close_in_days": None},    # idx 5 番禺智慧
+        ]
         s01_ids = []
-        for ld in s01_leads_data:
+        for idx, ld in enumerate(s01_leads_data):
             lid = _id()
             s01_ids.append(lid)
+            ex = s01_extras[idx]
+            close_dt = None
+            if ex["close_in_days"] is not None:
+                close_dt = (datetime.now(timezone.utc) + timedelta(days=ex["close_in_days"])).date().isoformat()
             s.add(Lead(id=lid, company_name=ld["name"], region=ld["region"],
                        source=ld["source"], owner_id=sales01.id, pool="private",
                        created_at=_ts(ld["days"]),
-                       last_followup_at=_ts(1)))  # all followed up 1 day ago
+                       last_followup_at=_ts(1),
+                       forecast_category=ex["forecast"],
+                       amount=ex["amount"],
+                       close_date=close_dt))
         s.flush()
 
         # sales01 contacts
@@ -127,14 +144,28 @@ def seed():
             {"name": "长沙星城智能制造公司", "region": "华中", "source": "outbound", "days": 7},
             {"name": "合肥量子信息技术有限公司", "region": "华东", "source": "organic", "days": 3},
         ]
+        s02_extras = [
+            {"forecast": "必赢", "amount": 350000, "close_in_days": 12},     # idx 0 锐思达
+            {"forecast": "进行中", "amount": 100000, "close_in_days": None}, # idx 1 中软云
+            {"forecast": "进行中", "amount": 75000, "close_in_days": None},  # idx 2 武汉光谷
+            {"forecast": "乐观估算", "amount": 50000, "close_in_days": 60},  # idx 3 长沙星城
+            {"forecast": "进行中", "amount": None, "close_in_days": None},   # idx 4 合肥量子
+        ]
         s02_ids = []
-        for ld in s02_leads_data:
+        for idx, ld in enumerate(s02_leads_data):
             lid = _id()
             s02_ids.append(lid)
+            ex = s02_extras[idx]
+            close_dt = None
+            if ex["close_in_days"] is not None:
+                close_dt = (datetime.now(timezone.utc) + timedelta(days=ex["close_in_days"])).date().isoformat()
             s.add(Lead(id=lid, company_name=ld["name"], region=ld["region"],
                        source=ld["source"], owner_id=sales02.id, pool="private",
                        created_at=_ts(ld["days"]),
-                       last_followup_at=_ts(4)))  # last followup 4 days ago
+                       last_followup_at=_ts(4),
+                       forecast_category=ex["forecast"],
+                       amount=ex["amount"],
+                       close_date=close_dt))
         s.flush()
 
         s02_contacts = [
@@ -185,14 +216,27 @@ def seed():
             {"name": "郑州中原数字经济公司", "region": "华中", "source": "koc_sem", "days": 14},
             {"name": "济南泉城云计算有限公司", "region": "华北", "source": "referral", "days": 10},
         ]
+        s03_extras = [
+            {"forecast": "进行中", "amount": 200000, "close_in_days": 8},   # close 临近触发 warning
+            {"forecast": "进行中", "amount": None, "close_in_days": None},
+            {"forecast": "进行中", "amount": 90000, "close_in_days": -3},   # overdue
+            {"forecast": "进行中", "amount": None, "close_in_days": None},
+        ]
         s03_ids = []
-        for ld in s03_leads_data:
+        for idx, ld in enumerate(s03_leads_data):
             lid = _id()
             s03_ids.append(lid)
+            ex = s03_extras[idx]
+            close_dt = None
+            if ex["close_in_days"] is not None:
+                close_dt = (datetime.now(timezone.utc) + timedelta(days=ex["close_in_days"])).date().isoformat()
             s.add(Lead(id=lid, company_name=ld["name"], region=ld["region"],
                        source=ld["source"], owner_id=sales03.id, pool="private",
                        created_at=_ts(ld["days"]),
-                       last_followup_at=_ts(9)))  # 9 days ago! 1 day from release!
+                       last_followup_at=_ts(9),
+                       forecast_category=ex["forecast"],
+                       amount=ex["amount"],
+                       close_date=close_dt))
         s.flush()
 
         s03_contacts = [
@@ -226,14 +270,23 @@ def seed():
             {"name": "北京华信恒通集团", "region": "华北", "source": "referral", "days": 20},
             {"name": "天津港务数字化转型中心", "region": "华北", "source": "organic", "days": 14},
         ]
+        mgr_extras = [
+            {"forecast": "必赢", "amount": 500000, "close_in_days": 20},   # 大单
+            {"forecast": "大概率", "amount": 300000, "close_in_days": 35},
+        ]
         mgr_ids = []
-        for ld in mgr_leads_data:
+        for idx, ld in enumerate(mgr_leads_data):
             lid = _id()
             mgr_ids.append(lid)
+            ex = mgr_extras[idx]
+            close_dt = (datetime.now(timezone.utc) + timedelta(days=ex["close_in_days"])).date().isoformat()
             s.add(Lead(id=lid, company_name=ld["name"], region=ld["region"],
                        source=ld["source"], owner_id=manager.id, pool="private",
                        created_at=_ts(ld["days"]),
-                       last_followup_at=_ts(3)))
+                       last_followup_at=_ts(3),
+                       forecast_category=ex["forecast"],
+                       amount=ex["amount"],
+                       close_date=close_dt))
         s.flush()
 
         mgr_contacts = [
@@ -291,12 +344,12 @@ def seed():
         converted_data = [
             # sales01: 2 customers
             {"name": "苏州工业园区金蝶信息", "region": "华东", "source": "referral",
-             "owner": sales01.id, "days": 45},
+             "owner": sales01.id, "days": 45, "amount": 380000},
             {"name": "南京紫金山实验室", "region": "华东", "source": "organic",
-             "owner": sales01.id, "days": 60},
+             "owner": sales01.id, "days": 60, "amount": 220000},
             # sales02: 1 customer
             {"name": "青岛海尔卡奥斯平台", "region": "华北", "source": "koc_sem",
-             "owner": sales02.id, "days": 40},
+             "owner": sales02.id, "days": 40, "amount": 450000},
         ]
         for cld in converted_data:
             lead_id = _id()
@@ -304,7 +357,10 @@ def seed():
             s.add(Lead(id=lead_id, company_name=cld["name"], region=cld["region"],
                        source=cld["source"], owner_id=cld["owner"], pool="private",
                        stage="converted", created_at=_ts(cld["days"]),
-                       converted_at=_ts(cld["days"] - 20)))
+                       converted_at=_ts(cld["days"] - 20),
+                       forecast_category="已赢单",
+                       amount=cld.get("amount", 200000),
+                       close_date=_ts(cld["days"] - 20)[:10]))
             s.flush()
             s.add(Customer(id=customer_id, lead_id=lead_id, company_name=cld["name"],
                            region=cld["region"], owner_id=cld["owner"],
@@ -317,6 +373,28 @@ def seed():
                            type="phone", content=f"客户回访，{cld['name']}使用情况良好",
                            followed_at=_ts(5, hour=10)))
 
+        s.flush()
+
+        # ═══════════════════════════════════════════════════════════════
+        # LOST LEAD（spec 004 演示已丢单 tab）
+        # ═══════════════════════════════════════════════════════════════
+        lost_lead_id = _id()
+        s.add(Lead(
+            id=lost_lead_id,
+            company_name="郑州未来工厂科技有限公司",
+            region="华中",
+            source="koc_sem",
+            owner_id=sales02.id,
+            pool="private",
+            stage="lost",
+            forecast_category="已丢单",
+            amount=180000,
+            created_at=_ts(50),
+            last_followup_at=_ts(35),
+            lost_at=_ts(30),
+        ))
+        s.add(Contact(id=_id(), lead_id=lost_lead_id, name="刘总", role="总经理",
+                      is_key_decision_maker=True, phone="13800999001"))
         s.flush()
 
         # ═══════════════════════════════════════════════════════════════
