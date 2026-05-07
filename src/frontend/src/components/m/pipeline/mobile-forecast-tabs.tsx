@@ -16,13 +16,11 @@ export default function MobileForecastTabs({ active, counts, warningCounts, onCh
       data-testid="mobile-forecast-tabs"
       style={{
         display: 'flex',
+        flexWrap: 'wrap',
         gap: 6,
-        overflowX: 'auto',
-        WebkitOverflowScrolling: 'touch',
         padding: '8px 12px',
         background: '#fff',
         borderBottom: '1px solid #f0f0f0',
-        scrollbarWidth: 'none',
       }}
     >
       {FORECAST_CATEGORIES.map((cat) => {

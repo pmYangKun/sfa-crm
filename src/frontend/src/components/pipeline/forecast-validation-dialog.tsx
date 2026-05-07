@@ -1,6 +1,9 @@
 'use client';
 
 // AI 校验 forecast_category dialog (PC) — 显示 verdict + 3 个按钮
+// Portal 出 body + 高 zIndex，避免被 chat-sidebar / 其他 fixed 元素遮住
+import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import {
   ForecastValidationResult,
   ForecastCategory,
@@ -12,9 +15,9 @@ interface Props {
   open: boolean;
   result: ForecastValidationResult | null;
   targetCategory: ForecastCategory;
-  onContinue: () => void; // 用户选 "继续标 {target}"
-  onUseSuggested: () => void; // 用户选 "改标 {suggested}"
-  onCancel: () => void; // 用户选 "先去补证据"
+  onContinue: () => void;
+  onUseSuggested: () => void;
+  onCancel: () => void;
 }
 
 export default function ForecastValidationDialog({
@@ -25,25 +28,32 @@ export default function ForecastValidationDialog({
   onUseSuggested,
   onCancel,
 }: Props) {
-  if (!open || !result) return null;
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
+  if (!open || !result || !mounted) return null;
 
   const showSuggested =
     !!result.suggested_category && result.suggested_category !== targetCategory;
   const missing = result.missing_dimensions || [];
 
-  return (
+  const node = (
     <div
       data-testid="forecast-validation-dialog"
       role="dialog"
       style={{
         position: 'fixed',
-        inset: 0,
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
         background: 'rgba(0,0,0,0.45)',
-        zIndex: 3000,
+        zIndex: 9999,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         padding: 20,
+        boxSizing: 'border-box',
       }}
       onClick={(e) => {
         if (e.target === e.currentTarget) onCancel();
@@ -55,7 +65,10 @@ export default function ForecastValidationDialog({
           borderRadius: 12,
           maxWidth: 520,
           width: '100%',
+          maxHeight: 'calc(100vh - 40px)',
+          overflowY: 'auto',
           padding: 24,
+          boxSizing: 'border-box',
           boxShadow: '0 10px 32px rgba(0,0,0,0.18)',
         }}
       >
@@ -77,6 +90,8 @@ export default function ForecastValidationDialog({
             color: '#262626',
             lineHeight: 1.6,
             marginBottom: 14,
+            wordBreak: 'break-word',
+            whiteSpace: 'pre-wrap',
           }}
         >
           {result.reasoning}
@@ -85,7 +100,13 @@ export default function ForecastValidationDialog({
         {missing.length > 0 && (
           <div
             data-testid="validation-missing"
-            style={{ marginBottom: 14, fontSize: 13, color: '#595959' }}
+            style={{
+              marginBottom: 14,
+              fontSize: 13,
+              color: '#595959',
+              wordBreak: 'break-word',
+              lineHeight: 1.6,
+            }}
           >
             <strong>缺失维度：</strong>
             <span style={{ marginLeft: 6 }}>
@@ -106,19 +127,14 @@ export default function ForecastValidationDialog({
               fontSize: 13,
               color: '#0050b3',
               marginBottom: 16,
+              wordBreak: 'break-word',
             }}
           >
             AI 建议改标 <strong>&quot;{result.suggested_category}&quot;</strong>
           </div>
         )}
 
-        <div
-          style={{
-            display: 'flex',
-            gap: 8,
-            flexDirection: 'column',
-          }}
-        >
+        <div style={{ display: 'flex', gap: 8, flexDirection: 'column' }}>
           <button
             type="button"
             data-testid="validation-continue"
@@ -176,4 +192,6 @@ export default function ForecastValidationDialog({
       </div>
     </div>
   );
+
+  return createPortal(node, document.body);
 }

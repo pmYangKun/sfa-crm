@@ -1,7 +1,9 @@
 'use client';
 
 // 行内 click-to-edit forecast_category — 选择 6 选 1，触发 AI 校验或直接 PUT
-import { useState } from 'react';
+// 下拉菜单 Portal 出 body + fixed 定位（按 trigger getBoundingClientRect），避免被表格 row 的 stacking context 截断
+import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import {
   ForecastCategory,
   FORECAST_CATEGORIES,
@@ -22,17 +24,72 @@ interface Props {
 const validateCache: Record<string, { at: number; result: ForecastValidationResult }> = {};
 const CACHE_MS = 60_000;
 
+interface MenuPos {
+  top: number;
+  left: number;
+  flipUp: boolean;
+}
+
 export default function ForecastCellEditor({ leadId, current, disabled, onSaved }: Props) {
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [pendingTarget, setPendingTarget] = useState<ForecastCategory | null>(null);
   const [dialog, setDialog] = useState<ForecastValidationResult | null>(null);
   const [toast, setToast] = useState<string | null>(null);
+  const [menuPos, setMenuPos] = useState<MenuPos | null>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => setMounted(true), []);
 
   const showToast = (msg: string, ms = 2500) => {
     setToast(msg);
     setTimeout(() => setToast(null), ms);
   };
+
+  const openMenu = () => {
+    if (!triggerRef.current) return;
+    const r = triggerRef.current.getBoundingClientRect();
+    const menuH = 6 * 32 + 12; // 6 选项 * 行高 + padding
+    const flipUp = r.bottom + menuH + 8 > window.innerHeight;
+    setMenuPos({
+      top: flipUp ? r.top - menuH - 4 : r.bottom + 4,
+      left: r.left,
+      flipUp,
+    });
+    setEditing(true);
+  };
+
+  const closeMenu = () => {
+    setEditing(false);
+    setMenuPos(null);
+  };
+
+  // 点击外部 / Esc / 滚动 关闭
+  useEffect(() => {
+    if (!editing) return;
+    const onDocClick = (e: MouseEvent) => {
+      const target = e.target as Node;
+      if (triggerRef.current?.contains(target)) return;
+      const menu = document.querySelector(`[data-testid="forecast-cell-menu-${leadId}"]`);
+      if (menu?.contains(target)) return;
+      closeMenu();
+    };
+    const onEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') closeMenu();
+    };
+    const onScrollOrResize = () => closeMenu();
+    document.addEventListener('mousedown', onDocClick);
+    document.addEventListener('keydown', onEsc);
+    window.addEventListener('scroll', onScrollOrResize, true);
+    window.addEventListener('resize', onScrollOrResize);
+    return () => {
+      document.removeEventListener('mousedown', onDocClick);
+      document.removeEventListener('keydown', onEsc);
+      window.removeEventListener('scroll', onScrollOrResize, true);
+      window.removeEventListener('resize', onScrollOrResize);
+    };
+  }, [editing, leadId]);
 
   const doSave = async (target: ForecastCategory) => {
     setSaving(true);
@@ -51,16 +108,14 @@ export default function ForecastCellEditor({ leadId, current, disabled, onSaved 
   };
 
   const handlePick = async (target: ForecastCategory) => {
-    setEditing(false);
+    closeMenu();
     if (target === current) return;
 
-    // 不需要 AI 校验：降级 / 进行中 / 已赢单 / 已丢单
     if (!FORECAST_CATEGORIES_NEED_AI_VALIDATE.includes(target)) {
       await doSave(target);
       return;
     }
 
-    // 60s cache check
     const cacheKey = `${leadId}:${target}`;
     const cached = validateCache[cacheKey];
     if (cached && Date.now() - cached.at < CACHE_MS) {
@@ -73,7 +128,6 @@ export default function ForecastCellEditor({ leadId, current, disabled, onSaved 
       return;
     }
 
-    // 调 AI 校验（3s timeout，超时放行）
     setSaving(true);
     setPendingTarget(target);
     try {
@@ -89,11 +143,9 @@ export default function ForecastCellEditor({ leadId, current, disabled, onSaved 
         setSaving(false);
         setDialog(result);
       } else {
-        // support / abstain → 直接放行
         await doSave(target);
       }
     } catch (e) {
-      // timeout / 接口失败 → 直接放行 + toast
       if (e instanceof ApiError && e.status === 408) {
         showToast('AI 暂时校验不上，已放行', 2500);
       } else {
@@ -103,6 +155,51 @@ export default function ForecastCellEditor({ leadId, current, disabled, onSaved 
     }
   };
 
+  const menu = mounted && editing && menuPos ? createPortal(
+    <div
+      data-testid={`forecast-cell-menu-${leadId}`}
+      style={{
+        position: 'fixed',
+        top: menuPos.top,
+        left: menuPos.left,
+        zIndex: 9999,
+        background: '#fff',
+        border: '1px solid #d9d9d9',
+        borderRadius: 6,
+        boxShadow: '0 4px 12px rgba(0,0,0,0.18)',
+        minWidth: 120,
+        padding: 4,
+      }}
+    >
+      {FORECAST_CATEGORIES.map((c) => (
+        <div
+          key={c}
+          data-testid={`forecast-option-${c}`}
+          onClick={() => handlePick(c)}
+          style={{
+            padding: '8px 14px',
+            fontSize: 13,
+            cursor: 'pointer',
+            borderRadius: 4,
+            color: c === current ? '#1890ff' : '#262626',
+            background: c === current ? '#e6f7ff' : 'transparent',
+            fontWeight: c === current ? 600 : 400,
+            whiteSpace: 'nowrap',
+          }}
+          onMouseEnter={(e) => {
+            if (c !== current) e.currentTarget.style.background = '#fafafa';
+          }}
+          onMouseLeave={(e) => {
+            if (c !== current) e.currentTarget.style.background = 'transparent';
+          }}
+        >
+          {c}
+        </div>
+      ))}
+    </div>,
+    document.body
+  ) : null;
+
   return (
     <>
       <span
@@ -111,10 +208,11 @@ export default function ForecastCellEditor({ leadId, current, disabled, onSaved 
         style={{ position: 'relative', display: 'inline-block' }}
       >
         <button
+          ref={triggerRef}
           type="button"
           data-testid={`forecast-cell-trigger-${leadId}`}
           disabled={disabled || saving}
-          onClick={() => setEditing(!editing)}
+          onClick={() => (editing ? closeMenu() : openMenu())}
           style={{
             background: '#fff',
             border: '1px solid #e8e8e8',
@@ -129,50 +227,6 @@ export default function ForecastCellEditor({ leadId, current, disabled, onSaved 
         >
           {saving ? '保存中…' : current} ▾
         </button>
-
-        {editing && (
-          <div
-            data-testid={`forecast-cell-menu-${leadId}`}
-            style={{
-              position: 'absolute',
-              top: '100%',
-              left: 0,
-              marginTop: 4,
-              zIndex: 50,
-              background: '#fff',
-              border: '1px solid #d9d9d9',
-              borderRadius: 6,
-              boxShadow: '0 4px 12px rgba(0,0,0,0.12)',
-              minWidth: 110,
-              padding: 4,
-            }}
-          >
-            {FORECAST_CATEGORIES.map((c) => (
-              <div
-                key={c}
-                data-testid={`forecast-option-${c}`}
-                onClick={() => handlePick(c)}
-                style={{
-                  padding: '6px 12px',
-                  fontSize: 13,
-                  cursor: 'pointer',
-                  borderRadius: 4,
-                  color: c === current ? '#1890ff' : '#262626',
-                  background: c === current ? '#e6f7ff' : 'transparent',
-                  fontWeight: c === current ? 600 : 400,
-                }}
-                onMouseEnter={(e) => {
-                  if (c !== current) e.currentTarget.style.background = '#fafafa';
-                }}
-                onMouseLeave={(e) => {
-                  if (c !== current) e.currentTarget.style.background = 'transparent';
-                }}
-              >
-                {c}
-              </div>
-            ))}
-          </div>
-        )}
 
         {toast && (
           <div
@@ -195,6 +249,8 @@ export default function ForecastCellEditor({ leadId, current, disabled, onSaved 
           </div>
         )}
       </span>
+
+      {menu}
 
       <ForecastValidationDialog
         open={!!dialog && !!pendingTarget}

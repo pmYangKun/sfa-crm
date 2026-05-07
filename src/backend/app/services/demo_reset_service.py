@@ -26,6 +26,7 @@ from app.models.followup import FollowUp
 from app.models.key_event import KeyEvent
 from app.models.lead import Lead
 from app.models.lead_meddicc_evidence import LeadMeddiccEvidence  # spec 003
+from app.models.lead_meddicc_history import LeadMeddiccHistory  # spec 004
 from app.models.llm_call_counter import LLMCallCounter
 from app.models.notification import Notification
 
@@ -86,6 +87,8 @@ def reset_business_data(
     # FK 冲突 → DELETE FROM lead 报 IntegrityError）。
     try:
         # spec 003: 先清 evidence + conversation（指向 Lead 的 FK）
+        # spec 004: 也清 lead_meddicc_history（FK -> Lead）
+        session.exec(delete(LeadMeddiccHistory))
         session.exec(delete(LeadMeddiccEvidence))
         session.exec(delete(Conversation))
         session.exec(delete(FollowUp))

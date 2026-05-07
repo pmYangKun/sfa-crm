@@ -9,7 +9,7 @@ import {
   formatRelativeTime,
 } from '@/lib/pipeline-types';
 import MeddiccDotsCompact from '@/components/pipeline/meddicc-dots-compact';
-import WarningsCell from '@/components/pipeline/warnings-cell';
+import MobileWarningsBadge from './mobile-warnings-sheet';
 
 interface Props {
   lead: PipelineLead;
@@ -65,7 +65,11 @@ export default function DealCard({ lead, onForecastTap }: Props) {
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 12, color: '#8c8c8c' }}>
         <span>{lead.owner?.name || '公共池'}</span>
         <span style={{ flex: 1 }} />
-        <WarningsCell warnings={lead.warnings} testId={`deal-warn-${lead.id}`} />
+        <MobileWarningsBadge
+          warnings={lead.warnings}
+          testId={`deal-warn-${lead.id}`}
+          leadName={lead.company_name}
+        />
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>

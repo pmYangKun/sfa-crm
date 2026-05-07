@@ -10,14 +10,6 @@ interface NavItem {
   permissions?: string[];
 }
 
-const NAV_ITEMS: NavItem[] = [
-  { label: '数据概览', href: '/dashboard' },
-  { label: '我的线索', href: '/leads' },
-  { label: '公共线索库', href: '/public-pool' },
-  { label: '我的客户', href: '/customers' },
-  { label: '我的日报', href: '/reports' },
-];
-
 const ADMIN_ITEMS: NavItem[] = [
   { label: '组织管理', href: '/admin/org' },
   { label: '用户管理', href: '/admin/users' },
@@ -29,7 +21,6 @@ const ADMIN_ITEMS: NavItem[] = [
 const MANAGER_ITEMS: NavItem[] = [
   { label: '团队线索', href: '/leads/team' },
   { label: '团队日报', href: '/reports/team' },
-  { label: '经理 Pipeline', href: '/manager-pipeline' },
 ];
 
 export default function Sidebar() {
@@ -42,6 +33,15 @@ export default function Sidebar() {
   const isManager = user.roles.some(r =>
     ['战队队长', '大区总', '销售VP', '督导'].includes(r)
   );
+
+  const NAV_ITEMS: NavItem[] = [
+    { label: '数据概览', href: '/dashboard' },
+    { label: '我的线索', href: '/leads' },
+    { label: '公共线索库', href: '/public-pool' },
+    { label: '我的客户', href: '/customers' },
+    { label: isManager || isAdmin ? '经理 Pipeline' : '我的 Pipeline', href: '/manager-pipeline' },
+    { label: '我的日报', href: '/reports' },
+  ];
 
   return (
     <aside style={{

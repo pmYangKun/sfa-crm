@@ -42,10 +42,19 @@ test.describe('移动端 经理 Pipeline 全量回归（spec 004）', () => {
     await context.clearCookies();
   });
 
-  test('Case M-P1 — manager01 进 /m/manager-pipeline 默认 Deals + 6 横滑 tabs', async ({ page }) => {
+  test('Case M-P1 — manager01 进 /m/manager-pipeline 默认 Team', async ({ page }) => {
     await loginAsManager01Mobile(page);
     await page.goto('/m/manager-pipeline');
     await expect(page.getByTestId('mobile-manager-pipeline-page')).toBeVisible({ timeout: 10_000 });
+    // spec 004 v2: manager 默认进 Team
+    await expect(page.getByTestId('mobile-toggle-team')).toHaveAttribute('data-active', 'true');
+    const rollupOrEmpty = page
+      .getByTestId('mobile-team-rollup')
+      .or(page.getByTestId('mobile-team-rollup-empty'));
+    await expect(rollupOrEmpty).toBeVisible({ timeout: 10_000 });
+
+    // 切到 Deals 后 6 tab 全可见
+    await page.locator('[data-testid="mobile-toggle-deals"]').evaluate((el: HTMLElement) => el.click());
     await expect(page.getByTestId('mobile-toggle-deals')).toHaveAttribute('data-active', 'true');
     await expect(page.getByTestId('mobile-forecast-tabs')).toBeVisible();
     for (const cat of ['进行中', '必赢', '大概率', '乐观估算', '已赢单', '已丢单']) {
@@ -79,7 +88,7 @@ test.describe('移动端 经理 Pipeline 全量回归（spec 004）', () => {
 
   test('Case M-P3 — forecast 改到 "必赢" → BottomSheet 选 → AI 校验 dialog (如有) → 改成功', async ({ page }) => {
     await loginAsManager01Mobile(page);
-    await page.goto('/m/manager-pipeline');
+    await page.goto('/m/manager-pipeline?view=deals');
     await expect(page.getByTestId('mobile-manager-pipeline-page')).toBeVisible({ timeout: 10_000 });
 
     await page.getByTestId('mobile-forecast-tab-进行中').click();
@@ -109,8 +118,8 @@ test.describe('移动端 经理 Pipeline 全量回归（spec 004）', () => {
 
   test('Case M-P4 — lead 详情页趋势图组件存在（移动端宽度自适应）', async ({ page }) => {
     await loginAsManager01Mobile(page);
-    // 走 manager-pipeline 卡片 → 点第一张卡进详情
-    await page.goto('/m/manager-pipeline');
+    // 走 manager-pipeline?view=deals → 点第一张卡进详情
+    await page.goto('/m/manager-pipeline?view=deals');
     await expect(page.getByTestId('mobile-manager-pipeline-page')).toBeVisible({ timeout: 10_000 });
     const firstLink = page
       .locator('[data-testid^="deal-card-"] a[href*="/leads/"]')

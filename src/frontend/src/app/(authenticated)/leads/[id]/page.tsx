@@ -7,6 +7,8 @@ import { Lead, Contact, FollowUp, KeyEvent, PaginatedResponse } from '@/types';
 import KeyEventForm from '@/components/leads/key-event-form';
 import MeddiccPanel from '@/components/lead/MeddiccPanel';
 import MeddiccTrendChart from '@/components/leads/meddicc-trend-chart';
+import ForecastCellEditor from '@/components/pipeline/forecast-cell-editor';
+import { ForecastCategory, formatAmount } from '@/lib/pipeline-types';
 
 interface LeadDetail extends Lead {
   contacts: Contact[];
@@ -145,15 +147,48 @@ export default function LeadDetailPage() {
         borderRadius: 4, cursor: 'pointer', marginBottom: 16,
       }}>← 返回</button>
 
-      <div style={{ background: '#fff', padding: 24, borderRadius: 8, marginBottom: 24 }}>
-        <h1 style={{ fontSize: 24, marginBottom: 16 }}>{lead.company_name}</h1>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 16 }}>
-          <div><div style={{ color: '#999', fontSize: 13 }}>状态</div><div>{stageLabel}</div></div>
-          <div><div style={{ color: '#999', fontSize: 13 }}>大区</div><div>{lead.region}</div></div>
-          <div><div style={{ color: '#999', fontSize: 13 }}>来源</div><div>{sourceLabel}</div></div>
-          <div><div style={{ color: '#999', fontSize: 13 }}>负责人</div><div>{lead.owner?.name || '公共池'}</div></div>
-          <div><div style={{ color: '#999', fontSize: 13 }}>组织机构代码</div><div>{lead.unified_code || '-'}</div></div>
-          <div><div style={{ color: '#999', fontSize: 13 }}>创建时间</div><div>{new Date(lead.created_at).toLocaleString()}</div></div>
+      <div style={{ background: '#fff', padding: 20, borderRadius: 8, marginBottom: 24 }}>
+        <h1 style={{ fontSize: 22, margin: '0 0 14px', wordBreak: 'break-word' }}>
+          {lead.company_name}
+        </h1>
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
+            columnGap: 12,
+            rowGap: 10,
+          }}
+        >
+          {[
+            { label: '状态', value: stageLabel },
+            { label: '大区', value: lead.region },
+            { label: '来源', value: sourceLabel },
+            { label: '负责人', value: lead.owner?.name || '公共池' },
+            {
+              label: 'Forecast',
+              value:
+                lead.stage === 'active' ? (
+                  <ForecastCellEditor
+                    leadId={lead.id}
+                    current={(lead.forecast_category as ForecastCategory) || '进行中'}
+                    onSaved={() => loadData()}
+                  />
+                ) : (
+                  lead.forecast_category || '-'
+                ),
+            },
+            { label: '预计金额', value: formatAmount(lead.amount ?? null) },
+            { label: '预计关单', value: lead.close_date || '-' },
+            { label: '组织机构代码', value: lead.unified_code || '-' },
+            { label: '创建时间', value: new Date(lead.created_at).toLocaleString() },
+          ].map((f) => (
+            <div key={f.label} style={{ minWidth: 0 }}>
+              <div style={{ color: '#8c8c8c', fontSize: 12, lineHeight: 1.4 }}>{f.label}</div>
+              <div style={{ fontSize: 14, color: '#262626', marginTop: 2, wordBreak: 'break-word' }}>
+                {f.value}
+              </div>
+            </div>
+          ))}
         </div>
         {lead.stage === 'active' && (
           <div id="actions" style={{ display: 'flex', gap: 8, marginTop: 20, paddingTop: 16, borderTop: '1px solid #f0f0f0', flexWrap: 'wrap' }}>

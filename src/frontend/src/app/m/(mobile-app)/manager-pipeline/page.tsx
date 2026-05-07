@@ -18,13 +18,21 @@ import MobileDealsTeamToggle from '@/components/m/pipeline/mobile-deals-team-tog
 import MobileTeamRollup from '@/components/m/pipeline/mobile-team-rollup';
 import MobileForecastEditSheet from '@/components/m/pipeline/mobile-forecast-edit-sheet';
 import { PipelineView } from '@/components/pipeline/deals-team-toggle';
+import { useAuth } from '@/lib/auth-context';
+
+const MANAGER_ROLES = ['战队队长', '大区总', '销售VP', '督导', '系统管理员'];
 
 export default function MobileManagerPipelinePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { user } = useAuth();
+  const isManager = user?.roles?.some((r) => MANAGER_ROLES.includes(r)) ?? false;
 
   const initialOwner = searchParams.get('owner') || null;
-  const initialView = (searchParams.get('view') as PipelineView) || 'deals';
+  // manager 默认进 Team，sales 永远 deals（他们看不到 team toggle）
+  const urlView = searchParams.get('view') as PipelineView | null;
+  const defaultView: PipelineView = isManager ? 'team' : 'deals';
+  const initialView: PipelineView = urlView || defaultView;
   const initialCategory = (searchParams.get('cat') as ForecastCategory) || '进行中';
 
   const [view, setView] = useState<PipelineView>(initialView);
@@ -73,6 +81,11 @@ export default function MobileManagerPipelinePage() {
     if (view === 'team') setOwnerFilter(null);
   }, [view]);
 
+  // sales 不能进 team view
+  useEffect(() => {
+    if (!isManager && view === 'team') setView('deals');
+  }, [isManager, view]);
+
   const handleSalesClick = (salesId: string) => {
     setOwnerFilter(salesId);
     setView('deals');
@@ -104,12 +117,14 @@ export default function MobileManagerPipelinePage() {
         }}
       >
         <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 16, fontWeight: 600 }}>🎯 经理 Pipeline</div>
+          <div style={{ fontSize: 16, fontWeight: 600 }}>
+            🎯 {isManager ? '经理 Pipeline' : '我的 Pipeline'}
+          </div>
           <div style={{ fontSize: 11, color: '#8c8c8c', marginTop: 2 }}>
-            按 Forecast 分组看团队 deal
+            {isManager ? '按 Forecast 分组看团队 deal' : '按 Forecast 分组看自己的 deal'}
           </div>
         </div>
-        <MobileDealsTeamToggle value={view} onChange={setView} />
+        {isManager && <MobileDealsTeamToggle value={view} onChange={setView} />}
       </div>
 
       {view === 'deals' && (

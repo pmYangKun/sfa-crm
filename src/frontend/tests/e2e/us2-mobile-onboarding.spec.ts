@@ -81,16 +81,18 @@ test.describe('US2: 金刚区导航（FR-011）', () => {
     await page.getByTestId('role-card-sales01').click();
     await expect(page.getByTestId('chat-fullscreen')).toBeVisible({ timeout: 10_000 });
 
+    // spec 004 v2: 5 槽 = 线索 / 客户 / AI / Pipeline / 我的（去掉跟进）
     await expect(page.getByTestId('tab-leads')).toBeVisible();
     await expect(page.getByTestId('tab-customers')).toBeVisible();
     await expect(page.getByTestId('tab-chat')).toBeVisible();
-    await expect(page.getByTestId('tab-followups')).toBeVisible();
+    await expect(page.getByTestId('tab-pipeline')).toBeVisible();
     await expect(page.getByTestId('tab-me')).toBeVisible();
 
-    await page.getByTestId('tab-followups').click();
-    await expect(page).toHaveURL(/\/m\/followups/);
-    await expect(page.getByTestId('mobile-followups-cta')).toBeVisible();
-    await page.screenshot({ path: 'tests/screenshots/us2-03-mobile-followups.png', fullPage: true });
+    await page.getByTestId('tab-pipeline').click();
+    await expect(page).toHaveURL(/\/m\/manager-pipeline/);
+    // sales 看到 "我的 Pipeline" 标题
+    await expect(page.getByTestId('mobile-manager-pipeline-page')).toBeVisible({ timeout: 10_000 });
+    await page.screenshot({ path: 'tests/screenshots/us2-03-mobile-pipeline.png', fullPage: true });
 
     await page.getByTestId('tab-me').click();
     await expect(page).toHaveURL(/\/m\/me/);

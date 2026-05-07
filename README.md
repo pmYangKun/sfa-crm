@@ -113,27 +113,33 @@ Spec 里有业务逻辑、对象定义、行为约束。AI 基于这些生成代
 | 第八集 | Spec Coding 的正确打开方式：spec-kit 定位与协作分工 | 完成 |
 | 编码阶段 | 110 个任务全部实现，14 个 Phase 完成 | 完成 |
 | spec 001 | 登录页双栏 + 移动端 + Onboarding 收口 | 完成（merged） |
-| spec 002 | 公网部署安全/治理硬化（限流 / 熔断 / prompt_guard / 半小时数据自动重置 / Fernet 加密 / 启动密钥校验 / Nginx + certbot 部署文档） | 完成（待 PR/merge） |
-| spec 002 二轮 | Copilot 可靠性硬化：AI 写动作 HITL 边界、chat 流式 Markdown 渲染（含表格）、AI 幻觉 ID 改返 404、9 case Playwright 全量回归（PC + Mobile = 18 场景，真实 LLM） | 完成（待 PR/merge） |
-| spec 003 | MEDDICC 销售视角自检：7 维证据抽取、对话录入、场景卡演示、Score 仪表盘、PC + Mobile 等价 | 完成（待 PR/merge） |
-| spec 004 | MEDDICC 经理视角 Pipeline：Forecast 6 tab + 主表 + Warnings 7 规则 + AI 反查吹牛 + Team Rollup + 单 lead 趋势图（PC + Mobile） | 完成（待 PR/merge） |
+| spec 002 | 公网部署安全/治理硬化（限流 / 熔断 / prompt_guard / 半小时数据自动重置 / Fernet 加密 / 启动密钥校验 / Nginx + certbot 部署文档） | 完成（merged，tag `v-spec002`） |
+| spec 002 二轮 | Copilot 可靠性硬化：AI 写动作 HITL 边界、chat 流式 Markdown 渲染（含表格）、AI 幻觉 ID 改返 404、9 case Playwright 全量回归（PC + Mobile = 18 场景，真实 LLM） | 完成（merged） |
+| spec 003 | MEDDICC 销售视角自检：7 维证据抽取、对话录入、场景卡演示、Score 仪表盘、PC + Mobile 等价 | 完成（merged，tag `v-spec003`） |
+| spec 004 | MEDDICC 经理视角 Pipeline：Forecast 6 tab + 主表 + Warnings 7 规则 + AI 反查吹牛 + Team Rollup + 单 lead 趋势图（PC + Mobile） | 完成（merged，tag `v-spec004`） |
+| spec 004 v2 UX | 默认 Team 视图 / 移动端 forecast tabs 折行 / Warnings 弹层 Portal 化 / 移动端 BottomSheet / 金刚区 5 槽 / Lead 详情页可改 Forecast / Seed data 大扩量（54 lead / 29 评分 / 116 evidence / 116 history） | 完成 |
+| spec 005 | （计划中）AI 主动巡检 / 每日早报推送 | 待 brainstorm |
 
 ---
 
 ## 经理 Pipeline 演示路径（spec 004）
 
 PC：
-1. 用 `manager01` 登录 → Dashboard onboarding 卡点击「📊 团队 MEDDICC 完成度」 → 跳转 `/manager-pipeline`
-2. 默认 Deals 视图 + Forecast 6 tab（进行中 / 必赢 / 大概率 / 乐观估算 / 已赢单 / 已丢单），每 tab 显示条数 + ⚠️ Warnings 数
-3. 主表行内点 Forecast 字段 → 改成"必赢"或"大概率" → AI 校验弹气泡（MEDDICC 证据不足时）
-4. 顶右 toggle 切到 Team 视图 → 看每个销售平均 Score / Warnings → 点行 drill-down 回 Deals + filter
-5. 主表点 lead name 进详情页 → 看 MEDDICC 仪表盘 + 趋势小折线图
+1. 用 `manager01` 登录 → 左侧导航点「经理 Pipeline」 → 跳转 `/manager-pipeline`
+2. **默认进 Team 视图**（团队全表：每个销售平均 Score / Warnings / 总额 / 最近活动），一眼看出谁强谁弱
+3. 点销售名字 → drill-down 跳 Deals 视图 + 自动按 owner filter
+4. Deals 视图 Forecast 6 tab（进行中 / 必赢 / 大概率 / 乐观估算 / 已赢单 / 已丢单），每 tab 显示条数 + ⚠️ Warnings 数
+5. 主表行内点 Forecast 下拉 → 改成"必赢" → AI 校验 dialog（证据不足时拦下来 + 给出建议档位）
+6. 主表点 lead name 进详情页 → 头部可直接改 Forecast / 看 MEDDICC 仪表盘 / 趋势小折线图
 
 Mobile：
 1. 用 `manager01` 登录 → 底部金刚区第 4 个 tab "🎯 Pipeline" → 跳 `/m/manager-pipeline`
-2. 横滑 Forecast tabs + 卡片化 deal list + 点 Forecast 标签弹 BottomSheet 编辑
-3. AI 校验改成全屏 dialog（信息密度大于 toast）
-4. Team 视图卡片栈 + 点头像 drill-down
+2. 默认 Team 视图卡片栈 → 点销售卡 drill-down 到 Deals
+3. Deals 视图 6 个 Forecast tabs **自动折行**铺开（不需要左右拖），卡片化 deal list
+4. 点卡片 Forecast 标签 → BottomSheet 编辑 → AI 校验全屏 dialog
+5. ⚠️ Warning 标记点击展开 BottomSheet 列出 7 类风险详情（不再被卡片宽度切）
+
+**Sales 视角（同一页面）：** 销售用 sales01 登录后也能看 Pipeline，标题变"我的 Pipeline"，Team toggle 隐藏，DataScope 自动 filter 成 owner=self。
 
 Chat（PC + Mobile 通用）：
 - "团队哪几单存在风险？" → AI 调 `scan_team_warnings`

@@ -17,13 +17,19 @@ import TeamRollupTable from '@/components/pipeline/team-rollup-table';
 import DealsTeamToggle, { PipelineView } from '@/components/pipeline/deals-team-toggle';
 import { useAuth } from '@/lib/auth-context';
 
+const MANAGER_ROLES = ['战队队长', '大区总', '销售VP', '督导', '系统管理员'];
+
 export default function ManagerPipelinePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user } = useAuth();
+  const isManager = user?.roles?.some((r) => MANAGER_ROLES.includes(r)) ?? false;
 
   const initialOwner = searchParams.get('owner') || null;
-  const initialView = (searchParams.get('view') as PipelineView) || 'deals';
+  // manager 默认进 Team（先看团队全貌再 drill 到具体 deal）；sales 永远是 deals
+  const urlView = searchParams.get('view') as PipelineView | null;
+  const defaultView: PipelineView = isManager ? 'team' : 'deals';
+  const initialView: PipelineView = urlView || defaultView;
   const initialCategory = (searchParams.get('cat') as ForecastCategory) || '进行中';
 
   const [view, setView] = useState<PipelineView>(initialView);
@@ -83,6 +89,11 @@ export default function ManagerPipelinePage() {
     }
   }, [view]);
 
+  // sales 不能进 team 视图
+  useEffect(() => {
+    if (!isManager && view === 'team') setView('deals');
+  }, [isManager, view]);
+
   const handleSalesClick = (salesId: string) => {
     setOwnerFilter(salesId);
     setView('deals');
@@ -113,10 +124,12 @@ export default function ManagerPipelinePage() {
       >
         <div>
           <h1 style={{ fontSize: 22, margin: 0, fontWeight: 600 }}>
-            🎯 经理 Pipeline
+            🎯 {isManager ? '经理 Pipeline' : '我的 Pipeline'}
           </h1>
           <p style={{ color: '#8c8c8c', fontSize: 13, margin: '4px 0 0' }}>
-            按 Forecast 分组看团队 deal 健康度 / 风险 / MEDDICC 完成度
+            {isManager
+              ? '按 Forecast 分组看团队 deal 健康度 / 风险 / MEDDICC 完成度'
+              : '按 Forecast 分组看自己的 deal 健康度 / 风险 / MEDDICC 完成度'}
             {user && (
               <span style={{ marginLeft: 8 }}>
                 · 当前角色：{user.roles.join('、')}
@@ -124,7 +137,7 @@ export default function ManagerPipelinePage() {
             )}
           </p>
         </div>
-        <DealsTeamToggle value={view} onChange={setView} />
+        {isManager && <DealsTeamToggle value={view} onChange={setView} />}
       </div>
 
       {err && (

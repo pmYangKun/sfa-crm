@@ -37,6 +37,13 @@ export interface Lead {
   last_followup_at: string | null;
   converted_at: string | null;
   lost_at: string | null;
+  // spec 003 / 004 cached fields
+  meddicc_score?: number | null;
+  meddicc_completion?: number;
+  meddicc_last_analyzed_at?: string | null;
+  forecast_category?: '进行中' | '必赢' | '大概率' | '乐观估算' | '已赢单' | '已丢单';
+  amount?: number | null;
+  close_date?: string | null;
 }
 
 export interface Customer {

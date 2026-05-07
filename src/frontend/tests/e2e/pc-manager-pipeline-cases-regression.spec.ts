@@ -48,17 +48,24 @@ test.describe('PC 端 经理 Pipeline 全量回归（spec 004）', () => {
     await context.clearCookies();
   });
 
-  test('Case P1 — manager01 进 /manager-pipeline 默认 Deals + 6 tabs 可见', async ({ page }) => {
+  test('Case P1 — manager01 进 /manager-pipeline 默认 Team 视图', async ({ page }) => {
     await loginAsManager01(page);
     await page.goto('/manager-pipeline');
     await expect(page.getByTestId('manager-pipeline-page')).toBeVisible({ timeout: 10_000 });
-    // 默认 Deals 视图（toggle 显示 deals active）
+    // spec 004 v2: manager 默认进 Team 视图（先看全貌，再 drill）
+    await expect(page.getByTestId('toggle-team')).toHaveAttribute('data-active', 'true');
+    // Team rollup 表 / 空态都接受
+    const rollupOrEmpty = page
+      .getByTestId('team-rollup-table')
+      .or(page.getByTestId('team-rollup-empty'));
+    await expect(rollupOrEmpty).toBeVisible({ timeout: 10_000 });
+
+    // 切到 Deals 视图后 6 个 tab 都存在
+    await page.locator('[data-testid="toggle-deals"]').evaluate((el: HTMLElement) => el.click());
     await expect(page.getByTestId('toggle-deals')).toHaveAttribute('data-active', 'true');
-    // 6 tabs 都存在
     for (const cat of ['进行中', '必赢', '大概率', '乐观估算', '已赢单', '已丢单']) {
       await expect(page.getByTestId(`forecast-tab-${cat}`)).toBeVisible();
     }
-    // forecast-tabs 容器
     await expect(page.getByTestId('forecast-tabs')).toBeVisible();
   });
 
@@ -92,7 +99,7 @@ test.describe('PC 端 经理 Pipeline 全量回归（spec 004）', () => {
 
   test('Case P3 — forecast 改到 "必赢" → AI 校验 dialog 出现（如有）→ 改成功', async ({ page }) => {
     await loginAsManager01(page);
-    await page.goto('/manager-pipeline');
+    await page.goto('/manager-pipeline?view=deals');
     await expect(page.getByTestId('manager-pipeline-page')).toBeVisible({ timeout: 10_000 });
 
     // 切到 "进行中" tab 找一条 active lead
@@ -106,8 +113,8 @@ test.describe('PC 端 经理 Pipeline 全量回归（spec 004）', () => {
     const trigger = firstRow.locator('[data-testid^="forecast-cell-trigger-"]').first();
     await trigger.click();
 
-    // 选 "必赢"
-    const needWinOption = firstRow.getByTestId('forecast-option-必赢');
+    // 选 "必赢"（spec 004 v2：菜单 Portal 出 body，不再是 row 子元素）
+    const needWinOption = page.getByTestId('forecast-option-必赢');
     await needWinOption.click();
 
     // AI 校验 dialog 可能出现（verdict=challenge 时）；可能不出现（verdict=support / abstain）
@@ -125,8 +132,8 @@ test.describe('PC 端 经理 Pipeline 全量回归（spec 004）', () => {
 
   test('Case P4 — lead 详情页趋势图组件存在', async ({ page }) => {
     await loginAsManager01(page);
-    // 走 /manager-pipeline → 点表里第一条 lead 链接（避免 sidebar 自身的 /leads 链接）
-    await page.goto('/manager-pipeline');
+    // 走 /manager-pipeline?view=deals → 点表里第一条 lead 链接
+    await page.goto('/manager-pipeline?view=deals');
     await expect(page.getByTestId('manager-pipeline-page')).toBeVisible({ timeout: 10_000 });
     const firstLink = page
       .getByTestId('pipeline-table')

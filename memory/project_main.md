@@ -120,7 +120,11 @@ spec-kit 产物：`specs/002-public-deploy-hardening/`（spec.md / plan.md / res
 - ✅ 9 篇公众号文章完成
 - ✅ 演示体验全面优化（全高面板、预填、团队分析、权限过滤）
 - ✅ spec 001（登录页双栏 + 移动端 + Onboarding）已 merge 进 master
-- ✅ spec 002（公网部署安全/治理硬化）实施完成 + 二轮收口（T033 + T036 + init_db 补 key），分支 `002-public-deploy-hardening`（待 PR/merge）；T035 全 backend proxy 仍 deferred 但理由已更新为"非紧急、非阻塞"
+- ✅ spec 002（公网部署安全/治理硬化）已 merge，tag `v-spec002` → `2497831`（T033 + T036 + init_db 补 key 全闭环；T035 全 backend proxy 仍 deferred 但理由已更新为"非紧急、非阻塞"）
+- ✅ spec 003（MEDDICC 销售视角）已 merge，tag `v-spec003` → `cd8133c`
+- ✅ spec 004（MEDDICC 经理视角 Pipeline）已 merge，tag `v-spec004` → `8271812`，PR #5
+- ✅ spec 004 v2 UX 微调（2026-05-07 当晚 + 当夜两轮）：默认 Team 视图 / 移动端 forecast tabs 折行 / Warnings & Forecast 弹层 Portal 化 / 移动端 BottomSheet 替代浮窗 / 金刚区 5 槽（删跟进 + Pipeline 全角色可见）/ Lead 详情页头部加 Forecast 编辑 + 金额 + 关单 / Seed 大扩量（54 lead / 29 评分 / 116 evidence / 116 history snapshot）/ demo_reset_service 补 LeadMeddiccHistory 漏删
+- **测试态势（2026-05-07 终态）：** Backend 159 pytest / PC Playwright 38 / Mobile Playwright 33 / 0 fail
 - LLM API Key：`src/backend/.env`（dev）/ DB Fernet 密文（生产，spec 002）
 - 演示案例：`docs/copilot-cases.md`（8 个独立案例）
 - 一键启动：`start.bat` | 一键重置：`reset-demo.bat`
@@ -149,7 +153,7 @@ spec-kit 产物：`specs/002-public-deploy-hardening/`（spec.md / plan.md / res
 |---|---|---|---|
 | `v-spec002` | `2497831`（spec 002 merge，含 spec 001） | spec 001 + 002 | 公网部署 + Onboarding 安全硬化 |
 | `v-spec003` | `cd8133c`（spec 003 merge） | spec 003 | MEDDICC 销售视角 |
-| `v-spec004` | （未打）| spec 004 | MEDDICC 经理视角 |
+| `v-spec004` | `8271812`（spec 004 PR #5 merge） | spec 004 | MEDDICC 经理视角 Pipeline |
 
 **集号 ↔ spec ↔ tag 三列映射的权威源：** [`Kun's Context/articles/sfa-crm-series/MASTER-PLAN.md`](../../../BaiduSyncdisk/Doc.Work/Programming/claudecode/Kun's%20Context/articles/sfa-crm-series/MASTER-PLAN.md) 的"三列映射表"——讨论 SFA CRM 文章 / spec / tag 历史都先打开它对照。
 
