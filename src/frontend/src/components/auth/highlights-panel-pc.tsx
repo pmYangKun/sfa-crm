@@ -26,7 +26,7 @@ const HIGHLIGHTS: HighlightItem[] = [
 
 export default function HighlightsPanelPC() {
   return (
-    <section data-testid="highlights-panel-pc" style={{ marginTop: 72 }}>
+    <section data-testid="highlights-panel-pc" style={{ marginTop: 16 }}>
       <div
         style={{
           fontSize: 11,
