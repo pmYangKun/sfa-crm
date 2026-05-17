@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { getRoleCardByLogin, ROLE_CARDS } from '@/lib/onboarding-config';
 import RoleSwitchConfirm from '@/components/onboarding/role-switch-confirm';
+import ResetCountdownCard from '@/components/demo/ResetCountdownCard';
 
 export default function MobileMePage() {
   const { user, loginName, logout, quickSwitchRole } = useAuth();
@@ -44,6 +45,8 @@ export default function MobileMePage() {
             {me?.description}
           </div>
         </div>
+
+        <ResetCountdownCard />
 
         {targetRole && (
           <button
