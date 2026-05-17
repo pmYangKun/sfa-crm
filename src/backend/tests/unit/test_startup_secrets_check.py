@@ -28,7 +28,7 @@ def test_production_default_jwt_secret_raises(monkeypatch, capsys):
     monkeypatch.setenv("ENV", "production")
     monkeypatch.setenv("JWT_SECRET", "change-me-in-production")
     monkeypatch.setenv("LLM_KEY_FERNET_KEY", "Z2FBQUFBQmtfZmFrZWtleQ==")
-    monkeypatch.setenv("CORS_ORIGINS", "https://sfacrm.pmyangkun.com")
+    monkeypatch.setenv("CORS_ORIGINS", "https://crm.pmyangkun.com")
     config = _reload_config()
 
     with pytest.raises(SystemExit):
@@ -41,7 +41,7 @@ def test_production_missing_fernet_key_raises(monkeypatch, capsys):
     monkeypatch.setenv("ENV", "production")
     monkeypatch.setenv("JWT_SECRET", "real-secret-32-chars-aaaaaaaaaaaa")
     monkeypatch.delenv("LLM_KEY_FERNET_KEY", raising=False)
-    monkeypatch.setenv("CORS_ORIGINS", "https://sfacrm.pmyangkun.com")
+    monkeypatch.setenv("CORS_ORIGINS", "https://crm.pmyangkun.com")
     config = _reload_config()
 
     with pytest.raises(SystemExit):
@@ -67,7 +67,7 @@ def test_production_all_correct_passes(monkeypatch):
     monkeypatch.setenv("ENV", "production")
     monkeypatch.setenv("JWT_SECRET", "real-secret-32-chars-aaaaaaaaaaaa")
     monkeypatch.setenv("LLM_KEY_FERNET_KEY", "Z2FBQUFBQmtfZmFrZWtleQ==")
-    monkeypatch.setenv("CORS_ORIGINS", "https://sfacrm.pmyangkun.com")
+    monkeypatch.setenv("CORS_ORIGINS", "https://crm.pmyangkun.com")
     config = _reload_config()
 
     config._assert_production_secrets()  # should not raise

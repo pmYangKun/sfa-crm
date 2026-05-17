@@ -238,6 +238,29 @@ export default function LoginPage() {
         </div>
 
         <HighlightsPanelPC />
+
+        <div
+          data-testid="login-footer"
+          style={{
+            marginTop: 40,
+            paddingTop: 20,
+            borderTop: '1px solid #e2e8f0',
+            textAlign: 'center',
+            fontSize: 12,
+            color: '#94a3b8',
+            lineHeight: 1.7,
+          }}
+        >
+          <a
+            href="https://beian.miit.gov.cn"
+            target="_blank"
+            rel="noopener noreferrer"
+            data-testid="login-icp"
+            style={{ color: '#94a3b8', textDecoration: 'none' }}
+          >
+            京ICP备2026025674号
+          </a>
+        </div>
       </div>
     </div>
   );

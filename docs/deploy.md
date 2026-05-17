@@ -2,7 +2,7 @@
 
 **适用范围**：spec 002 公网部署安全/治理硬化之后的所有版本
 
-**目标**：把 demo 站从干净的腾讯云 Linux VM 一次性部署到 `https://sfacrm.pmyangkun.com`，30 分钟内完成上线。
+**目标**：把 demo 站从干净的腾讯云 Linux VM 一次性部署到 `https://crm.pmyangkun.com`，30 分钟内完成上线。
 
 **部署原则**：**公网永远跟 master HEAD**。每个 spec 完整 PR + merge 进 master 后立即部署最新代码，不切 tag、不留过渡版本。这样演示站永远代表项目最新形态，回滚只在线上崩溃时才用（见 §十二）。
 
@@ -11,7 +11,7 @@
 ## 一、前置条件
 
 - 一台干净的 Linux VM（推荐 Ubuntu 22.04 / Debian 12，2 vCPU / 2GB RAM 起步）
-- 公网 IP 已绑定 DNS A 记录到 `sfacrm.pmyangkun.com`
+- 公网 IP 已绑定 DNS A 记录到 `crm.pmyangkun.com`
 - ICP 备案号已通过
 - 域名根 `pmyangkun.com` 的 ICP 备案号在备案管理后台
 
@@ -56,7 +56,7 @@ chmod 600 /opt/sfa-crm/.env.production  # 仅 owner 可读
 # 编辑 .env.production 填入：
 # 1. JWT_SECRET — openssl rand -base64 48
 # 2. LLM_KEY_FERNET_KEY — python3 -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
-# 3. CORS_ORIGINS=https://sfacrm.pmyangkun.com
+# 3. CORS_ORIGINS=https://crm.pmyangkun.com
 # 4. ENV=production
 # 5. ANTHROPIC_API_KEY / OPENAI_API_KEY / DEEPSEEK_API_KEY / MINIMAX_API_KEY
 #    （至少配 admin UI 选定的当前 active provider 对应那一项；spec 002 T036 起这是
@@ -188,7 +188,7 @@ sudo systemctl start sfa-crm-frontend
 sudo tee /etc/nginx/sites-available/sfacrm > /dev/null <<'EOF'
 server {
     listen 80;
-    server_name sfacrm.pmyangkun.com;
+    server_name crm.pmyangkun.com;
 
     # ACME challenge for certbot
     location /.well-known/acme-challenge/ {
@@ -203,11 +203,11 @@ server {
 
 server {
     listen 443 ssl http2;
-    server_name sfacrm.pmyangkun.com;
+    server_name crm.pmyangkun.com;
 
     # SSL 证书路径（certbot 会自动写）
-    ssl_certificate /etc/letsencrypt/live/sfacrm.pmyangkun.com/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/sfacrm.pmyangkun.com/privkey.pem;
+    ssl_certificate /etc/letsencrypt/live/crm.pmyangkun.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/crm.pmyangkun.com/privkey.pem;
     ssl_protocols TLSv1.2 TLSv1.3;
 
     # 后端 API
@@ -250,7 +250,7 @@ sudo systemctl reload nginx
 ## 八、HTTPS 证书
 
 ```bash
-sudo certbot --nginx -d sfacrm.pmyangkun.com --non-interactive --agree-tos -m your-email@example.com
+sudo certbot --nginx -d crm.pmyangkun.com --non-interactive --agree-tos -m your-email@example.com
 
 # certbot 会自动改 nginx 配置 + 申请证书 + 配置自动续期 timer
 sudo systemctl status certbot.timer  # 应是 active
@@ -263,9 +263,9 @@ sudo systemctl status certbot.timer  # 应是 active
 curl -i http://127.0.0.1:8000/
 
 # 2. HTTPS 访问首页
-curl -I https://sfacrm.pmyangkun.com/
+curl -I https://crm.pmyangkun.com/
 
-# 3. 浏览器访问 https://sfacrm.pmyangkun.com，登录 sales01 / 12345
+# 3. 浏览器访问 https://crm.pmyangkun.com，登录 sales01 / 12345
 
 # 4. 跑 8 个 demo case（详见 docs/copilot-cases.md），每个 3-5 轮对话不被 429/503
 

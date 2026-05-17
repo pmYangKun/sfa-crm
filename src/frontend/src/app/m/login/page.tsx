@@ -222,7 +222,7 @@ export default function MobileLoginPage() {
 
         <HighlightsPanelMobile />
 
-        {/* Footer：移动登录页底部回个人主页入口（仅登录页有，登录后是纯 CRM 演示环境） */}
+        {/* Footer：移动登录页底部回个人主页入口（仅登录页有，登录后是纯 CRM 演示环境） + ICP 备案号 */}
         <div
           data-testid="login-footer"
           style={{
@@ -232,20 +232,34 @@ export default function MobileLoginPage() {
             textAlign: 'center',
             fontSize: 12,
             color: '#94a3b8',
+            lineHeight: 1.8,
           }}
         >
-          <a
-            href="https://www.pmyangkun.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            data-testid="login-back-to-homepage"
-            style={{
-              color: '#475569',
-              textDecoration: 'none',
-            }}
-          >
-            ← 返回杨堃个人主页 (pmyangkun.com) ↗
-          </a>
+          <div>
+            <a
+              href="https://www.pmyangkun.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              data-testid="login-back-to-homepage"
+              style={{
+                color: '#475569',
+                textDecoration: 'none',
+              }}
+            >
+              ← 返回杨堃个人主页 (pmyangkun.com) ↗
+            </a>
+          </div>
+          <div style={{ marginTop: 6 }}>
+            <a
+              href="https://beian.miit.gov.cn"
+              target="_blank"
+              rel="noopener noreferrer"
+              data-testid="login-icp"
+              style={{ color: '#94a3b8', textDecoration: 'none' }}
+            >
+              京ICP备2026025674号
+            </a>
+          </div>
         </div>
       </div>
     </div>
