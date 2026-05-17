@@ -215,8 +215,13 @@ server {
     ssl_certificate_key /etc/letsencrypt/live/crm.pmyangkun.com/privkey.pem;
     ssl_protocols TLSv1.2 TLSv1.3;
 
-    # 后端 API
-    location /api/ {
+    # 后端 API（注意：是 /api/v1/ 而不是 /api/）
+    # 关键陷阱：Next.js 前端在 /api/chat 也有 Route Handler（LLM 流式 chat 入口）。
+    # 如果这里写 location /api/ 一刀切给 backend，会让 /api/chat 错误地落到
+    # backend（不存在该路由）返回 404，导致 AI Copilot "请求失败"。
+    # 后端所有真实路由都在 /api/v1/ 下（auth/leads/agent 等），所以这里必须
+    # 精确匹配 /api/v1/，剩下含 /api/chat 的请求统一交给前端 Next.js。
+    location /api/v1/ {
         proxy_pass http://127.0.0.1:8000;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
