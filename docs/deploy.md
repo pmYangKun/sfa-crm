@@ -112,8 +112,13 @@ cd /opt/sfa-crm/src/frontend
 npm install
 
 # 配置前端 backend URL
+# ⚠️ 重要：NEXT_PUBLIC_* 前缀的环境变量会被打包进客户端 JS bundle，
+# 浏览器执行时直接读取。绝不能写 127.0.0.1 / localhost —— 浏览器会
+# 解析为"用户自己电脑"的 localhost（而不是服务器），导致登录后所有
+# fetch 报 "Failed to fetch"。必须用浏览器能访问到的公网 URL（即本
+# 服务部署的对外 HTTPS 域名）。同源 fetch 还能避开 CORS。
 cat > .env.production.local <<EOF
-NEXT_PUBLIC_BACKEND_URL=http://127.0.0.1:8000
+NEXT_PUBLIC_BACKEND_URL=https://crm.pmyangkun.com
 EOF
 
 # 构建生产版本
