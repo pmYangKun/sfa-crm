@@ -51,7 +51,7 @@ export default function ResetCountdownBadge() {
   // 拉服务端状态
   const fetchStatus = async () => {
     try {
-      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+      const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
       if (!token) return;
       const res = await fetch(`${API_BASE}/agent/demo-reset-status`, {
         headers: { Authorization: `Bearer ${token}` },
