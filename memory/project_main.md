@@ -124,7 +124,14 @@ spec-kit 产物：`specs/002-public-deploy-hardening/`（spec.md / plan.md / res
 - ✅ spec 003（MEDDICC 销售视角）已 merge，tag `v-spec003` → `cd8133c`
 - ✅ spec 004（MEDDICC 经理视角 Pipeline）已 merge，tag `v-spec004` → `8271812`，PR #5
 - ✅ spec 004 v2 UX 微调（2026-05-07 当晚 + 当夜两轮）：默认 Team 视图 / 移动端 forecast tabs 折行 / Warnings & Forecast 弹层 Portal 化 / 移动端 BottomSheet 替代浮窗 / 金刚区 5 槽（删跟进 + Pipeline 全角色可见）/ Lead 详情页头部加 Forecast 编辑 + 金额 + 关单 / Seed 大扩量（54 lead / 29 评分 / 116 evidence / 116 history snapshot）/ demo_reset_service 补 LeadMeddiccHistory 漏删
-- **测试态势（2026-05-07 终态）：** Backend 159 pytest / PC Playwright 38 / Mobile Playwright 33 / 0 fail
+- ✅ **2026-05-17 首次公网正式上线 https://crm.pmyangkun.com**（5 commit 全 push 到 master + 部署到生产）：
+  - `ee54479` 域名 sfacrm → crm + 登录页 ICP footer
+  - `431269c` nginx 反代要按 /api/v1/ 精确匹配（原 /api/ 一刀切会吞 /api/chat Next.js Route Handler 导致 AI Copilot 失败）
+  - `a788e4f` 嵌入百度统计（共享主站 site ID 961b93...）
+  - `7c4eac6` 修 ResetCountdownBadge 老 bug：localStorage key 写错 'token' → 'access_token' + 加 PC smoke 回归
+  - `fe467fb` 移动端去浮动 badge，挪到 /m/me 内嵌 ResetCountdownCard（抽 useResetCountdown hook 复用）+ 加 mobile smoke 回归
+  - 部署：本地 git archive + scp + 服务器 mv 旧目录保留 secrets + .venv/node_modules 复用 + npm build + systemctl restart frontend，详细流程见 `~/Doc.Work/Programming/claudecode/memory/feedback_deploy_vocab.md`（增量部署 7 步）
+- **测试态势（2026-05-17 终态）：** Backend 159 pytest / PC Playwright 39（spec 003-004 38 + reset-countdown-badge-smoke 1） / Mobile Playwright 34（spec 003-004 33 + reset-countdown-card-smoke 1）/ 0 fail
 - LLM API Key：`src/backend/.env`（dev）/ DB Fernet 密文（生产，spec 002）
 - 演示案例：`docs/copilot-cases.md`（8 个独立案例）
 
@@ -139,7 +146,7 @@ spec-kit 产物：`specs/002-public-deploy-hardening/`（spec.md / plan.md / res
 
 ## 发布 / 部署约定（2026-05-07 三修：简化为"公网永远跟最新"）
 
-**核心规则：** 公网 `sfacrm.pmyangkun.com` **永远跟 master HEAD 跑**——每个大 spec 收口（PR merge 后）立即部署最新版到公网。**不按 tag 切回旧版本演示历史。**
+**核心规则：** 公网 `crm.pmyangkun.com` **永远跟 master HEAD 跑**——每个大 spec 收口（PR merge 后）立即部署最新版到公网。**不按 tag 切回旧版本演示历史。**
 
 **为什么简化（用户 2026-05-07 三修决策）：**
 1. 切 tag 部署需要 DB schema 同步管理（每个 tag 还得带迁移脚本能 rebuild），工程量大
