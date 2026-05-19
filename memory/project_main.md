@@ -131,14 +131,17 @@ spec-kit 产物：`specs/002-public-deploy-hardening/`（spec.md / plan.md / res
   - `7c4eac6` 修 ResetCountdownBadge 老 bug：localStorage key 写错 'token' → 'access_token' + 加 PC smoke 回归
   - `fe467fb` 移动端去浮动 badge，挪到 /m/me 内嵌 ResetCountdownCard（抽 useResetCountdown hook 复用）+ 加 mobile smoke 回归
   - 部署：本地 git archive + scp + 服务器 mv 旧目录保留 secrets + .venv/node_modules 复用 + npm build + systemctl restart frontend，详细流程见 `~/Doc.Work/Programming/claudecode/memory/feedback_deploy_vocab.md`（增量部署 7 步）
-- ✅ **2026-05-19 VM 重装 + 完整重新部署**（前次 VM 疑似被攻破，从控制台重置后用 SSH 密钥认证从零部署）：
-  - 触发：用户报"虚拟机好像中了木马了"→ 控制台重置 VM
-  - SSH 加固：腾讯云控制台绑定密钥对 + 下载私钥 `C:\Users\YK\.ssh\kunclawmachine.pem` + Windows 本地 icacls 锁权限 + 本地 `~/.ssh/config` 配 alias `ssh crm` + sshd `PasswordAuthentication=no` 关掉密码登录
+- ✅ **2026-05-19 VM 重装 + 完整重新部署 + 安全加固**（前次 VM 疑似被攻破，从控制台重置后从零部署 + 一次性补齐所有防线）：
+  - 触发：用户报"虚拟机好像中了木马了"→ 控制台重置 VM；事后回看真正入口大概率是**前次部署用 root + 密码登录**这条老路，不是 SSH 端口或别的
+  - SSH 加固：腾讯云控制台绑定密钥对 + 下载私钥 `C:\Users\YK\.ssh\kunclawmachine.pem` + Windows 本地 icacls 锁权限 + 本地 `~/.ssh/config` 配 alias `ssh crm` + sshd `PasswordAuthentication=no` + `PermitRootLogin no`（drop-in `/etc/ssh/sshd_config.d/99-disable-password.conf`）
   - 服务器接入：用户改为 `ubuntu`（不再是 root）+ sudo 免密拿 root（腾讯云 Ubuntu 镜像标准）
   - 运行时：Ubuntu 24.04 / Node 22.22（Astro 6.2.1 要 ≥22.12，Next.js 14 同时兼容 Node 22）/ Python 3.12 / nginx 1.24 / certbot 2.9
   - 全部 secrets 重生：JWT_SECRET + LLM_KEY_FERNET_KEY + WEBHOOK_SECRET 自动随机；DeepSeek key 用户手动 rotate（前一把已泄露 chat 历史 → revoke + 新生）
   - 公网两站全活：https://crm.pmyangkun.com / https://www.pmyangkun.com 各自 Let's Encrypt 证书
+  - 应用层加固：**admin 默认密码 admin/12345 已改**（用户自行设强密码）；改密码工具脚本流程 = `/opt/sfa-crm/src/backend/.venv/bin/python /tmp/changepw.py`，脚本内用 `getpass` + passlib bcrypt 直接 UPDATE `user` 表，密码不入 history、不在 process list 暴露
+  - 系统层加固：**fail2ban**（sshd jail，5 次失败/10 分钟 → 封 1 小时）+ **UFW**（默认 deny incoming，明确放 22/80/443）+ **腾讯云安全组**（外层 ACL，与 UFW 双层）
   - 部署期间踩 4 个坑（已记录到 [[feedback_deploy_vocab]]）：腾讯云"SSH 微信二次验证"会拦自动化 ssh → 控制台关掉；Astro 要 Node 22 而非 20；腾讯云云镜扫 sk-ant-/sk- 占位符 → 解 tar 后立刻删 `.env.production.example`；PowerShell→ssh stdin 用 `cmd /c "type file | ssh ..."`（PowerShell 不支持 `<`）+ 用 `[System.IO.File]::WriteAllText(..., UTF8Encoding($false))` 避免 BOM 报错
+  - **SSH 端口换高位**这件事评估为低 ROI 没做：密钥+fail2ban 已经把暴力破解面封死，换端口只是减少日志噪声不真提高安全性。要做需先在腾讯云安全组放新端口避免锁死
 - **测试态势（2026-05-17 终态）：** Backend 159 pytest / PC Playwright 39（spec 003-004 38 + reset-countdown-badge-smoke 1） / Mobile Playwright 34（spec 003-004 33 + reset-countdown-card-smoke 1）/ 0 fail
 - LLM API Key：`src/backend/.env`（dev）/ DB Fernet 密文（生产，spec 002）
 - 演示案例：`docs/copilot-cases.md`（8 个独立案例）
