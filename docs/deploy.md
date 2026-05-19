@@ -234,19 +234,35 @@ server {
         proxy_read_timeout 300s;
     }
 
-    # 前端 Next.js（页面 + RSC）
+    # AI Copilot 流式 chat（Next.js Route Handler at /api/chat）—— 独立 location 块
+    # 必须显式关 buffering + cache + chunked encoding，否则浏览器看不到打字机效果，
+    # LLM 响应会被 nginx 攒在缓冲区里一次性吐给前端（2026-05-19 实测踩过这个坑：
+    # 把 streaming 设置只塞在根 location 太粗，且部署脚本容易把它误删；独立块更醒目）
+    location /api/chat {
+        proxy_pass http://127.0.0.1:3000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_http_version 1.1;
+        proxy_buffering off;
+        proxy_cache off;
+        proxy_set_header Connection '';
+        chunked_transfer_encoding off;
+        proxy_read_timeout 300s;
+    }
+
+    # 前端 Next.js 其余路径（页面 + RSC + 静态资源）
     location / {
         proxy_pass http://127.0.0.1:3000;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
-
-        # Next.js HMR / 流式响应
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection 'upgrade';
-        proxy_buffering off;
+        # 注意：这里不再关 buffering——streaming 由独立的 /api/chat 块负责
     }
 }
 EOF

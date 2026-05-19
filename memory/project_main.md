@@ -142,6 +142,7 @@ spec-kit 产物：`specs/002-public-deploy-hardening/`（spec.md / plan.md / res
   - 系统层加固：**fail2ban**（sshd jail，5 次失败/10 分钟 → 封 1 小时）+ **UFW**（默认 deny incoming，明确放 22/80/443）+ **腾讯云安全组**（外层 ACL，与 UFW 双层）
   - 部署期间踩 4 个坑（已记录到 [[feedback_deploy_vocab]]）：腾讯云"SSH 微信二次验证"会拦自动化 ssh → 控制台关掉；Astro 要 Node 22 而非 20；腾讯云云镜扫 sk-ant-/sk- 占位符 → 解 tar 后立刻删 `.env.production.example`；PowerShell→ssh stdin 用 `cmd /c "type file | ssh ..."`（PowerShell 不支持 `<`）+ 用 `[System.IO.File]::WriteAllText(..., UTF8Encoding($false))` 避免 BOM 报错
   - **SSH 端口换高位**这件事评估为低 ROI 没做：密钥+fail2ban 已经把暴力破解面封死，换端口只是减少日志噪声不真提高安全性。要做需先在腾讯云安全组放新端口避免锁死
+  - **当晚补丁：chat 流式响应回归**——部署写 nginx 时漏抄根 `location /` 的 `proxy_buffering off`，导致 AI 回复一次性蹦出（无打字机效果）。修法：抽独立 `location /api/chat` 块（buffering off + cache off + chunked_transfer_encoding off），根 location 保持默认 buffer。`docs/deploy.md` 的 nginx 模板同步升级到三 location 块（/api/v1 + /api/chat + /）
 - **测试态势（2026-05-17 终态）：** Backend 159 pytest / PC Playwright 39（spec 003-004 38 + reset-countdown-badge-smoke 1） / Mobile Playwright 34（spec 003-004 33 + reset-countdown-card-smoke 1）/ 0 fail
 - LLM API Key：`src/backend/.env`（dev）/ DB Fernet 密文（生产，spec 002）
 - 演示案例：`docs/copilot-cases.md`（8 个独立案例）
