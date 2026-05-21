@@ -5,6 +5,8 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from starlette.middleware.trustedhost import TrustedHostMiddleware  # noqa: F401  # 保留备用
+from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
@@ -71,6 +73,14 @@ app = FastAPI(
     version="0.1.0",
     lifespan=lifespan,
 )
+
+# Trust X-Forwarded-For / X-Real-IP from local nginx (127.0.0.1).
+# 关键：slowapi 的 get_remote_address 走 request.client.host，
+# 没这个 middleware 反代场景下永远拿到 nginx 的 IP（127.0.0.1）
+# → 所有用户被合并按 IP 限流。
+# 加了之后 starlette 把 X-Forwarded-For 第一段写回 request.client.host。
+# 只 trust 127.0.0.1 表示只接受本机 nginx 转发，不接受任意外网注入。
+app.add_middleware(ProxyHeadersMiddleware, trusted_hosts="127.0.0.1")
 
 # Rate limiter
 app.state.limiter = limiter

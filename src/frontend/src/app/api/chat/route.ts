@@ -29,8 +29,36 @@ import { streamText, jsonSchema, stepCountIs } from 'ai';
 import { createAnthropic } from '@ai-sdk/anthropic';
 import { createOpenAI } from '@ai-sdk/openai';
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000';
+// 关键设计（2026-05-21 修）：
+// - 浏览器侧 fetch 走 NEXT_PUBLIC_BACKEND_URL（公网 HTTPS 域名，CORS-friendly + 用户真实 IP 进 backend）
+// - 服务端 Route Handler fetch 走 BACKEND_URL_INTERNAL（127.0.0.1 内部回环，省一跳 nginx + TLS）
+// 之前问题：Route Handler 也走外网回来，backend 看到所有用户都是服务器自己出口 IP
+// → slowapi 按 IP 限流时所有 user 共享同 IP 桶 → 一聊天就 429 + 重启 VM 才恢复
+const BACKEND_URL =
+  process.env.BACKEND_URL_INTERNAL ||
+  process.env.NEXT_PUBLIC_BACKEND_URL ||
+  'http://localhost:8000';
 const API_BASE = `${BACKEND_URL}/api/v1`;
+
+// 把浏览器真实 IP 从 req header 提取并透传给 backend
+// nginx 已经设置了 X-Real-IP / X-Forwarded-For（见 sites-available/sfacrm）
+// 这里把它从浏览器→Next.js 这一跳的 header 接力到 Next.js→backend 这一跳
+function getClientIp(req: Request): string | null {
+  const xff = req.headers.get('x-forwarded-for');
+  if (xff) return xff.split(',')[0].trim();
+  const xrip = req.headers.get('x-real-ip');
+  if (xrip) return xrip.trim();
+  return null;
+}
+
+function buildForwardHeaders(req: Request): Record<string, string> {
+  const clientIp = getClientIp(req);
+  if (!clientIp) return {};
+  return {
+    'X-Forwarded-For': clientIp,
+    'X-Real-IP': clientIp,
+  };
+}
 
 // Helper: define tool with inputSchema (workaround for ai@6 bug where tool() uses 'parameters' but streamText reads 'inputSchema')
 function defineTool(
@@ -58,9 +86,12 @@ export async function POST(req: Request) {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
   }
 
+  // 透传给所有 server-side fetch 的浏览器真实 IP（限流 / 审计用）
+  const ipHeaders = buildForwardHeaders(req);
+
   // 1. Read LLM config + system prompt from backend
   const configRes = await fetch(`${API_BASE}/agent/llm-config/full`, {
-    headers: { Authorization: `Bearer ${token}` },
+    headers: { Authorization: `Bearer ${token}`, ...ipHeaders },
   });
   if (!configRes.ok) {
     return new Response(JSON.stringify({ error: 'Failed to load LLM config' }), { status: 500 });
@@ -78,6 +109,7 @@ export async function POST(req: Request) {
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`,
+        ...ipHeaders,
       },
       body: JSON.stringify({ session_id: sessionId, message: lastUserMsg.content }),
     });
@@ -157,7 +189,7 @@ export async function POST(req: Request) {
   const exec = async (toolName: string, args: Record<string, unknown>) => {
     const res = await fetch(`${API_BASE}/agent/execute-tool?tool_name=${encodeURIComponent(toolName)}`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}`, ...ipHeaders },
       body: JSON.stringify(args),
     });
     return res.json();
