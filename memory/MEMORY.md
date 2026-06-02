@@ -1,5 +1,7 @@
 # Memory Index
 
+本项目记忆文件固定存放在 `D:\MyProgramming\cc\SFACRM\memory\`。读取项目上下文时先读本文件，再按索引读取相关文件；写入项目记忆时也写到本目录下，不使用 `C:\Users\YK\.claude\projects\` 下的任何路径。
+
 - [Main Project](project_main.md) — 书籍方法论→Spec/Skill→SFA CRM，三阶段验证项目
 - [Feedback: CRM构建不强绑方法论](feedback_crm_methodology.md) — SFA CRM构建完全依赖AI/工程最佳实践，不把书中方法论强行映射进来
 - [Feedback: spec coding 用 Playwright 自我验证](feedback_playwright_self_verify.md) — 每个 user story / phase 完成后跑 Playwright e2e，确认通过再报告

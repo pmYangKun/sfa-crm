@@ -37,7 +37,7 @@ Windows 用户双击 `start.bat`，等待两个终端窗口启动完成后访问
 首次使用需配置 LLM：
 1. 用 `admin` 登录
 2. 进入「Admin → LLM 配置」
-3. 填入 API Key（支持 DeepSeek、Anthropic 等 OpenAI 兼容 Provider；推荐 DeepSeek-chat，国内可达且响应快）
+3. 选择 Provider / Model；本地开发可填入 API Key，生产部署默认由服务端环境变量提供 Key（支持 DeepSeek、Anthropic 等 OpenAI 兼容 Provider；推荐 DeepSeek-chat，国内可达且响应快）
 4. 点击保存并激活
 
 配置完成后，任意用户登录都可以使用右下角的 AI 助手。
@@ -71,7 +71,7 @@ Windows 用户双击 `start.bat`，等待两个终端窗口启动完成后访问
 
 Spec 里有业务逻辑、对象定义、行为约束。AI 基于这些生成代码，出问题改 Spec 不改注释。Spec 是设计的唯一真实来源。
 
-与此配合的还有 **Harness Engineering**：用 CLAUDE.md、Skill 文件、Memory 系统约束 AI 的行为边界，让它不跑偏。
+与此配合的还有 **Harness Engineering**：用 Skill 文件、Memory 系统约束 AI 的行为边界，让它不跑偏。
 
 ---
 
@@ -93,8 +93,7 @@ Spec 里有业务逻辑、对象定义、行为约束。AI 基于这些生成代
 │   └── docker-compose.yml
 ├── skills/                          # Claude Code Skill 文件
 │   └── check-prd/                   # PRD 质量检查工具（独立子项目）
-├── memory/                          # Claude 跨会话记忆文件
-└── CLAUDE.md                        # Claude Code 项目配置
+└── memory/                          # 项目协作记忆与回归约定
 ```
 
 ---
@@ -205,7 +204,7 @@ npx playwright test pc-copilot-cases-regression --reporter=list      # PC 9 case
 npx playwright test mobile-copilot-cases-regression --reporter=list  # Mobile 9 case，真实 LLM
 ```
 
-**回归约定（刚性）**：用户说"回归测试 / 全量测试"时，上面三条 **全跑过才算通过**。详见 [`CLAUDE.md`](CLAUDE.md) 的「回归测试约定」段。
+**回归约定（刚性）**：用户说"回归测试 / 全量测试"时，上面三条 **全跑过才算通过**。详见 [`memory/feedback_regression_via_playwright.md`](memory/feedback_regression_via_playwright.md)。
 
 ---
 

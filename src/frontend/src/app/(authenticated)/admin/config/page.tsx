@@ -78,10 +78,6 @@ export default function ConfigPage() {
   };
 
   const handleLLMSave = async () => {
-    if (!llmForm.api_key && !llmConfig?.configured) {
-      alert('请输入 API Key');
-      return;
-    }
     setLlmSaving(true);
     try {
       await api.post('/agent/llm-config', llmForm);
@@ -150,11 +146,11 @@ export default function ConfigPage() {
       {/* LLM Config */}
       <div style={{ background: '#fff', padding: 24, borderRadius: 8, marginBottom: 24 }}>
         <h2 style={{ fontSize: 18, marginBottom: 16 }}>AI 模型配置</h2>
-        {llmConfig?.configured && (
-          <p style={{ color: '#52c41a', marginBottom: 12 }}>
-            当前已配置：{llmConfig.provider} / {llmConfig.model}
-          </p>
-        )}
+        <p style={{ color: llmConfig?.configured ? '#52c41a' : '#8c8c8c', marginBottom: 12 }}>
+          {llmConfig?.configured
+            ? `当前已配置：${llmConfig.provider} / ${llmConfig.model}`
+            : '尚未保存模型配置。生产环境可只保存 Provider/Model，API Key 由服务端环境变量提供。'}
+        </p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12, maxWidth: 500 }}>
           <div>
             <label style={{ display: 'block', marginBottom: 4, fontWeight: 500 }}>Provider</label>
@@ -211,14 +207,17 @@ export default function ConfigPage() {
             </div>
           </div>
           <div>
-            <label style={{ display: 'block', marginBottom: 4, fontWeight: 500 }}>API Key</label>
+            <label style={{ display: 'block', marginBottom: 4, fontWeight: 500 }}>API Key（可选）</label>
             <input
               type="password"
               value={llmForm.api_key}
               onChange={e => setLlmForm({ ...llmForm, api_key: e.target.value })}
-              placeholder={llmConfig?.configured ? '(已配置，留空不修改)' : '输入 API Key'}
+              placeholder={llmConfig?.configured ? '留空则沿用已有 Key / 服务端环境变量' : '本地开发可填写；生产环境可留空'}
               style={{ width: '100%', padding: '6px 8px', border: '1px solid #d9d9d9', borderRadius: 4 }}
             />
+            <div style={{ fontSize: 12, color: '#888', marginTop: 4 }}>
+              留空保存时，系统会优先使用服务端环境变量中的 Key；已有 DB Key 时会自动沿用。
+            </div>
           </div>
           <div>
             <button onClick={handleLLMSave} disabled={llmSaving} style={{

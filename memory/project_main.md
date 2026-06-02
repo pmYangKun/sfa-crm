@@ -148,9 +148,9 @@ spec-kit 产物：`specs/002-public-deploy-hardening/`（spec.md / plan.md / res
 - LLM API Key：`src/backend/.env`（dev）/ DB Fernet 密文（生产，spec 002）
 - 演示案例：`docs/copilot-cases.md`（8 个独立案例）
 
-## 已知 bug / 待修 (2026-05-17)
+## 已知 bug / 修复记录
 
-- **admin UI LLM 配置表单 API Key 字段仍强制 required**：spec 002 T036 让 chat 运行时改从 `process.env.{PROVIDER}_API_KEY` 读 key（绕开 backend），但 admin UI（`/admin/config`）的 LLM 配置表单仍要求填 API Key 才能保存。导致部署后用户体验割裂："env 已经配过了为什么 UI 还要再填一次？"。修法二选一：(1) UI 把 key 字段改 optional 加提示"留空表示使用 server env"；(2) 后端 /llm-config 接受空 key + UI 显示 env 是否已配置的指示器。下次有 spec 编排时纳入。具体踩坑场景：用户 2026-05-17 首次上线后试 chat 报"请求失败"，进 admin UI 想保存配置时被 "请输入 API Key" 阻塞
+- ✅ **2026-06-02 修复 admin UI LLM 配置表单 API Key 强制 required**：spec 002 T036 让 chat 运行时改从 `process.env.{PROVIDER}_API_KEY` 读 key（绕开 backend），但 admin UI（`/admin/config`）的 LLM 配置表单仍要求填 API Key 才能保存。已改为 API Key 可选：生产环境可只保存 Provider/Model，由服务端环境变量提供 Key；本地开发仍可填写 Key；已有 DB Key 时留空会沿用旧密文。
 - 一键启动：`start.bat` | 一键重置：`reset-demo.bat`
 - 公网部署：`docs/deploy.md` 一键流程（spec 002）
 - 演示账号：admin / sales01（王小明）/ sales02（李思远）/ sales03（张磊）/ manager01（陈队长），密码均为 12345
