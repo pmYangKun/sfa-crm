@@ -262,6 +262,12 @@ DEFAULT_CONFIGS = [
     ("meddicc_score_activity_weight", "15", "MEDDICC Score 活跃度权重"),
     ("meddicc_activity_recent_days", "7", "MEDDICC 活跃度满分天数"),
     ("meddicc_activity_acceptable_days", "30", "MEDDICC 活跃度半分天数"),
+    # ── spec 005 MCP 开放平台配置 ────────────────────────────────────────────
+    ("mcp_token_ttl_days", "7", "MCP 接入密钥有效期（天）"),
+    ("mcp_rate_per_minute", "30", "单个 MCP 密钥每分钟调用上限"),
+    ("mcp_rate_per_day", "500", "单个 MCP 密钥每日调用上限"),
+    ("mcp_issue_per_ip_per_day", "5", "单个来源 IP 每日可领取的 MCP 密钥数"),
+    ("mcp_demo_rate_per_hour", "60", "/open 首页 live 演示区每小时调用上限（独立配额）"),
 ]
 
 

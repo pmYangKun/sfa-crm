@@ -29,9 +29,9 @@ description: "Task list for spec 005 — MCP 开放平台"
 
 **Purpose**: 锁定协议实现方式，避免在错误的地基上铺代码
 
-- [ ] T001 锁定 MCP SDK 版本并跑通最小挂载示例：在 `src/backend/` 下验证 SDK 的 Streamable HTTP ASGI 应用能挂载进既有 FastAPI，能完成一次连接握手与空工具列举。**本任务不通过则不得进入 T002**（research.md Decision 1 标注：SDK 挂载 API 跨版本有变动，须先验证再叠加鉴权；若确认无法与 FastAPI 共存，改走手写 JSON-RPC 退路并回写 research.md）
-- [ ] T002 将锁定版本的 MCP SDK 写入 `src/backend/pyproject.toml` 的 dependencies
-- [ ] T003 [P] 在 `src/backend/app/core/config.py`（或既有配置常量位置）定义 5 个新配置键名常量：`mcp_token_ttl_days` / `mcp_rate_per_minute` / `mcp_rate_per_day` / `mcp_issue_per_ip_per_day` / `mcp_demo_rate_per_hour`
+- [X] T001 锁定 MCP SDK 版本并跑通最小挂载示例：在 `src/backend/` 下验证 SDK 的 Streamable HTTP ASGI 应用能挂载进既有 FastAPI，能完成一次连接握手与空工具列举。**本任务不通过则不得进入 T002**（research.md Decision 1 标注：SDK 挂载 API 跨版本有变动，须先验证再叠加鉴权；若确认无法与 FastAPI 共存，改走手写 JSON-RPC 退路并回写 research.md）
+- [X] T002 将锁定版本的 MCP SDK 写入 `src/backend/pyproject.toml` 的 dependencies
+- [X] T003 [P] 在 `src/backend/app/core/config.py`（或既有配置常量位置）定义 5 个新配置键名常量：`mcp_token_ttl_days` / `mcp_rate_per_minute` / `mcp_rate_per_day` / `mcp_issue_per_ip_per_day` / `mcp_demo_rate_per_hour`
 
 **Checkpoint**: 协议可挂载已验证，依赖已声明
 
@@ -43,15 +43,15 @@ description: "Task list for spec 005 — MCP 开放平台"
 
 **⚠️ CRITICAL**: 本阶段未完成前，任何 user story 不得开工
 
-- [ ] T004 [P] 创建 `McpToken` 模型于 `src/backend/app/models/mcp_token.py`，字段与索引严格按 data-model.md §1（`token_hash` UNIQUE+INDEX、`expires_at` INDEX、`user_id` FK+INDEX）
-- [ ] T005 [P] 在 `src/backend/app/core/database.py` 的 `init_db` 中**幂等补入** 5 个 SystemConfig 默认值（缺失则插入、已存在不覆盖——沿用 spec 002 的既有模式，禁止用"已初始化就整体跳过"的 short-circuit）
-- [ ] T006 实现 `src/backend/app/services/mcp_token_service.py`：发放（生成 `sfa_ro_` + 32 字节随机、返回明文、仅存 SHA-256 摘要与 12 位前缀）、校验（按 data-model §1 的单一有效性判据）、吊销、成功调用后更新 `last_used_at` 与 `call_count`（依赖 T004、T005）
-- [ ] T007 实现 `src/backend/app/core/mcp_auth.py`：FastAPI 依赖，从 `Authorization: Bearer` 解析密钥 → 校验 → 返回对应 `User`；三类失效（查无此摘要 / 已过期 / 已吊销）须返回**可区分且人类可读**的 401（依赖 T006）
-- [ ] T008 [P] 实现 `src/backend/app/services/mcp_tool_registry.py`：从既有 `TOOL_DEFINITIONS` 按 `mode == "read"` **程序化过滤**（禁止手工白名单），并转换为 MCP 工具 schema，保留必填标记与原始 description 语义
-- [ ] T009 实现 `src/backend/app/api/mcp.py`：MCP 协议端点，承载连接握手 / 工具列举 / 工具调用三类消息；工具调用**必须**转交既有 `execute_tool(user_id, ...)`，不得绕过直接查库（宪法原则二）（依赖 T007、T008）
-- [ ] T010 在 `src/backend/app/main.py` 挂载 MCP router 与密钥 router，前缀 `/api/v1`（依赖 T009）
-- [ ] T011 [P] 单测：密钥生命周期（发放→有效→过期→吊销→三类失效响应可区分）于 `src/backend/tests/unit/test_mcp_token_service.py`
-- [ ] T012 [P] 单测：工具过滤结果恰为 9 个且不含任何 `navigate_*` 于 `src/backend/tests/unit/test_mcp_tool_registry.py`
+- [X] T004 [P] 创建 `McpToken` 模型于 `src/backend/app/models/mcp_token.py`，字段与索引严格按 data-model.md §1（`token_hash` UNIQUE+INDEX、`expires_at` INDEX、`user_id` FK+INDEX）
+- [X] T005 [P] 在 `src/backend/app/core/database.py` 的 `init_db` 中**幂等补入** 5 个 SystemConfig 默认值（缺失则插入、已存在不覆盖——沿用 spec 002 的既有模式，禁止用"已初始化就整体跳过"的 short-circuit）
+- [X] T006 实现 `src/backend/app/services/mcp_token_service.py`：发放（生成 `sfa_ro_` + 32 字节随机、返回明文、仅存 SHA-256 摘要与 12 位前缀）、校验（按 data-model §1 的单一有效性判据）、吊销、成功调用后更新 `last_used_at` 与 `call_count`（依赖 T004、T005）
+- [X] T007 实现 `src/backend/app/core/mcp_auth.py`：FastAPI 依赖，从 `Authorization: Bearer` 解析密钥 → 校验 → 返回对应 `User`；三类失效（查无此摘要 / 已过期 / 已吊销）须返回**可区分且人类可读**的 401（依赖 T006）
+- [X] T008 [P] 实现 `src/backend/app/services/mcp_tool_registry.py`：从既有 `TOOL_DEFINITIONS` 按 `mode == "read"` **程序化过滤**（禁止手工白名单），并转换为 MCP 工具 schema，保留必填标记与原始 description 语义
+- [X] T009 实现 `src/backend/app/api/mcp.py`：MCP 协议端点，承载连接握手 / 工具列举 / 工具调用三类消息；工具调用**必须**转交既有 `execute_tool(user_id, ...)`，不得绕过直接查库（宪法原则二）（依赖 T007、T008）
+- [X] T010 在 `src/backend/app/main.py` 挂载 MCP router 与密钥 router，前缀 `/api/v1`（依赖 T009）
+- [X] T011 [P] 单测：密钥生命周期（发放→有效→过期→吊销→三类失效响应可区分）于 `src/backend/tests/unit/test_mcp_token_service.py`
+- [X] T012 [P] 单测：工具过滤结果恰为 9 个且不含任何 `navigate_*` 于 `src/backend/tests/unit/test_mcp_tool_registry.py`
 
 **Checkpoint**: 密钥可发可验、工具可列、协议可通 —— user story 可以并行开工
 

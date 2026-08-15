@@ -17,6 +17,29 @@ class Settings:
 settings = Settings()
 
 
+# ── spec 005 MCP 开放平台：SystemConfig 键名常量 ──────────────────────────────
+# 宪法原则三：阈值一律进 SystemConfig，代码里不得出现字面量。
+# 默认值在 app/core/init_db.py 的 DEFAULT_CONFIGS 中幂等补入。
+CFG_MCP_TOKEN_TTL_DAYS = "mcp_token_ttl_days"
+CFG_MCP_RATE_PER_MINUTE = "mcp_rate_per_minute"
+CFG_MCP_RATE_PER_DAY = "mcp_rate_per_day"
+CFG_MCP_ISSUE_PER_IP_PER_DAY = "mcp_issue_per_ip_per_day"
+CFG_MCP_DEMO_RATE_PER_HOUR = "mcp_demo_rate_per_hour"
+
+# 演示区专用密钥：服务端持有，禁止下发前端（spec 005 FR-021）
+MCP_DEMO_TOKEN: str = os.getenv("MCP_DEMO_TOKEN", "")
+
+# MCP 端点对外地址：写进发放响应，避免前端硬编码
+MCP_PUBLIC_ENDPOINT: str = os.getenv(
+    "MCP_PUBLIC_ENDPOINT", "http://localhost:8000/api/v1/mcp"
+)
+
+# DNS-rebinding 防护放行列表（SDK 默认开启，未放行的 Host 返回 421）
+MCP_ALLOWED_HOSTS: list[str] = os.getenv(
+    "MCP_ALLOWED_HOSTS", "crm.pmyangkun.com,localhost,127.0.0.1,testserver"
+).split(",")
+
+
 def _assert_production_secrets() -> None:
     """生产环境密钥强校验（spec 002 FR-025 / contracts/config-contracts.md § 5）.
 

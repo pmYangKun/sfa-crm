@@ -23,7 +23,17 @@
 | **手写 JSON-RPC 端点**（只实现 `initialize` / `tools/list` / `tools/call` 三消息） | 约 150 行、零新依赖，与既有 `Depends` + slowapi 装饰器结合最自然 | ❌ 否决。省下的依赖不值 SC-004 的兼容性风险；但**保留为退路**：若 SDK 与 FastAPI 挂载方式冲突难解，可回退此方案，届时须逐客户端实测 |
 | **FastMCP 独立进程** | 与主应用分离，部署与鉴权链路都要重建 | ❌ 否决。需第二个 systemd 服务与第二套 nginx 配置，运维面翻倍，且拿不到既有 DB session 与权限依赖 |
 
-**⚠️ 实施期须核对：** SDK 的 ASGI 挂载 API 与 Streamable HTTP 端点构造方式在不同版本间有变动。**动工第一步是锁定版本号并跑通一个最小挂载示例，再往上叠鉴权**，不要按本文的描述直接铺代码。
+**✅ 实施期核对结果（2026-08-15，T001 已完成）：锁定 `mcp==2.0.0`。**
+
+预警的版本变动确实发生了，三处必须按实测结论写代码：
+
+1. **`mcp.server.fastmcp` 在 2.0 已移除。** 改用 `from mcp.server import MCPServer`，通过 `MCPServer.streamable_http_app(streamable_http_path=..., stateless_http=True, transport_security=...)` 得到一个可 mount 的 Starlette 子应用
+2. **父应用必须自行启动 session manager。** 把 Starlette 子应用 mount 进 FastAPI 时，**子应用的 lifespan 不会被父应用执行**，直接调用会抛 `RuntimeError: Task group is not initialized`。修法：在 FastAPI 的 lifespan 里 `async with mcp_server.session_manager.run(): yield`
+3. **必须显式配置 `TransportSecuritySettings`。** SDK 默认开启 DNS-rebinding 防护，未放行的 Host 一律返回 **421 Misdirected Request**（表现为"客户端连不上"，极易误判为网络问题）。须放行生产域名与本地回环
+
+**鉴权注入方式（已实测通过）：** 在 mount 处包一层 ASGI 中间件，解析 `Authorization` 后把用户写入 `contextvars.ContextVar`；工具函数内读取该 contextvar。实测确认 contextvar 能从中间件穿透到工具函数体内（无状态模式下每请求独立上下文，无串号风险）。
+
+验证脚本保留于本次会话的 scratchpad，四个验证点全部通过：子应用可挂载 / 握手成功 / 工具列举正确 / 用户身份成功穿透。
 
 **无状态约束（跨方案通用）：** 端点采用无状态实现——每个请求独立完成鉴权，不维护服务端会话。理由：反代配置简单、水平扩展无障碍、演示环境重启不影响已配置的客户端。
 
