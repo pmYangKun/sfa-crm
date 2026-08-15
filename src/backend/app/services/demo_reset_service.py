@@ -99,6 +99,10 @@ def reset_business_data(
         session.exec(delete(Lead))         # 再 Lead
         session.exec(delete(ChatAudit))
         session.exec(delete(LLMCallCounter))
+        # ⚠️ 禁止把 McpToken 加进这份列表（spec 005 FR-030）。
+        # 它是访客的接入凭证，不是业务数据：访客刚在 /open 配好客户端，
+        # 20 分钟后连接突然全断 = 灾难级体验。
+        # 守护测试：tests/integration/test_mcp_survives_demo_reset.py
         session.commit()
     except Exception:
         session.rollback()

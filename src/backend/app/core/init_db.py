@@ -27,6 +27,7 @@ from app.models.key_event import KeyEvent  # noqa: F401
 from app.models.lead import Lead  # noqa: F401
 from app.models.llm_call_counter import LLMCallCounter  # noqa: F401 — spec 002
 from app.models.llm_config import ConversationMessage, LLMConfig, Skill  # noqa: F401
+from app.models.mcp_token import McpToken  # noqa: F401 — spec 005
 from app.models.notification import Notification  # noqa: F401
 from app.models.org import OrgNode, User
 from app.models.report import DailyReport  # noqa: F401
@@ -266,7 +267,11 @@ DEFAULT_CONFIGS = [
     ("mcp_token_ttl_days", "7", "MCP 接入密钥有效期（天）"),
     ("mcp_rate_per_minute", "30", "单个 MCP 密钥每分钟调用上限"),
     ("mcp_rate_per_day", "500", "单个 MCP 密钥每日调用上限"),
-    ("mcp_issue_per_ip_per_day", "5", "单个来源 IP 每日可领取的 MCP 密钥数"),
+    # 30 而不是 5：一间办公室 / 一个会场共用一个出口 IP 是常态，而每位访客
+    # 通常要销售 + 主管两把。设 5 意味着第 3 个人就领不到了 —— 这个项目
+    # 2026-05-21 刚因为"共用出口 IP"栽过一次，不重蹈覆辙。
+    # 密钥本身只读 + 有 30/分 500/天 的调用限流，发放数放宽不放大攻击面。
+    ("mcp_issue_per_ip_per_day", "30", "单个来源 IP 每日可领取的 MCP 密钥数"),
     ("mcp_demo_rate_per_hour", "60", "/open 首页 live 演示区每小时调用上限（独立配额）"),
 ]
 

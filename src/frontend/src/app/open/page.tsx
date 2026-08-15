@@ -3,6 +3,7 @@
 import Link from 'next/link';
 
 import CopyButton from '@/components/open/CopyButton';
+import LiveDemo from '@/components/open/LiveDemo';
 import PersonaPicker from '@/components/open/PersonaPicker';
 import ToolCatalog from '@/components/open/ToolCatalog';
 import { FALLBACK_ENDPOINT } from '@/lib/open-api';
@@ -64,15 +65,25 @@ export default function OpenHomePage() {
         <PersonaPicker />
       </section>
 
-      {/* 第 4 屏 · 能问什么 */}
+      {/* 第 4 屏 · 先看它真的在跑 */}
       <section className="screen">
-        <p className="screen-label">02 / 能问什么</p>
+        <p className="screen-label">02 / 先看它真的在跑</p>
+        <p className="hero-sub" style={{ fontSize: 14, marginBottom: 20 }}>
+          还没决定要不要花时间配置？这里的调用是真的 —— 点一句，
+          后端会用演示凭证真调一次工具，把过程和数据原样打出来。
+        </p>
+        <LiveDemo />
+      </section>
+
+      {/* 第 5 屏 · 能问什么 */}
+      <section className="screen">
+        <p className="screen-label">03 / 接上之后能问什么</p>
         <SampleQuestions />
       </section>
 
       {/* 第 5 屏 · 工具总览 */}
       <section className="screen">
-        <p className="screen-label">03 / 开放的能力</p>
+        <p className="screen-label">04 / 开放的能力</p>
         <ToolCatalog />
         <p style={{ marginTop: 18 }}>
           <Link href="/open/tools" className="btn">
@@ -83,7 +94,7 @@ export default function OpenHomePage() {
 
       <footer className="open-footer" data-testid="open-footer">
         <p>
-          <strong>限流：</strong>每把密钥每分钟 30 次、每日 500 次；每个来源每日可领 5 把。
+          <strong>限流：</strong>每把密钥每分钟 30 次、每日 500 次；每个来源每日可领 30 把。
         </p>
         <p>
           <strong>数据：</strong>全部为虚构演示数据，每 30 分钟自动重置一次，

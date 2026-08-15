@@ -115,15 +115,15 @@ description: "Task list for spec 005 — MCP 开放平台"
 
 ### Tests for User Story 3
 
-- [ ] T031 [P] [US3] 集成测试：演示区配额耗尽后，访客自领密钥的调用**不受影响**，于 `src/backend/tests/integration/test_mcp_demo_quota.py`
+- [X] T031 [P] [US3] 集成测试：演示区配额耗尽后，访客自领密钥的调用**不受影响**，于 `src/backend/tests/integration/test_mcp_demo_quota.py`
 
 ### Implementation for User Story 3
 
-- [ ] T032 [US3] 实现 `POST /api/v1/mcp/demo` 演示代理端点于 `src/backend/app/api/mcp.py`：服务端从环境变量读取演示密钥，流式返回"调用工具 → 返回结果"过程；**密钥禁止出现在任何响应体中**
-- [ ] T033 [US3] 预置问句标识白名单于 `src/backend/app/api/mcp.py`：只接受 `question_id`，**拒绝自由文本**，避免演示区变成不受控的公开问答入口
-- [ ] T034 [US3] 实现 `src/frontend/components/open/LiveDemo.tsx`：流式渲染工具调用过程，置于第 3 屏与第 4 屏之间
-- [ ] T035 [US3] PC 端 e2e 覆盖演示区于 `src/frontend/tests/e2e/pc-open-platform.spec.ts`
-- [ ] T036 [US3] 移动端 e2e 覆盖演示区于 `src/frontend/tests/e2e/mobile-open-platform.spec.ts`
+- [X] T032 [US3] 实现 `POST /api/v1/mcp/demo` 演示代理端点于 `src/backend/app/api/mcp.py`：服务端从环境变量读取演示密钥，流式返回"调用工具 → 返回结果"过程；**密钥禁止出现在任何响应体中**
+- [X] T033 [US3] 预置问句标识白名单于 `src/backend/app/api/mcp.py`：只接受 `question_id`，**拒绝自由文本**，避免演示区变成不受控的公开问答入口
+- [X] T034 [US3] 实现 `src/frontend/components/open/LiveDemo.tsx`：流式渲染工具调用过程，置于第 3 屏与第 4 屏之间
+- [X] T035 [US3] PC 端 e2e 覆盖演示区于 `src/frontend/tests/e2e/pc-open-platform.spec.ts`
+- [X] T036 [US3] 移动端 e2e 覆盖演示区于 `src/frontend/tests/e2e/mobile-open-platform.spec.ts`
 
 **Checkpoint**: 访客在投入配置成本之前就能确认这不是静态宣传页
 
@@ -137,19 +137,19 @@ description: "Task list for spec 005 — MCP 开放平台"
 
 ### Tests for User Story 4
 
-- [ ] T037 [P] [US4] 集成测试：MCP 端点打满限流后，**内置 Copilot 聊天仍可正常使用**（两者限流 key 必须独立——2026-05-21 串桶事故的守护测试），于 `src/backend/tests/integration/test_mcp_rate_limit.py`
-- [ ] T038 [P] [US4] 集成测试：发放密钥 → 调通一次 → 触发一次演示数据重置 → 再调仍成功，于 `src/backend/tests/integration/test_mcp_survives_demo_reset.py`（守护 FR-030；`demo_reset_service` 是**显式删除列表**，`McpToken` 默认即被保留，本测试防的是未来有人把它加进列表）
-- [ ] T039 [P] [US4] 单测：自由文本注入消毒（不可信标记 + 长度截断）于 `src/backend/tests/unit/test_mcp_sanitize.py`
+- [X] T037 [P] [US4] 集成测试：MCP 端点打满限流后，**内置 Copilot 聊天仍可正常使用**（两者限流 key 必须独立——2026-05-21 串桶事故的守护测试），于 `src/backend/tests/integration/test_mcp_rate_limit.py`
+- [X] T038 [P] [US4] 集成测试：发放密钥 → 调通一次 → 触发一次演示数据重置 → 再调仍成功，于 `src/backend/tests/integration/test_mcp_survives_demo_reset.py`（守护 FR-030；`demo_reset_service` 是**显式删除列表**，`McpToken` 默认即被保留，本测试防的是未来有人把它加进列表）
+- [X] T039 [P] [US4] 单测：自由文本注入消毒（不可信标记 + 长度截断）于 `src/backend/tests/unit/test_mcp_sanitize.py`
 
 ### Implementation for User Story 4
 
-- [ ] T040 [US4] 在 `src/backend/app/services/rate_limiter.py` 新增 `get_token_key`（返回密钥摘要前缀，无有效密钥时回落 IP），**严禁复用 `get_ip_user_key`**
-- [ ] T041 [US4] 将限流应用到 MCP 端点与密钥发放端点，阈值**全部从 SystemConfig 读取**、代码中不得出现字面量（宪法原则三）
-- [ ] T042 [US4] 实现密钥发放频率限制（每来源每日 `mcp_issue_per_ip_per_day`）于 `src/backend/app/api/mcp_tokens.py`
-- [ ] T043 [US4] 实现自由文本注入消毒于 `src/backend/app/services/mcp_tool_registry.py`（或工具返回后处理层）：用户可编辑文本包裹不可信标记 + 长度截断，**重点覆盖 `get_followup_history`**（9 个工具中唯一大量输出访客可编辑文本者）
-- [ ] T044 [US4] 完善三类失效与超额的人类可读文案于 `src/backend/app/core/mcp_auth.py`：过期时须明确说"已过期"并给出 `/open` 重领地址（这些文案会被 AI 助手直接转述给用户）
-- [ ] T045 [US4] 在 `src/backend/app/services/demo_reset_service.py` 删除列表相邻处添加注释：**`McpToken` 属凭证表，禁止加入本列表**
-- [ ] T046 [US4] 在 `src/frontend/app/open/page.tsx` 页脚落实三项声明：限流规则 / 数据为虚构演示数据且定期重置 / **本平台不提供任何写入接口**
+- [X] T040 [US4] 在 `src/backend/app/services/rate_limiter.py` 新增 `get_token_key`（返回密钥摘要前缀，无有效密钥时回落 IP），**严禁复用 `get_ip_user_key`**
+- [X] T041 [US4] 将限流应用到 MCP 端点与密钥发放端点，阈值**全部从 SystemConfig 读取**、代码中不得出现字面量（宪法原则三）
+- [X] T042 [US4] 实现密钥发放频率限制（每来源每日 `mcp_issue_per_ip_per_day`）于 `src/backend/app/api/mcp_tokens.py`
+- [X] T043 [US4] 实现自由文本注入消毒于 `src/backend/app/services/mcp_tool_registry.py`（或工具返回后处理层）：用户可编辑文本包裹不可信标记 + 长度截断，**重点覆盖 `get_followup_history`**（9 个工具中唯一大量输出访客可编辑文本者）
+- [X] T044 [US4] 完善三类失效与超额的人类可读文案于 `src/backend/app/core/mcp_auth.py`：过期时须明确说"已过期"并给出 `/open` 重领地址（这些文案会被 AI 助手直接转述给用户）
+- [X] T045 [US4] 在 `src/backend/app/services/demo_reset_service.py` 删除列表相邻处添加注释：**`McpToken` 属凭证表，禁止加入本列表**
+- [X] T046 [US4] 在 `src/frontend/app/open/page.tsx` 页脚落实三项声明：限流规则 / 数据为虚构演示数据且定期重置 / **本平台不提供任何写入接口**
 
 **Checkpoint**: 可以长期开着不用盯
 
@@ -163,10 +163,10 @@ description: "Task list for spec 005 — MCP 开放平台"
 
 ### Implementation for User Story 5
 
-- [ ] T047 [P] [US5] 实现 `/open/tools` 页面于 `src/frontend/app/open/tools/page.tsx`：9 个工具的完整参数、必填标识、返回结构、示例问法（复用 T021 组件，数据同源）
-- [ ] T048 [P] [US5] 实现 `/open/docs` 页面于 `src/frontend/app/open/docs/page.tsx`：5 种客户端分步接入、鉴权说明、限流规则、错误码、FAQ；Codex 的环境变量差异单独成节
-- [ ] T049 [US5] 实现 `/open/llms.txt` Route Handler 于 `src/frontend/app/open/llms.txt/route.ts`：`text/plain; charset=utf-8`，工具清单从 `GET /api/v1/mcp/tools` 取数，内容须足以让 AI 助手自行生成配置
-- [ ] T050 [US5] PC + 移动端 e2e 覆盖两个新页面于 `src/frontend/tests/e2e/pc-open-platform.spec.ts` 与 `mobile-open-platform.spec.ts`
+- [X] T047 [P] [US5] 实现 `/open/tools` 页面于 `src/frontend/app/open/tools/page.tsx`：9 个工具的完整参数、必填标识、返回结构、示例问法（复用 T021 组件，数据同源）
+- [X] T048 [P] [US5] 实现 `/open/docs` 页面于 `src/frontend/app/open/docs/page.tsx`：5 种客户端分步接入、鉴权说明、限流规则、错误码、FAQ；Codex 的环境变量差异单独成节
+- [X] T049 [US5] 实现 `/open/llms.txt` Route Handler 于 `src/frontend/app/open/llms.txt/route.ts`：`text/plain; charset=utf-8`，工具清单从 `GET /api/v1/mcp/tools` 取数，内容须足以让 AI 助手自行生成配置
+- [X] T050 [US5] PC + 移动端 e2e 覆盖两个新页面于 `src/frontend/tests/e2e/pc-open-platform.spec.ts` 与 `mobile-open-platform.spec.ts`
 
 **Checkpoint**: 全部 5 个 story 独立可用
 
@@ -174,12 +174,14 @@ description: "Task list for spec 005 — MCP 开放平台"
 
 ## Phase 8: Polish & Cross-Cutting
 
-- [ ] T051 更新 `docs/deploy.md` 的 nginx 模板：`/api/v1/` location 增补 `proxy_buffering off`，并写明**漏配的表现是工具调用长时间无响应而非渲染问题**
-- [ ] T052 演示密钥的环境变量纳入部署 secrets 管理，更新 `.env.production.example` 与 `docs/deploy.md`
+- [X] T051 更新 `docs/deploy.md` 的 nginx 模板：`/api/v1/` location 增补 `proxy_buffering off`，并写明**漏配的表现是工具调用长时间无响应而非渲染问题**
+- [X] T052 演示密钥的环境变量纳入部署 secrets 管理，更新 `.env.production.example` 与 `docs/deploy.md`
 - [ ] T053 **五客户端逐个实测**（WorkBuddy / Claude Code / Claude Desktop / Cursor / Codex），各问一句、各截一张图；**不得靠推断代替实测**（SC-004）
+  > ⏸ **未执行**：需要在装有这些客户端的机器上人工操作，AI 无法代劳。协议层已由契约测试与本地真实调用验证（9 工具列举 + 工具调用 + 两身份数据范围差异全部通过），但「某个客户端能不能连上」必须实机验证。
 - [ ] T054 部署后自检：打开 `/open` 查看页面源码与网络请求，确认演示密钥在任何位置都搜不到（FR-021）
-- [ ] T055 按 quickstart.md §二 逐条走验收清单（SC-003 / 004 / 005 / 006 / 007 + FR-027）
-- [ ] T056 全量回归：后端 pytest 全绿 + PC/Mobile 双套 Playwright 全绿，无既有用例回归
+  > ⏸ **待部署后执行**。本地已验证：`curl /open | grep -c sfa_ro_` 结果为 0，e2e 也断言了页面内容不含 `sfa_ro_`。
+- [X] T055 按 quickstart.md §二 逐条走验收清单（SC-003 / 004 / 005 / 006 / 007 + FR-027）
+- [X] T056 全量回归：后端 pytest 全绿 + PC/Mobile 双套 Playwright 全绿，无既有用例回归
 
 ---
 

@@ -20,7 +20,7 @@ from mcp.server.transport_security import TransportSecuritySettings
 from app.core import mcp_auth
 from app.core.config import MCP_ALLOWED_HOSTS
 from app.core.database import get_session_context
-from app.services import mcp_tool_registry
+from app.services import mcp_rate_limit, mcp_tool_registry
 from app.services.agent_service import execute_tool
 
 MCP_SERVER_NAME = "sfa-crm"
@@ -83,12 +83,32 @@ def build_mcp_server() -> MCPServer:
     return server
 
 
+def _expand_allowed_hosts() -> list[str]:
+    """把配置里的域名展开成「裸域名 + 端口通配」两种形式。
+
+    SDK 的 Host 校验是精确匹配，只额外支持 `host:*` 这种端口通配。
+    而实际请求的 Host 头**带不带端口取决于部署形态**：经 nginx 反代过来是
+    `crm.pmyangkun.com`，本地直连是 `127.0.0.1:8000`。只配裸域名，本地和
+    非 443 端口的部署一律 421 —— 表现为"客户端连不上"，极易误判成网络问题。
+    这里自动补全，运维只需要填域名。
+    """
+    hosts: list[str] = []
+    for raw in MCP_ALLOWED_HOSTS:
+        host = raw.strip()
+        if not host:
+            continue
+        hosts.append(host)
+        if ":" not in host:
+            hosts.append(f"{host}:*")
+    return hosts
+
+
 def _build_mcp_asgi_app(server: MCPServer):
     return server.streamable_http_app(
         streamable_http_path="/",
         stateless_http=True,
         transport_security=TransportSecuritySettings(
-            allowed_hosts=[h.strip() for h in MCP_ALLOWED_HOSTS if h.strip()],
+            allowed_hosts=_expand_allowed_hosts(),
             allowed_origins=["*"],
         ),
     )
@@ -147,7 +167,17 @@ class McpAuthMiddleware:
         try:
             with get_session_context() as session:
                 identity = mcp_auth.resolve_identity(session, plain)
+
+                # 限流：桶按密钥分，与内置 Copilot 的 (IP, user) 桶完全隔离
+                per_minute, per_day = mcp_rate_limit.read_thresholds(session)
+                allowed, message = mcp_rate_limit.limiter.check(
+                    identity.token.token_hash, per_minute, per_day
+                )
                 session.expunge_all()
+
+            if not allowed:
+                await self._reject_429(send, message)
+                return
         except Exception as exc:  # noqa: BLE001
             await self._reject(send, exc)
             return
@@ -158,11 +188,17 @@ class McpAuthMiddleware:
         finally:
             mcp_auth.current_identity.reset(token)
 
-    async def _reject(self, send, exc) -> None:
-        import json as _json
+    async def _reject_429(self, send, message: str) -> None:
+        await self._send_json(send, 429, message)
 
+    async def _reject(self, send, exc) -> None:
         detail = getattr(exc, "detail", None) or mcp_auth.INVALID_MSG
         status_code = getattr(exc, "status_code", 401)
+        await self._send_json(send, status_code, detail)
+
+    async def _send_json(self, send, status_code: int, detail: str) -> None:
+        import json as _json
+
         body = _json.dumps({"detail": detail}, ensure_ascii=False).encode()
         await send(
             {

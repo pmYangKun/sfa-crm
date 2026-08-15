@@ -45,6 +45,26 @@ def get_ip_only_key(request: Request) -> str:
     )
 
 
+def get_token_key(request: Request) -> str:
+    """限流 key = MCP 密钥摘要前缀（spec 005 FR-026）。
+
+    **严禁复用 get_ip_user_key。** MCP 是独立入口，其调用特征（用户问一句
+    可能触发多次工具调用）与 chat 完全不同；共用一个桶会让两边互相挤兑。
+    2026-05-21 那次"一聊天就提示请求过多"就是限流 key 被合并导致的，
+    这里不能重演。
+
+    没带有效密钥时回落到 IP —— 未鉴权的请求本来也会被 401 拦掉。
+    """
+    import hashlib
+
+    auth_header = request.headers.get("Authorization", "")
+    if auth_header.startswith("Bearer "):
+        token = auth_header[7:].strip()
+        if token:
+            return "mcp:" + hashlib.sha256(token.encode("utf-8")).hexdigest()[:32]
+    return "mcp-ip:" + get_ip_only_key(request)
+
+
 # 向后兼容别名（spec 001 既有代码用 get_user_id_key）
 get_user_id_key = get_ip_user_key
 

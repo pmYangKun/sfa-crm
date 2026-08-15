@@ -34,7 +34,7 @@
 ## 2. `POST /api/v1/mcp/tokens` — 领取密钥
 
 **鉴权：** 无（公开端点）
-**限流：** 每来源 IP `mcp_issue_per_ip_per_day`
+**限流：** 每来源 IP `mcp_issue_per_ip_per_day`（默认 30；取值须顾及共用出口 IP —— 办公室/会场常共用一个 IP，且每位访客通常领两把）
 
 **Request**
 
