@@ -65,21 +65,21 @@ description: "Task list for spec 005 — MCP 开放平台"
 
 ### Tests for User Story 1
 
-- [ ] T013 [P] [US1] 契约测试：工具列举返回且仅返回 9 个工具、名称与 contracts/mcp-tools.md 一致、入参 schema 与 `TOOL_DEFINITIONS` 完全一致，于 `src/backend/tests/contract/test_mcp_tools_contract.py`
-- [ ] T014 [P] [US1] 集成测试：领密钥 → 列工具 → 调用 `scan_team_warnings` 返回非空，于 `src/backend/tests/integration/test_mcp_end_to_end.py`
+- [X] T013 [P] [US1] 契约测试：工具列举返回且仅返回 9 个工具、名称与 contracts/mcp-tools.md 一致、入参 schema 与 `TOOL_DEFINITIONS` 完全一致，于 `src/backend/tests/contract/test_mcp_tools_contract.py`
+- [X] T014 [P] [US1] 集成测试：领密钥 → 列工具 → 调用 `scan_team_warnings` 返回非空，于 `src/backend/tests/integration/test_mcp_end_to_end.py`
 
 ### Implementation for User Story 1
 
-- [ ] T015 [US1] 实现 `POST /api/v1/mcp/tokens` 于 `src/backend/app/api/mcp_tokens.py`：按 contracts/http-api.md §2，只接受 `sales` / `manager`（**拒绝 `admin`**），映射账号缺失时明确报错不静默降级
-- [ ] T016 [US1] 实现 `GET /api/v1/mcp/tokens/me` 于 `src/backend/app/api/mcp_tokens.py`：返回身份、剩余天数、调用次数；**禁止**返回明文或完整摘要
-- [ ] T017 [US1] 实现 `GET /api/v1/mcp/tools` 公开工具目录端点于 `src/backend/app/api/mcp_tokens.py`：内容由 T008 的过滤结果派生（research Decision 6，杜绝站点与实现漂移）
-- [ ] T018 [P] [US1] 创建 `/open` 首页骨架于 `src/frontend/app/open/page.tsx`：五屏容器 + 深色终端风基础样式（近黑底、细网格、单色光晕、等宽字体），PC 与移动端等价布局
-- [ ] T019 [US1] 实现 `src/frontend/components/open/PersonaPicker.tsx`：两张身份卡（销售 · 王小明 / 主管 · 陈队长）+ 点击后**原地展开**配置（不跳页）
-- [ ] T020 [US1] 实现 `src/frontend/components/open/ClientConfigTabs.tsx`：WorkBuddy / Claude Code / Claude Desktop / Cursor / Codex 五个 tab 各渲染对应语法 + 一键复制；**Codex tab 单独处理**（凭证走环境变量，步骤多一步 export，不套用统一模板）
-- [ ] T021 [P] [US1] 实现 `src/frontend/components/open/ToolCatalog.tsx`：从 `GET /api/v1/mcp/tools` 取数渲染 9 个工具卡片，供首页总览与 `/open/tools` 复用
-- [ ] T022 [P] [US1] 实现首页示例问句区于 `src/frontend/app/open/page.tsx`：spec.md §5.3 的六条问句，点击复制
-- [ ] T023 [US1] PC 端 Playwright e2e 于 `src/frontend/tests/e2e/pc-open-platform.spec.ts`：领密钥 → 配置展开 → 复制 → 工具目录可见
-- [ ] T024 [US1] 移动端 Playwright e2e 于 `src/frontend/tests/e2e/mobile-open-platform.spec.ts`：与 T023 完全对等的路径，**不得出现任何"请到电脑上操作"分支**
+- [X] T015 [US1] 实现 `POST /api/v1/mcp/tokens` 于 `src/backend/app/api/mcp_tokens.py`：按 contracts/http-api.md §2，只接受 `sales` / `manager`（**拒绝 `admin`**），映射账号缺失时明确报错不静默降级
+- [X] T016 [US1] 实现 `GET /api/v1/mcp/tokens/me` 于 `src/backend/app/api/mcp_tokens.py`：返回身份、剩余天数、调用次数；**禁止**返回明文或完整摘要
+- [X] T017 [US1] 实现 `GET /api/v1/mcp/tools` 公开工具目录端点于 `src/backend/app/api/mcp_tokens.py`：内容由 T008 的过滤结果派生（research Decision 6，杜绝站点与实现漂移）
+- [X] T018 [P] [US1] 创建 `/open` 首页骨架于 `src/frontend/app/open/page.tsx`：五屏容器 + 深色终端风基础样式（近黑底、细网格、单色光晕、等宽字体），PC 与移动端等价布局
+- [X] T019 [US1] 实现 `src/frontend/components/open/PersonaPicker.tsx`：两张身份卡（销售 · 王小明 / 主管 · 陈队长）+ 点击后**原地展开**配置（不跳页）
+- [X] T020 [US1] 实现 `src/frontend/components/open/ClientConfigTabs.tsx`：WorkBuddy / Claude Code / Claude Desktop / Cursor / Codex 五个 tab 各渲染对应语法 + 一键复制；**Codex tab 单独处理**（凭证走环境变量，步骤多一步 export，不套用统一模板）
+- [X] T021 [P] [US1] 实现 `src/frontend/components/open/ToolCatalog.tsx`：从 `GET /api/v1/mcp/tools` 取数渲染 9 个工具卡片，供首页总览与 `/open/tools` 复用
+- [X] T022 [P] [US1] 实现首页示例问句区于 `src/frontend/app/open/page.tsx`：spec.md §5.3 的六条问句，点击复制
+- [X] T023 [US1] PC 端 Playwright e2e 于 `src/frontend/tests/e2e/pc-open-platform.spec.ts`：领密钥 → 配置展开 → 复制 → 工具目录可见
+- [X] T024 [US1] 移动端 Playwright e2e 于 `src/frontend/tests/e2e/mobile-open-platform.spec.ts`：与 T023 完全对等的路径，**不得出现任何"请到电脑上操作"分支**
 
 **Checkpoint**: US1 独立可用 —— 这就是 MVP，可以对外放出去了
 
@@ -93,15 +93,15 @@ description: "Task list for spec 005 — MCP 开放平台"
 
 ### Tests for User Story 2
 
-- [ ] T025 [P] [US2] 集成测试：双身份对同一工具的返回集合满足 A ⊂ B 且 A ≠ B，于 `src/backend/tests/integration/test_mcp_datascope.py`
-- [ ] T026 [P] [US2] 集成测试：两种身份的**工具列举结果完全相同**（差异只在数据、不在能力），于 `src/backend/tests/integration/test_mcp_datascope.py`
+- [X] T025 [P] [US2] 集成测试：双身份对同一工具的返回集合满足 A ⊂ B 且 A ≠ B，于 `src/backend/tests/integration/test_mcp_datascope.py`
+- [X] T026 [P] [US2] 集成测试：两种身份的**工具列举结果完全相同**（差异只在数据、不在能力），于 `src/backend/tests/integration/test_mcp_datascope.py`
 
 ### Implementation for User Story 2
 
-- [ ] T027 [US2] 核验 `src/backend/app/api/mcp.py` 中密钥换得的 `user` 被正确传入 `execute_tool`，确保既有 `get_visible_user_ids` 生效（**不新建任何权限逻辑**）
-- [ ] T028 [US2] 越权探测响应一致化于 `src/backend/app/api/mcp.py`：请求可见范围外的标识时，返回与"不存在"完全相同的结果，不泄露存在性
-- [ ] T029 [US2] 在 `src/frontend/components/open/PersonaPicker.tsx` 补充两身份可见范围的说明文案，让访客理解差异从何而来
-- [ ] T030 [US2] PC + 移动端 e2e 补充双身份对比场景于 `src/frontend/tests/e2e/pc-open-platform.spec.ts` 与 `mobile-open-platform.spec.ts`
+- [X] T027 [US2] 核验 `src/backend/app/api/mcp.py` 中密钥换得的 `user` 被正确传入 `execute_tool`，确保既有 `get_visible_user_ids` 生效（**不新建任何权限逻辑**）
+- [X] T028 [US2] 越权探测响应一致化于 `src/backend/app/api/mcp.py`：请求可见范围外的标识时，返回与"不存在"完全相同的结果，不泄露存在性
+- [X] T029 [US2] 在 `src/frontend/components/open/PersonaPicker.tsx` 补充两身份可见范围的说明文案，让访客理解差异从何而来
+- [X] T030 [US2] PC + 移动端 e2e 补充双身份对比场景于 `src/frontend/tests/e2e/pc-open-platform.spec.ts` 与 `mobile-open-platform.spec.ts`
 
 **Checkpoint**: US1 + US2 均独立可用；本 feature 的核心叙事已成立
 

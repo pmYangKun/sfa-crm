@@ -66,9 +66,13 @@ async def lifespan(app: FastAPI):
     # 关键：streamable_http_app() 返回的 Starlette 子应用被 mount 进来后，
     # 它自己的 lifespan **不会**被父应用执行，直接调用会抛
     # RuntimeError: Task group is not initialized。必须在这里显式启动。
-    from app.api.mcp import mcp_server as _mcp_server
+    # 注意顺序：session_manager 只有在 streamable_http_app() 被调用之后才存在
+    # （SDK 内部惰性创建），所以必须先把 ASGI 子应用构造出来。
+    from app.api.mcp import get_mcp_asgi_app, get_mcp_server
 
-    async with _mcp_server.session_manager.run():
+    get_mcp_asgi_app()
+
+    async with get_mcp_server().session_manager.run():
         yield
 
     # Shutdown
@@ -164,9 +168,9 @@ app.include_router(mcp_tokens_router, prefix="/api/v1", tags=["mcp"])
 
 # MCP 协议端点本体：Starlette 子应用 + 鉴权中间件
 # 挂在 /api/v1/mcp 以复用既有 nginx 反代块（该 location 须 proxy_buffering off）
-from app.api.mcp import McpAuthMiddleware, build_mcp_asgi_app  # noqa: E402
+from app.api.mcp import LazyMcpApp, McpAuthMiddleware  # noqa: E402
 
-app.mount("/api/v1/mcp", McpAuthMiddleware(build_mcp_asgi_app()))
+app.mount("/api/v1/mcp", McpAuthMiddleware(LazyMcpApp()))
 
 
 @app.get("/")

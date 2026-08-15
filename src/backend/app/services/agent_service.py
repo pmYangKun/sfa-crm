@@ -240,6 +240,27 @@ def execute_tool(
         # Get current user for DataScope filtering
         current_user = session.get(User, user_id)
 
+        def _lead_visible(lead) -> bool:
+            """按 DataScope 判断这条 lead 对当前用户是否可见。
+
+            spec 005：MCP 开放平台把工具暴露给外部 agent 之后，lead_id 不再只来自
+            受控的搜索结果 —— 任何人都能直接枚举 ID 调 get_lead_detail /
+            get_followup_history / get_lead_meddicc。这三个入口过去只按主键取数、
+            不校验归属，在公开场景下就是越权读取。按宪法原则二修在统一执行点，
+            GUI / 内置 Copilot / 外部 agent 三条路径同时受益。
+            """
+            if lead is None:
+                return False
+            if current_user is None:
+                return False
+            visible_ids = get_visible_user_ids(session, current_user)
+            if visible_ids is None:  # None = 全量可见
+                return True
+            return lead.owner_id in visible_ids
+
+        # 越权与不存在返回同一句话，避免被用来探测某条线索是否存在
+        NOT_FOUND = {"success": False, "message": "线索不存在"}
+
         # ── Read tools ────────────────────────────────────────────────
         if tool_name == "search_leads":
             stmt = select(Lead).where(Lead.stage == "active")
@@ -277,8 +298,8 @@ def execute_tool(
 
         elif tool_name == "get_lead_detail":
             lead = session.get(Lead, args["lead_id"])
-            if not lead:
-                return {"success": False, "message": "线索不存在"}
+            if not _lead_visible(lead):
+                return NOT_FOUND
             owner_name = None
             if lead.owner_id:
                 owner = session.get(User, lead.owner_id)
@@ -307,6 +328,8 @@ def execute_tool(
             }
 
         elif tool_name == "get_followup_history":
+            if not _lead_visible(session.get(Lead, args["lead_id"])):
+                return NOT_FOUND
             followups = session.exec(
                 select(FollowUp)
                 .where(FollowUp.lead_id == args["lead_id"])
@@ -331,8 +354,8 @@ def execute_tool(
             # 读已持久化的仪表盘数据（lead_meddicc_evidence 表 + lead.meddicc_score）
             from app.models.lead_meddicc_evidence import LeadMeddiccEvidence, DIMENSIONS
             lead = session.get(Lead, args["lead_id"])
-            if not lead:
-                return {"success": False, "message": "线索不存在"}
+            if not _lead_visible(lead):
+                return NOT_FOUND
             evidences = session.exec(
                 select(LeadMeddiccEvidence).where(LeadMeddiccEvidence.lead_id == lead.id)
             ).all()

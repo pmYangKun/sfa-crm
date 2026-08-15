@@ -83,12 +83,8 @@ def build_mcp_server() -> MCPServer:
     return server
 
 
-mcp_server = build_mcp_server()
-
-
-def build_mcp_asgi_app():
-    """构造可 mount 进 FastAPI 的 Starlette 子应用。"""
-    return mcp_server.streamable_http_app(
+def _build_mcp_asgi_app(server: MCPServer):
+    return server.streamable_http_app(
         streamable_http_path="/",
         stateless_http=True,
         transport_security=TransportSecuritySettings(
@@ -96,6 +92,38 @@ def build_mcp_asgi_app():
             allowed_origins=["*"],
         ),
     )
+
+
+# ── 惰性运行时 ──────────────────────────────────────────────────────────────
+# 不在导入期构造：SDK 的 StreamableHTTPSessionManager.run() **每个实例只能跑一次**，
+# 模块级单例会让"同一进程内第二次启动 lifespan"直接抛 RuntimeError（测试里每个
+# TestClient 都会启一次 lifespan）。惰性构造 + reset 让运行时可重建。
+_runtime: dict = {"server": None, "asgi": None}
+
+
+def get_mcp_server() -> MCPServer:
+    if _runtime["server"] is None:
+        _runtime["server"] = build_mcp_server()
+    return _runtime["server"]
+
+
+def get_mcp_asgi_app():
+    if _runtime["asgi"] is None:
+        _runtime["asgi"] = _build_mcp_asgi_app(get_mcp_server())
+    return _runtime["asgi"]
+
+
+def reset_mcp_runtime() -> None:
+    """丢弃当前运行时，下次访问时重建。仅供测试与热重载使用。"""
+    _runtime["server"] = None
+    _runtime["asgi"] = None
+
+
+class LazyMcpApp:
+    """ASGI 入口：调用时才解析真正的子应用，配合 reset 支持重建。"""
+
+    async def __call__(self, scope, receive, send):
+        await get_mcp_asgi_app()(scope, receive, send)
 
 
 class McpAuthMiddleware:
