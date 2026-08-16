@@ -51,6 +51,100 @@
   margin-bottom: 20px;
 }
 
+/* ── 段落标题（参考区，非操作步骤）── */
+.section-head {
+  margin-bottom: 20px;
+}
+.section-head h2 {
+  font-size: 20px;
+  font-weight: 600;
+  margin: 0 0 6px;
+  letter-spacing: -0.01em;
+}
+.section-head p {
+  font-size: 13.5px;
+  line-height: 1.7;
+  color: var(--text-dim);
+  margin: 0;
+  max-width: 640px;
+}
+
+/* ── 接入步骤（真正要动手的三步）── */
+.stepper {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 28px;
+  flex-wrap: wrap;
+}
+.stepper-item {
+  flex: 1 1 160px;
+  background: var(--bg-raised);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px 14px;
+}
+.stepper-item.current {
+  border-color: var(--accent-line);
+  background: var(--accent-dim);
+}
+.stepper-num {
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  color: var(--text-faint);
+  display: block;
+  margin-bottom: 4px;
+}
+.stepper-item.current .stepper-num { color: var(--accent); }
+.stepper-title { font-size: 13.5px; color: var(--text); }
+
+.step-block {
+  border-left: 2px solid var(--line-strong);
+  padding-left: 20px;
+  margin-bottom: 36px;
+  position: relative;
+}
+.step-block:last-child { margin-bottom: 0; }
+.step-block::before {
+  content: attr(data-step);
+  position: absolute;
+  left: -15px;
+  top: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--bg);
+  border: 1px solid var(--accent-line);
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.step-block h3 {
+  font-size: 17px;
+  font-weight: 600;
+  margin: 0 0 6px;
+  padding-left: 22px;
+}
+.step-block > p {
+  font-size: 13.5px;
+  line-height: 1.7;
+  color: var(--text-dim);
+  margin: 0 0 16px;
+  padding-left: 22px;
+}
+.step-body { margin-top: 16px; }
+
+.step-waiting {
+  font-size: 13px;
+  color: var(--text-faint);
+  background: var(--bg-inset);
+  border: 1px dashed var(--line-strong);
+  border-radius: 8px;
+  padding: 16px;
+}
+
 /* ── Hero ── */
 .hero-title {
   font-size: 40px;

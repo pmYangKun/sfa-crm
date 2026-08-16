@@ -59,31 +59,72 @@ export default function OpenHomePage() {
         </div>
       </section>
 
-      {/* 第 2-3 屏 · 选身份 → 原地展开配置 */}
+      {/* 先看它跑起来 —— 零成本，放在要求访客动手之前 */}
       <section className="screen">
-        <p className="screen-label">01 / 选择身份</p>
-        <PersonaPicker />
-      </section>
-
-      {/* 第 4 屏 · 先看它真的在跑 */}
-      <section className="screen">
-        <p className="screen-label">02 / 先看它真的在跑</p>
-        <p className="hero-sub" style={{ fontSize: 14, marginBottom: 20 }}>
-          还没决定要不要花时间配置？这里的调用是真的 —— 点一句，
-          后端会用演示凭证真调一次工具，把过程和数据原样打出来。
-        </p>
+        <div className="section-head">
+          <h2>先看它真的在跑</h2>
+          <p>
+            不用领密钥、不用配置任何东西。点一句，服务端会真的调用一次工具，
+            把过程和返回的数据原样打出来。
+          </p>
+        </div>
         <LiveDemo />
       </section>
 
-      {/* 第 5 屏 · 能问什么 */}
+      {/* 三步接入 —— 唯一需要动手的部分 */}
       <section className="screen">
-        <p className="screen-label">03 / 接上之后能问什么</p>
+        <div className="section-head">
+          <h2>接上你自己的 AI 助手</h2>
+          <p>三步，一分钟以内。全程不需要注册，也不需要手填任何东西。</p>
+        </div>
+
+        <div className="stepper" data-testid="stepper">
+          <div className="stepper-item current">
+            <span className="stepper-num">步骤 1</span>
+            <span className="stepper-title">选身份，领密钥</span>
+          </div>
+          <div className="stepper-item">
+            <span className="stepper-num">步骤 2</span>
+            <span className="stepper-title">复制配置（已含密钥）</span>
+          </div>
+          <div className="stepper-item">
+            <span className="stepper-num">步骤 3</span>
+            <span className="stepper-title">重启客户端，开口问</span>
+          </div>
+        </div>
+
+        <PersonaPicker />
+
+        <div className="step-block" data-step="3" style={{ marginTop: 36 }}>
+          <h3>重启客户端，然后直接问</h3>
+          <p>
+            连上之后，你的助手会自动拿到全部 9 个工具和它们的参数说明 ——
+            这是 MCP 协议自带的，不需要你再告诉它「这里有哪些接口」。
+          </p>
+          <div className="step-body">
+            <div className="notice">
+              试着问一句：<strong>「我团队哪几单有风险？」</strong>
+              <br />
+              它会自己决定该调哪个工具、怎么传参，然后把结果讲给你听。
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 以下为参考资料，不参与步骤编号 */}
+      <section className="screen">
+        <div className="section-head">
+          <h2>接上之后能问什么</h2>
+          <p>这些问题都能直接问，助手会自己选工具。点右侧可复制。</p>
+        </div>
         <SampleQuestions />
       </section>
 
-      {/* 第 5 屏 · 工具总览 */}
       <section className="screen">
-        <p className="screen-label">04 / 开放的能力</p>
+        <div className="section-head">
+          <h2>开放了哪 9 个能力</h2>
+          <p>全部只读。清单由后端按工具定义自动派生，不会与实际能力对不上。</p>
+        </div>
         <ToolCatalog />
         <p style={{ marginTop: 18 }}>
           <Link href="/open/tools" className="btn">

@@ -18,7 +18,7 @@ type ClientId = 'workbuddy' | 'claude-code' | 'claude-desktop' | 'cursor' | 'cod
 
 const CLIENTS: { id: ClientId; label: string }[] = [
   { id: 'workbuddy', label: 'WorkBuddy' },
-  { id: 'claude-code', label: 'Claude Code' },
+  { id: 'claude-code', label: 'Claude Code ⚡' },
   { id: 'claude-desktop', label: 'Claude Desktop' },
   { id: 'cursor', label: 'Cursor' },
   { id: 'codex', label: 'Codex' },
@@ -54,7 +54,7 @@ export function buildSnippet(client: ClientId, endpoint: string, token: string):
 
 const FILE_HINT: Record<ClientId, string> = {
   workbuddy: 'WorkBuddy 设置 → MCP → 添加自定义服务器（或直接编辑其 MCP 配置文件）',
-  'claude-code': '终端里执行这一行即可，无需手改配置文件',
+  'claude-code': '⚡ 最省事：终端粘贴执行这一行就完事，不用找配置文件',
   'claude-desktop': 'claude_desktop_config.json',
   cursor: '.cursor/mcp.json',
   codex: '~/.codex/config.toml（注意凭证走环境变量）',
@@ -81,24 +81,25 @@ export default function ClientConfigTabs({ issued }: { issued: IssuedToken }) {
         ))}
       </div>
 
-      <p className="tool-example" style={{ marginBottom: 10 }}>
-        写入位置：{FILE_HINT[active]}
-      </p>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 12,
+          marginBottom: 10,
+          flexWrap: 'wrap',
+        }}
+      >
+        <p className="tool-example" style={{ margin: 0 }}>
+          写入位置：{FILE_HINT[active]}
+        </p>
+        <CopyButton value={snippet} label="复制（含密钥）" testId="copy-config" />
+      </div>
 
       <pre className="code-block" data-testid="config-snippet">
         {snippet}
       </pre>
-
-      <div style={{ marginTop: 12 }}>
-        <CopyButton value={snippet} label="复制配置" testId="copy-config" />
-      </div>
-
-      <ol className="steps">
-        <li>复制上面这段</li>
-        <li>粘进 {CLIENTS.find((c) => c.id === active)?.label} 的 MCP 配置</li>
-        <li>重启客户端</li>
-        <li>问它一句「我团队哪几单有风险？」</li>
-      </ol>
     </div>
   );
 }
