@@ -3,6 +3,8 @@
 **Feature**: 005-mcp-open-platform
 **Base**: `/api/v1`（沿用既有前缀，复用现有 nginx 反代块）
 
+> 演示区代理端点（原 §5）已于 2026-08-16 随首页演示区一并移除，见 spec.md §8。
+
 ---
 
 ## 1. `POST /api/v1/mcp` — MCP 协议端点
@@ -123,26 +125,7 @@
 
 ---
 
-## 5. `POST /api/v1/mcp/demo` — 演示区代理
-
-**鉴权：** 无（公开端点）
-**限流：** `mcp_demo_rate_per_hour`，**独立配额**，耗尽不影响访客自领密钥的额度（FR-021）
-
-**Request**
-
-```json
-{ "question_id": "team_risk" }
-```
-
-只接受**预置问句的标识**，不接受自由文本——避免演示区变成一个不受控的公开问答入口。
-
-**Response：** 流式，逐步输出"正在调用工具 → 工具返回 → 结果摘要"。
-
-**约束：** 演示所用密钥由服务端从环境变量读取，**MUST NOT** 出现在任何响应体、页面源码或前端可见内容中（FR-021）。
-
----
-
-## 6. `GET /open/llms.txt` — 纯文本接入说明
+## 5. `GET /open/llms.txt` — 纯文本接入说明
 
 **位置：** 前端 Route Handler（非后端端点）
 **Content-Type:** `text/plain; charset=utf-8`

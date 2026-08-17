@@ -70,7 +70,6 @@
 | `mcp_rate_per_minute` | `30` | 每密钥每分钟调用上限 | FR-026 |
 | `mcp_rate_per_day` | `500` | 每密钥每日调用上限 | FR-026 |
 | `mcp_issue_per_ip_per_day` | `30` | 每来源每日密钥发放上限 | FR-007 |
-| `mcp_demo_rate_per_hour` | `60` | 演示区每小时调用上限（独立配额） | FR-021 |
 
 **宪法原则三合规：以上阈值一律不得在代码中出现字面量。**
 

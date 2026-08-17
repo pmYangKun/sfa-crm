@@ -83,7 +83,6 @@ def mcp_env(monkeypatch):
             ("mcp_rate_per_minute", "30"),
             ("mcp_rate_per_day", "500"),
             ("mcp_issue_per_ip_per_day", "5"),
-            ("mcp_demo_rate_per_hour", "60"),
         ):
             s.add(SystemConfig(key=key, value=value))
 

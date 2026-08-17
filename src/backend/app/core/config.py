@@ -24,10 +24,6 @@ CFG_MCP_TOKEN_TTL_DAYS = "mcp_token_ttl_days"
 CFG_MCP_RATE_PER_MINUTE = "mcp_rate_per_minute"
 CFG_MCP_RATE_PER_DAY = "mcp_rate_per_day"
 CFG_MCP_ISSUE_PER_IP_PER_DAY = "mcp_issue_per_ip_per_day"
-CFG_MCP_DEMO_RATE_PER_HOUR = "mcp_demo_rate_per_hour"
-
-# 演示区专用密钥：服务端持有，禁止下发前端（spec 005 FR-021）
-MCP_DEMO_TOKEN: str = os.getenv("MCP_DEMO_TOKEN", "")
 
 # MCP 端点对外地址：写进发放响应，避免前端硬编码
 MCP_PUBLIC_ENDPOINT: str = os.getenv(

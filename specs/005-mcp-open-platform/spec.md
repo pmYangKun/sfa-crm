@@ -254,21 +254,28 @@ SFA CRM 已在公网可用（https://crm.pmyangkun.com），但**只能被人用
 
 ---
 
-## 8. 遗留项（实施后产生）
+## 8. 演示区撤销的完整处置（2026-08-16 已执行）
 
-### 8.1 演示区撤销后的孤儿端点
+US3 撤销后，`POST /api/v1/mcp/demo` 与 `GET /api/v1/mcp/demo/questions` 已无任何 UI 调用方。
 
-US3 撤销后，`POST /api/v1/mcp/demo` 与 `GET /api/v1/mcp/demo/questions` **已无任何 UI 调用方**。
+**用户决定：删除。** 理由是它们属于公开、无鉴权端点，且背后承载 `scan_team_warnings`
+这类聚合查询 —— 留一块没人用的攻击面没有收益。
 
-现状：代码与测试（`test_mcp_demo_quota.py`，6 条）保留未删。
+已移除：
 
-**这不是无代价的**——它们是公开、无鉴权的端点，且 `scan_team_warnings` / `top_attention_deals` 这类聚合查询成本不低。留着等于维持一块没人用的攻击面。
-
-两个选项，待定：
-
-| 选项 | 说明 |
+| 项 | 处置 |
 |---|---|
-| **删掉**（倾向） | 端点 + 测试 + 契约 §5 一并移除。日后要恢复演示区，从 git 历史取回即可 |
-| 留着 | 若打算把演示区挪到 `/open/docs` 或文章配图里复用，则保留有意义 |
+| `POST /api/v1/mcp/demo`、`GET /api/v1/mcp/demo/questions` | 删除 |
+| `_DemoQuota` 独立配额器与 `demo_quota` 实例 | 删除 |
+| `tests/integration/test_mcp_demo_quota.py`（6 条） | 删除 |
+| `components/open/LiveDemo.tsx` | 删除 |
+| `mcp_demo_rate_per_hour` 配置项（含 init_db 默认值、config 常量） | 删除 |
+| `MCP_DEMO_TOKEN` 环境变量（含 `.env.production.example`） | 删除 |
+| `contracts/http-api.md` §5 演示区代理 | 删除，后续小节顺延 |
 
-判断依据：**是否还有把"当场跑一次"这件事放到别处的打算**。没有就该删。
+**若日后要恢复演示区**，从 git 历史取回即可（截至 commit `e5f4abc` 仍完整），
+并**务必同时恢复 FR-021**——演示凭证不得下发前端、且配额必须独立于访客额度。
+这两条是恢复时最容易漏掉的安全约束。
+
+**遗留一个可选清理项：** 演示环境数据库里若已写入过 `mcp_demo_rate_per_hour` 配置行，
+它现在是一条无人读取的死配置。不影响运行，可在下次重置时顺手删掉。
