@@ -100,7 +100,6 @@ src/frontend/
 ├── components/open/
 │   ├── PersonaPicker.tsx           # 身份选择 + 原地展开配置
 │   ├── ClientConfigTabs.tsx        # 5 客户端配置模板
-│   ├── LiveDemo.tsx                # 可运行演示区
 │   └── ToolCatalog.tsx             # 工具卡片（首页总览与 /open/tools 复用）
 └── tests/e2e/
     ├── pc-open-platform.spec.ts
