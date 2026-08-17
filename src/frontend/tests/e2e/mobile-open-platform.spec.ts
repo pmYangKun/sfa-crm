@@ -87,17 +87,6 @@ test.describe('Mobile · /open 开放平台', () => {
     await expect(footer).toContainText('不提供任何写入接口');
   });
 
-  test('US3 · 演示区在移动端同样能跑', async ({ page }) => {
-    await page.goto('/open');
-    await expect(page.getByTestId('live-demo')).toBeVisible();
-    await page.getByTestId('demo-q-team_risk').click();
-
-    await expect(page.getByTestId('demo-stream')).toContainText('调用工具', {
-      timeout: 20_000,
-    });
-    expect(await page.content()).not.toContain('sfa_ro_');
-  });
-
   test('US5 · 契约页与文档页在移动端等价可用', async ({ page }) => {
     await page.goto('/open/tools');
     await expect(page.getByTestId('tool-catalog')).toHaveAttribute(

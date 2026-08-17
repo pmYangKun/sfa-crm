@@ -99,21 +99,6 @@ test.describe('PC · /open 开放平台', () => {
     await expect(footer).toContainText('不提供任何写入接口');
   });
 
-  test('US3 · 演示区无需领密钥即可跑出真实调用', async ({ page }) => {
-    await page.goto('/open');
-
-    const demo = page.getByTestId('live-demo');
-    await expect(demo).toBeVisible();
-    await page.getByTestId('demo-q-team_risk').click();
-
-    const stream = page.getByTestId('demo-stream');
-    await expect(stream).toContainText('调用工具', { timeout: 20_000 });
-    await expect(stream).toContainText('scan_team_warnings', { timeout: 20_000 });
-
-    // 演示凭证绝不能出现在页面里
-    expect(await page.content()).not.toContain('sfa_ro_');
-  });
-
   test('US5 · 工具契约页与接入文档页可达', async ({ page }) => {
     await page.goto('/open/tools');
     await expect(page.getByTestId('tool-catalog')).toHaveAttribute(

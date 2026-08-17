@@ -3,7 +3,6 @@
 import Link from 'next/link';
 
 import CopyButton from '@/components/open/CopyButton';
-import LiveDemo from '@/components/open/LiveDemo';
 import PersonaPicker from '@/components/open/PersonaPicker';
 import ToolCatalog from '@/components/open/ToolCatalog';
 import { FALLBACK_ENDPOINT } from '@/lib/open-api';
@@ -59,19 +58,7 @@ export default function OpenHomePage() {
         </div>
       </section>
 
-      {/* 先看它跑起来 —— 零成本，放在要求访客动手之前 */}
-      <section className="screen">
-        <div className="section-head">
-          <h2>先看它真的在跑</h2>
-          <p>
-            不用领密钥、不用配置任何东西。点一句，服务端会真的调用一次工具，
-            把过程和返回的数据原样打出来。
-          </p>
-        </div>
-        <LiveDemo />
-      </section>
-
-      {/* 三步接入 —— 唯一需要动手的部分 */}
+      {/* 三步接入 —— 首屏之后直接进入动手环节 */}
       <section className="screen">
         <div className="section-head">
           <h2>接上你自己的 AI 助手</h2>
