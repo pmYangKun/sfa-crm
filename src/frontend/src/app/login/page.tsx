@@ -7,6 +7,7 @@ import { useIsMobile } from '@/lib/viewport';
 import { ROLE_CARDS } from '@/lib/onboarding-config';
 import RoleCard from '@/components/auth/role-card';
 import HighlightsPanelPC from '@/components/auth/highlights-panel-pc';
+import OpenPlatformEntry from '@/components/auth/open-platform-entry';
 
 export default function LoginPage() {
   const { login, user, loading } = useAuth();
@@ -235,6 +236,12 @@ export default function LoginPage() {
               <div>业务数据每 30 分钟自动重置</div>
             </div>
           </form>
+        </div>
+
+        {/* MCP 开放平台入口：整页唯一一块深色区，和上面的角色登录卡明确区分开 ——
+            那条路是"进系统点界面"，这条路是"让自己的 AI 助手直接连数据" */}
+        <div style={{ margin: '40px 0 24px' }}>
+          <OpenPlatformEntry layout="pc" />
         </div>
 
         <HighlightsPanelPC />

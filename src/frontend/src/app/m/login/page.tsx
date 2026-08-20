@@ -7,6 +7,7 @@ import { useIsMobile } from '@/lib/viewport';
 import { ROLE_CARDS } from '@/lib/onboarding-config';
 import RoleCard from '@/components/auth/role-card';
 import HighlightsPanelMobile from '@/components/auth/highlights-panel-mobile';
+import OpenPlatformEntry from '@/components/auth/open-platform-entry';
 
 export default function MobileLoginPage() {
   const { login, user, loading } = useAuth();
@@ -219,6 +220,11 @@ export default function MobileLoginPage() {
             业务数据每 30 分钟自动重置
           </div>
         </form>
+
+        {/* MCP 开放平台入口，与 PC 登录页同一组件、同一位置（表单之后、亮点之前） */}
+        <div style={{ marginBottom: 28 }}>
+          <OpenPlatformEntry layout="mobile" />
+        </div>
 
         <HighlightsPanelMobile />
 
