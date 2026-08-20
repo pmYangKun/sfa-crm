@@ -381,16 +381,35 @@ Cursor / Codex 各配一次、各问一句。Codex 的凭证走环境变量，�
 ## 十一、定期维护
 
 - **每月**：`sudo certbot renew --dry-run` 验证证书自动续期
-- **每周**：`du -sh /opt/sfa-crm/src/backend/data/sfa_crm.db` 看 DB 大小（半小时重置一直清，不该膨胀）
+- **每周**：`du -sh /var/lib/sfa-crm/sfa_crm.db` 看 DB 大小（半小时重置一直清，不该膨胀）。**注意生产库在 `/var/lib/sfa-crm/` 下，不在 `src/backend/data/`** —— 后者只是本地开发时的默认相对路径
 - **首次部署后**：跟着 `specs/002-public-deploy-hardening/quickstart.md` A-G 全跑一遍验证
 
 ## 十二、回滚
 
+⚠️ **别在 `/opt/sfa-crm` 里 `git checkout`**。增量部署（见
+`~/Doc.Work/Programming/claudecode/memory/feedback_deploy_vocab.md`）是
+本地 `git archive` + scp + 解 tar，**线上目录根本不是 git 仓库、没有 `.git`**，
+`git log` / `git checkout` 一律报 not a git repository。2026-08-20 核实。
+
+真正的回滚路径是上一版目录 `/opt/sfa-crm.old`（部署第 3 步 mv 出来的）：
+
 ```bash
-cd /opt/sfa-crm
-git log --oneline | head -10  # 找上一个稳定 tag/commit
-git checkout <stable-commit>
+# 确认上一版还在（下次部署第 3 步开头会 rm -rf 掉它）
+ls -d /opt/sfa-crm.old
+
+sudo mv /opt/sfa-crm /opt/sfa-crm.failed
+sudo mv /opt/sfa-crm.old /opt/sfa-crm
 sudo systemctl restart sfa-crm-backend sfa-crm-frontend
+curl -sI https://crm.pmyangkun.com/login | head -1
 ```
+
+`.old` 里 `.env.production` / `.env.production.local` / `.venv` / `node_modules` /
+`.next` 都是完整的，mv 回去即可直接起，**不需要重新 build**。
+
+如果 `.old` 已经被删，退路是本地 `git checkout <stable-commit>` 后重跑一遍
+增量部署 7 步（等于把旧版本当新版本发一次）。
+
+**数据不受回滚影响**：SQLite 库在 `/var/lib/sfa-crm/sfa_crm.db`，在
+`/opt/sfa-crm` 之外，换版 / 回滚都不碰它。
 
 回滚不需要重启 nginx。

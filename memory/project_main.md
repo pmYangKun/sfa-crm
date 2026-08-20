@@ -157,6 +157,16 @@ spec-kit 产物：`specs/002-public-deploy-hardening/`（spec.md / plan.md / res
   - `mcp_token` 表**永不随 demo_reset 清空**（删除列表是显式的，默认即保留；有静态 + 集成两条守护测试防未来误加）
   - 撤销项：live 演示区做完又整体移除（用户判断"接入只要一分钟，前面不该插铺垫"），后端 `/mcp/demo` 端点连带删除。**日后恢复必须一并恢复 FR-021**（演示凭证不下发前端 + 配额独立），见 spec.md §8
   - CLI / Skill 均推后（Skill 的触发条件 = 启动写操作那一版，届时同期交付）
+- ✅ **2026-08-20 登录页加 MCP 开放平台入口**（commit `42a217e`，已 push master + 部署生产）：
+  - PC / 移动登录页各挂一块 `OpenPlatformEntry`（角色卡 + 账号表单之后、亮点区之前），跳站内 `/open`。视觉沿用 `open.css` 的深色终端风（近黑底 + `#4ade80` + 等宽字）——整页浅色里唯一一块深色区；PC 1440×900 实测 y=474，首屏不用滚就能看见
+  - 补的是 spec 005 的缺口：`/open` 上线后 CRM 这边一直没入口，访客只能靠文章直链进
+  - 纯前端改动，无新表 / 无新环境变量 → 部署**跳过 init_db**
+  - 未做（待定）：`/open` 侧没有回 CRM 的反向入口；"登录页 → /open"这条链路未进 e2e
+  - **本次暴露的部署手册三处硬伤**（已回写 [[feedback_deploy_vocab]]）：
+    1. 增量第 3 步漏了回填 `src/backend/.venv` 和 `src/frontend/node_modules` —— 而第 4 步的 `.venv/bin/pip` 和第 5 步的"复用 node_modules"都假设它们在，照原文跑必挂
+    2. 第 5 步的 `cp -r /opt/sfa-crm.old/node_modules ./` 路径是错的（node_modules 在 `src/frontend/` 下，不在仓库根）
+    3. **`docs/deploy.md` §十二 的回滚方法跑不通** —— 线上目录是 tar 解出来的，没有 `.git`，`git checkout <commit>` 无从执行。真回滚路径 = `/opt/sfa-crm.old` mv 回去 + restart 两个服务（本次已顺手改掉 §十二）
+  - 记一笔省得下次犹豫：SQLite 库在 `/var/lib/sfa-crm/sfa_crm.db`，**不在 `/opt/sfa-crm` 内**，所以整目录换版不碰数据
 - **测试态势（2026-08-16 终态）：** Backend **223 pytest** / 开放平台 e2e PC 9 + Mobile 8 / 全量 Playwright 91 passed（1 例 us1 角色切换在满套件下偶发抖动，单独跑通过，与 spec 005 代码路径无关）
 - **测试态势（2026-05-17）：** Backend 159 pytest / PC Playwright 39 / Mobile Playwright 34 / 0 fail
 - LLM API Key：`src/backend/.env`（dev）/ DB Fernet 密文（生产，spec 002）
