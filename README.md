@@ -100,24 +100,18 @@ Spec 里有业务逻辑、对象定义、行为约束。AI 基于这些生成代
 
 ## 进度
 
-| 集数 | 内容 | 状态 |
-|------|------|------|
-| 第一集 | 从两本书提炼方法论 Skill | 完成 |
-| 第二集 | Skill 落地与迭代 | 完成 |
-| 第三集 | check-prd 工具，解剖 8 份真实企业 PRD | 完成 |
-| 第四集 | 业务上下文采集，确定架构方向 | 完成 |
-| 第五集 | Ontology 设计：对象建模、Actions、AI-native CRM | 完成 |
-| 第六集 | Spec 阶段：线索/客户拆分、RBAC、数据权限分离 | 完成 |
-| 第七集 | Plan 阶段：技术栈选型，AI Agent 方案 | 完成 |
-| 第八集 | Spec Coding 的正确打开方式：spec-kit 定位与协作分工 | 完成 |
-| 编码阶段 | 110 个任务全部实现，14 个 Phase 完成 | 完成 |
-| spec 001 | 登录页双栏 + 移动端 + Onboarding 收口 | 完成（merged） |
-| spec 002 | 公网部署安全/治理硬化（限流 / 熔断 / prompt_guard / 半小时数据自动重置 / Fernet 加密 / 启动密钥校验 / Nginx + certbot 部署文档） | 完成（merged，tag `v-spec002`） |
-| spec 002 二轮 | Copilot 可靠性硬化：AI 写动作 HITL 边界、chat 流式 Markdown 渲染（含表格）、AI 幻觉 ID 改返 404、9 case Playwright 全量回归（PC + Mobile = 18 场景，真实 LLM） | 完成（merged） |
-| spec 003 | MEDDICC 销售视角自检：7 维证据抽取、对话录入、场景卡演示、Score 仪表盘、PC + Mobile 等价 | 完成（merged，tag `v-spec003`） |
-| spec 004 | MEDDICC 经理视角 Pipeline：Forecast 6 tab + 主表 + Warnings 7 规则 + AI 反查吹牛 + Team Rollup + 单 lead 趋势图（PC + Mobile） | 完成（merged，tag `v-spec004`） |
-| spec 004 v2 UX | 默认 Team 视图 / 移动端 forecast tabs 折行 / Warnings 弹层 Portal 化 / 移动端 BottomSheet / 金刚区 5 槽 / Lead 详情页可改 Forecast / Seed data 大扩量（54 lead / 29 评分 / 116 evidence / 116 history） | 完成 |
-| spec 005 | （计划中）AI 主动巡检 / 每日早报推送 | 待 brainstorm |
+项目 2026-03 启动，目前 5 个 spec 全部收口，公网跑最新版。
+
+| 阶段 | 内容 |
+|------|------|
+| 方法论 → Skill | 从两本书提炼方法论，产出 check-prd Skill，在 8 份真实企业 PRD 上验证 |
+| Spec 设计 | 确定 Ontology 数据底座 + API-first + Copilot 三层架构 |
+| 编码实现 | 110 个任务 / 14 个 Phase 全部完成 |
+| spec 001 · 002 | 登录与移动端 Onboarding；公网部署安全与治理硬化（限流 / 熔断 / prompt_guard / 半小时数据自动重置 / Fernet 加密） |
+| spec 003 · 004 | MEDDICC 销售视角自检 + 经理视角 Pipeline（Forecast 6 tab / Warnings 7 规则 / Team Rollup / 趋势图，PC + Mobile 等价） |
+| spec 005 | **MCP 开放平台** —— 任何 AI 客户端零注册接入，见 [crm.pmyangkun.com/open](https://crm.pmyangkun.com/open) |
+
+> 逐集的详细过程、踩过的坑和设计取舍，都记录在公众号系列里（见下方「配套公众号」）。
 
 ---
 
